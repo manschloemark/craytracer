@@ -1,5 +1,5 @@
 /* main.c ray tracer
- * A very simple minimalistic raytracer that I hope to incrementally work on.
+ * A very simple minimalistic raytracer that I will word on incrementally.
  * Mark Schloeman
  * */
 
@@ -12,6 +12,7 @@
 #include "argparse.h"
 #include "vector3.h"
 #include "color.h"
+#include "ray.h"
 /* Data Types */
 
 
@@ -54,17 +55,6 @@ FILE *MakePPMFile(char *filename, int height, int width) {
 
 
 void WriteToPPM(color *pixels, int height, int width, int bytes_per_channel, FILE *dest) {
-	// This appears to be slower than mallocing a new array of unsigned chars. It's not like this is important but still.
-	//int count;
-	//count = 0;
-	//unsigned char p[3];
-	//while (count < (height * width)) {
-	//	p[0] = (unsigned char)(Clamp(pixels[count].red, 0.0, 0.999) * 256);
-	//	p[1] = (unsigned char)(Clamp(pixels[count].green, 0.0, 0.999) * 256);
-	//	p[2] = (unsigned char)(Clamp(pixels[count].blue, 0.0, 0.999) * 256);
-	//	fwrite(p, 1, 3, dest);
-	//	++count;
-	//}
 	unsigned char *temp = malloc(height * width * bytes_per_channel * 3);
 	int count;
 	for (count = 0; count < height * width * 3; count = count + 3) {
@@ -79,36 +69,22 @@ void WriteToPPM(color *pixels, int height, int width, int bytes_per_channel, FIL
 }
 /* Rendering */
 
-void GetColor(color *c, float u, float v) {
-	float r = sqrtf(u*u+v*v);
-	if (r < 0.16) {
-		c->r = 1.0 * fabs(u);
-		c->g = 1.0 * fabs(u);
-		c->b = 1.0 * fabs(v * u);
-	} else {
-		c->r = fmod(u, 0.1);
-		c->g = fmod(u, 0.05);
-		c->b = sin(u*v);
-	}
+color TraceRay(ray *r) {
+	return color_new(0.0, 0.5, 0.0);
 }
 
-void PutColor(unsigned char *pixel, color *c) {
-	return;
-}
-
-void Render(color *pixels, int height, int width, int bytes_per_channel) {
+void Render(color *pixels, int height, int width, point3 origin, point3 vp, vec3 y, vec3 z) {
 	int i, j;
-	float x, y;
 	int scale = Max(height, width);
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; ++i) {
-			x = -1.0 + (2.0*((float)i / (float)width));
-			y = -1.0 + (2.0*((float)j / (float)height));
-			x *= ((float)width / (float)scale);
-			y *= ((float)height / (float)scale);
+			float u = (float)i / (float)(width-1);
+			float v = (float)j / (float)(height-1);
 
-			GetColor(pixels, x, y); 
-			++pixels;
+			vec3 d = vec3_sub(vec3_add(vec3_add(vp, vec3_mul(y, u)), vec3_mul(z, v)), origin);
+
+			ray r = {&origin, &d};
+			*pixels++ = TraceRay(&r); 
 		}
 	}
 }
@@ -118,8 +94,6 @@ int main(int argc, char **argv) {
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 
 	int bytes_per_channel = sizeof(char);
-
-
 	FILE *ppm_file = MakePPMFile(
 				args.outfile,
 				args.image_height,
@@ -127,6 +101,8 @@ int main(int argc, char **argv) {
 				);
 
 	if (!ppm_file) return -1;
+
+	// TODO : impelement vector math and whatever
 
 	color *pixels = malloc(args.image_height * args.image_width * sizeof(color)); 
 	Render(pixels, args.image_height, args.image_width, bytes_per_channel);
