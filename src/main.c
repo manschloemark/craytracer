@@ -14,11 +14,14 @@
 /* Data Types */
 
 struct Vector3 {
+	float x, y, z;
+};
+typedef struct Vector3 vec3;
+
+struct Color {
 	float red, green, blue;
 };
-
-typedef struct Vector3 vec3;
-typedef struct Vector3 color;
+typedef struct Color color;
 
 static inline float Clamp(float n, float min, float max) {
 	if (n < min) return min;
@@ -57,30 +60,31 @@ FILE *MakePPMFile(char *filename, int height, int width) {
 	return newfile;
 }
 
-void WriteToPPM(color *pixels, int height, int width, int bytes_per_channel, FILE *dest) {
-	int count;
-	count = 0;
-	unsigned char p[3];
-	while (count < (height * width)) {
-		p[0] = (unsigned char)(Clamp(pixels[count].red, 0.0, 0.999) * 256);
-		p[1] = (unsigned char)(Clamp(pixels[count].green, 0.0, 0.999) * 256);
-		p[2] = (unsigned char)(Clamp(pixels[count].blue, 0.0, 0.999) * 256);
-		fwrite(p, 1, 3, dest);
-		++count;
-	}
-	//unsigned char *temp = malloc(height * width * bytes_per_channel * 3);
-	//int count;
-	//for (count = 0; count < height * width * 3; count = count + 3) {
-	//	temp[count] = (unsigned char)(Clamp(pixels->red, 0.0, 0.999) * 256);
-	//	temp[count+1] = (unsigned char)(Clamp(pixels->green, 0.0, 0.999) * 256);
-	//	temp[count+2] = (unsigned char)(Clamp(pixels->blue, 0.0, 0.999) * 256);
-	//	++pixels;
-	//}
-	//fwrite(temp, height * width * 3, bytes_per_channel, dest);
-	fflush(dest);
-	//free(temp);
-}
 
+void WriteToPPM(color *pixels, int height, int width, int bytes_per_channel, FILE *dest) {
+	// This appears to be slower than mallocing a new array of unsigned chars. It's not like this is important but still.
+	//int count;
+	//count = 0;
+	//unsigned char p[3];
+	//while (count < (height * width)) {
+	//	p[0] = (unsigned char)(Clamp(pixels[count].red, 0.0, 0.999) * 256);
+	//	p[1] = (unsigned char)(Clamp(pixels[count].green, 0.0, 0.999) * 256);
+	//	p[2] = (unsigned char)(Clamp(pixels[count].blue, 0.0, 0.999) * 256);
+	//	fwrite(p, 1, 3, dest);
+	//	++count;
+	//}
+	unsigned char *temp = malloc(height * width * bytes_per_channel * 3);
+	int count;
+	for (count = 0; count < height * width * 3; count = count + 3) {
+		temp[count] = (unsigned char)(Clamp(pixels->red, 0.0, 0.999) * 256);
+		temp[count+1] = (unsigned char)(Clamp(pixels->green, 0.0, 0.999) * 256);
+		temp[count+2] = (unsigned char)(Clamp(pixels->blue, 0.0, 0.999) * 256);
+		++pixels;
+	}
+	fwrite(temp, height * width * 3, bytes_per_channel, dest);
+	fflush(dest);
+	free(temp);
+}
 /* Rendering */
 
 void GetColor(color *c, float u, float v) {
