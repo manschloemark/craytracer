@@ -10,13 +10,9 @@
 #include <math.h>
 
 #include "argparse.h"
-
+#include "vector3.h"
 /* Data Types */
 
-struct Vector3 {
-	float x, y, z;
-};
-typedef struct Vector3 vec3;
 
 struct Color {
 	float red, green, blue;
