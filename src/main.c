@@ -9,6 +9,8 @@
 
 #include <math.h>
 
+#include "argparse.h"
+
 /* Data Types */
 
 struct Vector3 {
@@ -93,29 +95,23 @@ void Render(color *pixels, int height, int width, int bytes_per_channel) {
 }
 
 int main(int argc, char **argv) {
-	char *fname;
-	if (argc == 2) {
-		fname = argv[1];
-	} else {
-		/* maybe use something like this for auto file duplicates
-		int max_filename = 64;
-		char *fname = malloc(max_filename);
-		strncpy(fname, "test.ppm", max_filename);
-		GetUniqueFilename(fname); // NOTE : does nothing atm
-		*/
-		fname = "default_test.ppm";
-	}
-	int h = 480;
-	int w = 480;
+	struct arguments args = {};
+	argp_parse(&argp, argc, argv, 0, 0, &args);
+
 	int bytes_per_channel = sizeof(char);
 
 
-	FILE *ppm_file = MakePPMFile(fname, h, w);
+	FILE *ppm_file = MakePPMFile(
+				args.outfile,
+				args.image_height,
+				args.image_width
+				);
+
 	if (!ppm_file) return -1;
 
-	color *pixels = malloc(h * w * sizeof(color)); 
-	Render(pixels, h, w, bytes_per_channel);
-	WriteToPPM(pixels, h, w, bytes_per_channel, ppm_file);
+	color *pixels = malloc(args.image_height * args.image_width * sizeof(color)); 
+	Render(pixels, args.image_height, args.image_width, bytes_per_channel);
+	WriteToPPM(pixels, args.image_height, args.image_width, bytes_per_channel, ppm_file);
 
 	free(pixels);
 	fclose(ppm_file);
