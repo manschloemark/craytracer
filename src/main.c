@@ -26,6 +26,16 @@ static inline float Clamp(float n, float min, float max) {
 	return n;
 }
 
+static inline int Min(int a, int b) {
+	if (a > b) return b;
+	return a;
+}
+
+static inline int Max(int a, int b) {
+	if (a > b) return a;
+	return b;
+}
+
 /* File I/O */
 
 // TODO :: at some point it would be nice to make it so instead of overwriting
@@ -41,25 +51,34 @@ FILE *MakePPMFile(char *filename, int height, int width) {
 
 	char *header;
 	header = malloc(sizeof(char) * 64);
-	snprintf(header, 64, "P6 %i %i %i\n", height, width, 255);
+	snprintf(header, 64, "P6 %i %i %i\n", width, height, 255);
 	fputs(header, newfile);
 	fflush(newfile);
 	return newfile;
 }
 
 void WriteToPPM(color *pixels, int height, int width, int bytes_per_channel, FILE *dest) {
-	unsigned char *temp = malloc(height * width * bytes_per_channel * 3);
 	int count;
-	for (count = 0; count < height * width * 3; count = count + 3) {
-		temp[count] = (unsigned char)(Clamp(pixels->red, 0.0, 0.999) * 256);
-		temp[count+1] = (unsigned char)(Clamp(pixels->green, 0.0, 0.999) * 256);
-		temp[count+2] = (unsigned char)(Clamp(pixels->blue, 0.0, 0.999) * 256);
-		++pixels;
+	count = 0;
+	unsigned char p[3];
+	while (count < (height * width)) {
+		p[0] = (unsigned char)(Clamp(pixels[count].red, 0.0, 0.999) * 256);
+		p[1] = (unsigned char)(Clamp(pixels[count].green, 0.0, 0.999) * 256);
+		p[2] = (unsigned char)(Clamp(pixels[count].blue, 0.0, 0.999) * 256);
+		fwrite(p, 1, 3, dest);
+		++count;
 	}
-	fwrite(temp, height * width * 3, bytes_per_channel, dest);
-	fprintf(dest, "\n");
+	//unsigned char *temp = malloc(height * width * bytes_per_channel * 3);
+	//int count;
+	//for (count = 0; count < height * width * 3; count = count + 3) {
+	//	temp[count] = (unsigned char)(Clamp(pixels->red, 0.0, 0.999) * 256);
+	//	temp[count+1] = (unsigned char)(Clamp(pixels->green, 0.0, 0.999) * 256);
+	//	temp[count+2] = (unsigned char)(Clamp(pixels->blue, 0.0, 0.999) * 256);
+	//	++pixels;
+	//}
+	//fwrite(temp, height * width * 3, bytes_per_channel, dest);
 	fflush(dest);
-	free(temp);
+	//free(temp);
 }
 
 /* Rendering */
@@ -67,13 +86,13 @@ void WriteToPPM(color *pixels, int height, int width, int bytes_per_channel, FIL
 void GetColor(color *c, float u, float v) {
 	float r = sqrtf(u*u+v*v);
 	if (r < 0.16) {
-		c->red = 0.5;
-		c->green = 0.0;
-		c->blue = 1.0;
+		c->red = 1.0 * fabs(u);
+		c->green = 1.0 * fabs(u);
+		c->blue = 1.0 * fabs(v * u);
 	} else {
-		c->red = fabs(u*v);
-		c->green = fabs(u);
-		c->blue = fabs(v);
+		c->red = fmod(u, 0.1);
+		c->green = fmod(u, 0.05);
+		c->blue = sin(u*v);
 	}
 }
 
@@ -84,10 +103,14 @@ void PutColor(unsigned char *pixel, color *c) {
 void Render(color *pixels, int height, int width, int bytes_per_channel) {
 	int i, j;
 	float x, y;
+	int scale = Max(height, width);
 	for (j = 0; j < height; ++j) {
 		for (i = 0; i < width; ++i) {
 			x = -1.0 + (2.0*((float)i / (float)width));
-			y = -1.0 + (2.0*((float)j / (float)width));
+			y = -1.0 + (2.0*((float)j / (float)height));
+			x *= ((float)width / (float)scale);
+			y *= ((float)height / (float)scale);
+
 			GetColor(pixels, x, y); 
 			++pixels;
 		}
