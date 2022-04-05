@@ -11,13 +11,9 @@
 
 #include "argparse.h"
 #include "vector3.h"
+#include "color.h"
 /* Data Types */
 
-
-struct Color {
-	float red, green, blue;
-};
-typedef struct Color color;
 
 static inline float Clamp(float n, float min, float max) {
 	if (n < min) return min;
@@ -72,9 +68,9 @@ void WriteToPPM(color *pixels, int height, int width, int bytes_per_channel, FIL
 	unsigned char *temp = malloc(height * width * bytes_per_channel * 3);
 	int count;
 	for (count = 0; count < height * width * 3; count = count + 3) {
-		temp[count] = (unsigned char)(Clamp(pixels->red, 0.0, 0.999) * 256);
-		temp[count+1] = (unsigned char)(Clamp(pixels->green, 0.0, 0.999) * 256);
-		temp[count+2] = (unsigned char)(Clamp(pixels->blue, 0.0, 0.999) * 256);
+		temp[count] = (unsigned char)(Clamp(pixels->r, 0.0, 0.999) * 256);
+		temp[count+1] = (unsigned char)(Clamp(pixels->g, 0.0, 0.999) * 256);
+		temp[count+2] = (unsigned char)(Clamp(pixels->b, 0.0, 0.999) * 256);
 		++pixels;
 	}
 	fwrite(temp, height * width * 3, bytes_per_channel, dest);
@@ -86,13 +82,13 @@ void WriteToPPM(color *pixels, int height, int width, int bytes_per_channel, FIL
 void GetColor(color *c, float u, float v) {
 	float r = sqrtf(u*u+v*v);
 	if (r < 0.16) {
-		c->red = 1.0 * fabs(u);
-		c->green = 1.0 * fabs(u);
-		c->blue = 1.0 * fabs(v * u);
+		c->r = 1.0 * fabs(u);
+		c->g = 1.0 * fabs(u);
+		c->b = 1.0 * fabs(v * u);
 	} else {
-		c->red = fmod(u, 0.1);
-		c->green = fmod(u, 0.05);
-		c->blue = sin(u*v);
+		c->r = fmod(u, 0.1);
+		c->g = fmod(u, 0.05);
+		c->b = sin(u*v);
 	}
 }
 
