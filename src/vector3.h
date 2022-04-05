@@ -7,6 +7,7 @@ struct Vector3 {
 	float x, y, z;
 };
 typedef struct Vector3 vec3;
+typedef struct Vector3 point3;
 
 static inline vec3 vec3_new(float x, float y, float z) {
 	vec3 v;
