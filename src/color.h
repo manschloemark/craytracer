@@ -6,6 +6,11 @@ struct Color {
 };
 typedef struct Color color;
 
+#define COLOR_ADD(macro_dest, macro_color) \
+	(macro_dest).r += (macro_color).r; \
+  (macro_dest).g += (macro_color).g; \
+  (macro_dest).b += (macro_color).b;
+
 color color_new(float r, float g, float b) {
 	color c;
 	c.r = r;
