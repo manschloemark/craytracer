@@ -9,7 +9,7 @@ struct Ray {
 };
 typedef struct Ray ray;
 
-point3 ray_pt(struct ray *r, float t) {
+point3 ray_pt(ray *r, float t) {
 	return vec3_add(*r->pt, vec3_mul(*r->dir, t));
 }
 

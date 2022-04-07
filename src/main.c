@@ -69,22 +69,39 @@ void WriteToPPM(color *pixels, int height, int width, int bytes_per_channel, FIL
 }
 /* Rendering */
 
+
 color TraceRay(ray *r) {
-	return color_new(0.0, 0.5, 0.0);
+	color bgcolor = color_new(0.24, 0.33, 1.0);
+	// Equation to check sphere intersection
+	color sphere_color = color_new(0.66, 0.2, 0.15);
+	point3 sphere_center = vec3_new(-25.0, 0.0, 5.0);
+	float radius = 3.0;
+
+	vec3 T = vec3_sub(*r->pt, sphere_center);
+	float a = vec3_dot(*r->dir, *r->dir);
+	float b = 2.0 * vec3_dot(T, *r->dir);
+	float c = vec3_dot(T, T) - radius*radius; 
+
+	float discriminant = b*b - 4.0*a*c;
+
+	if (discriminant > 0.0) {
+		return sphere_color;
+	}
+	return bgcolor;
 }
 
-void Render(color *pixels, int height, int width, point3 origin, point3 vp, vec3 y, vec3 z) {
+void Render(color *pixels, int height, int width, point3 origin, point3 vp_corner, vec3 horizontal, vec3 vertical) {
 	int i, j;
-	int scale = Max(height, width);
-	for (j = 0; j < height; ++j) {
+	for (j = height-1; j >= 0; --j) {
 		for (i = 0; i < width; ++i) {
 			float u = (float)i / (float)(width-1);
 			float v = (float)j / (float)(height-1);
 
-			vec3 d = vec3_sub(vec3_add(vec3_add(vp, vec3_mul(y, u)), vec3_mul(z, v)), origin);
-
+			vec3 d = vec3_sub(vec3_add(vec3_add(vp_corner, vec3_mul(horizontal, u)), vec3_mul(vertical, v)), origin);
 			ray r = {&origin, &d};
-			*pixels++ = TraceRay(&r); 
+			color sample = {0.0, 0.0, 0.0};
+			COLOR_ADD(*pixels, TraceRay(&r)); 
+			++pixels;
 		}
 	}
 }
@@ -102,14 +119,22 @@ int main(int argc, char **argv) {
 
 	if (!ppm_file) return -1;
 
-	// TODO : impelement vector math and whatever
+	float aspect_ratio = (float)args.image_width / (float)args.image_height;
+
+	float vp_height = 2.0;
+	float vp_width = vp_height * aspect_ratio;
+	float focal_length = 1.0;
+
+	point3 origin = {0.0, 0.0, 0.0};
+	vec3 vertical = {0.0, 0.0, vp_height};
+	vec3 horizontal = {0.0, vp_width, 0.0};
+	vec3 vp_corner = vec3_sub(vec3_sub(vec3_sub(origin, vec3_div(horizontal, 2.0)), vec3_div(vertical, 2.0)), vec3_new(focal_length, 0.0, 0.0));
 
 	color *pixels = malloc(args.image_height * args.image_width * sizeof(color)); 
-	Render(pixels, args.image_height, args.image_width, bytes_per_channel);
+	Render(pixels, args.image_height, args.image_width, origin, vp_corner, horizontal, vertical);
 	WriteToPPM(pixels, args.image_height, args.image_width, bytes_per_channel, ppm_file);
-
-	free(pixels);
 	fclose(ppm_file);
+	free(pixels);
 
 	return 0;
 }
