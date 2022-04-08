@@ -13,6 +13,8 @@
 #include "vector3.h"
 #include "color.h"
 #include "ray.h"
+
+#include "objects.h"
 /* Data Types */
 
 
@@ -74,17 +76,12 @@ color TraceRay(ray *r) {
 	color bgcolor = color_new(0.24, 0.33, 1.0);
 	// Equation to check sphere intersection
 	color sphere_color = color_new(0.66, 0.2, 0.15);
-	point3 sphere_center = vec3_new(-25.0, 0.0, 5.0);
-	float radius = 3.0;
 
-	vec3 T = vec3_sub(*r->pt, sphere_center);
-	float a = vec3_dot(*r->dir, *r->dir);
-	float b = 2.0 * vec3_dot(T, *r->dir);
-	float c = vec3_dot(T, T) - radius*radius; 
+	sphere sp = {};
+	sp.center = vec3_new(-10.0, 0.0, 0.0);
+	sp.radius = 1.0;
 
-	float discriminant = b*b - 4.0*a*c;
-
-	if (discriminant > 0.0) {
+	if (IntersectSphere(&sp, r) > 0) {
 		return sphere_color;
 	}
 	return bgcolor;
