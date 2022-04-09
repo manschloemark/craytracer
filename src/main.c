@@ -78,16 +78,15 @@ fcolor TraceRay(ray *r, scene *scene) {
 	object *object_hit = NULL;
 	float min_t = 1023021312;
 	while(c < scene->object_count) {
-		int t = Intersect(&scene->objects[c], r);
+		int t = Intersect(scene->objects[c], r);
 		if (t < min_t && t > 0.0) {
 			min_t = t;
-			object_hit = &scene->objects[c];
+			object_hit = scene->objects[c];
 		}
 		++c;
 	}
 	if (min_t > 0.0 && object_hit) {
-		printf("Got a hit: object addr %p. (base add %p) \n", object_hit, scene->objects);
-		return scene->objects[c].color;
+		return object_hit->color;
 	}
 	return fcolor_new(0.24, 0.55, 0.65);
 }

@@ -6,17 +6,18 @@
 #include "objects.h"
 
 typedef struct {
-	object *objects;
+	object **objects;
 	int object_count;
 } scene;
 
 scene TestScene() {
 	int object_count = 10;
-	object *object_list = (object *)malloc(sizeof(object) * object_count);
+	object **object_list = (object **)malloc(sizeof(object *) * object_count);
 
 	int i;
 	for(i = 0; i < 10; ++i) {
-		object o = make_sphere(vec3_new(-5.0 - i, i % 3, i), 0.8, fcolor_new((float)i / 10.0, (float)i/10.0, (float)i/10.0));
+		object *o = (object *)malloc(sizeof(object));
+		*o = make_sphere(vec3_new(-5.0 - i, i % 3, i), 0.8, fcolor_new(0.8, (float)i/10.0, (float)i/10.0));
 		object_list[i] = o;
 	}
 	scene scene = {};
@@ -26,6 +27,10 @@ scene TestScene() {
 }
 
 void FreeScene(scene *scene) {
+	int i = 0;
+	while(i < scene->object_count) {
+		free(scene->objects[i++]);
+	}
 	free(scene->objects);
 }
 
