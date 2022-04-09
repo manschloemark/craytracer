@@ -15,6 +15,7 @@
 #include "ray.h"
 
 #include "objects.h"
+#include "scene.h"
 /* Data Types */
 
 
@@ -72,16 +73,26 @@ void WriteToPPM(fcolor *pixels, int height, int width, int bytes_per_channel, FI
 /* Rendering */
 
 
-fcolor TraceRay(ray *r) {
-	object sp = make_sphere(vec3_new(-10.0, 0.0, 0.0), 1.0, fcolor_new(1.0, 0.0, 0.0));
-
-	if ((Intersect)(&sp, r) > 0) {
-		return sp.color;
+fcolor TraceRay(ray *r, scene *scene) {
+	int c = 0;
+	object *object_hit = NULL;
+	float min_t = 1023021312;
+	while(c < scene->object_count) {
+		int t = Intersect(&scene->objects[c], r);
+		if (t < min_t && t > 0.0) {
+			min_t = t;
+			object_hit = &scene->objects[c];
+		}
+		++c;
+	}
+	if (min_t > 0.0 && object_hit) {
+		printf("Got a hit: object addr %p. (base add %p) \n", object_hit, scene->objects);
+		return scene->objects[c].color;
 	}
 	return fcolor_new(0.24, 0.55, 0.65);
 }
 
-void Render(fcolor *pixels, int height, int width, point3 origin, point3 vp_corner, vec3 horizontal, vec3 vertical) {
+void Render(fcolor *pixels, int height, int width, point3 origin, point3 vp_corner, vec3 horizontal, vec3 vertical, scene *s) {
 	int i, j;
 	for (j = height-1; j >= 0; --j) {
 		for (i = 0; i < width; ++i) {
@@ -91,7 +102,7 @@ void Render(fcolor *pixels, int height, int width, point3 origin, point3 vp_corn
 			vec3 d = vec3_sub(vec3_add(vec3_add(vp_corner, vec3_mul(horizontal, u)), vec3_mul(vertical, v)), origin);
 			ray r = {&origin, &d};
 			fcolor sample = {0.0, 0.0, 0.0};
-			COLOR_ADD(*pixels, TraceRay(&r)); 
+			COLOR_ADD(*pixels, TraceRay(&r, s)); 
 			++pixels;
 		}
 	}
@@ -121,11 +132,16 @@ int main(int argc, char **argv) {
 	vec3 horizontal = {0.0, vp_width, 0.0};
 	vec3 vp_corner = vec3_sub(vec3_sub(vec3_sub(origin, vec3_div(horizontal, 2.0)), vec3_div(vertical, 2.0)), vec3_new(focal_length, 0.0, 0.0));
 
+	scene s = TestScene();
 	fcolor *pixels = malloc(args.image_height * args.image_width * sizeof(fcolor)); 
-	Render(pixels, args.image_height, args.image_width, origin, vp_corner, horizontal, vertical);
+
+	Render(pixels, args.image_height, args.image_width, origin, vp_corner, horizontal, vertical, &s);
+
 	WriteToPPM(pixels, args.image_height, args.image_width, bytes_per_channel, ppm_file);
 	fclose(ppm_file);
+
 	free(pixels);
+	FreeScene(&s);
 
 	return 0;
 }

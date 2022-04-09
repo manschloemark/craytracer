@@ -1,7 +1,6 @@
 #ifndef OBJECTS_H
 #define OBJECTS_H
 
-#endif
 
 #include "vector3.h"
 #include "ray.h"
@@ -71,3 +70,4 @@ float Intersect(object *obj, ray *r) {
 	}
 }
 
+#endif
