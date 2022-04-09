@@ -42,19 +42,21 @@ union Shape {
 	triangle *triangle;
 };
 
+union shape {
+	sphere sphere;
+	triangle triangle;
+};
+
 typedef struct {
 	enum ShapeID id;
-	union {
-		sphere sphere;
-		triangle triangle;
-	};
 	fcolor color;
+	union shape shape;
 } object;
 
 object make_sphere(point3 center, float r, fcolor color) {
 	object o;
 	o.id = Sphere;
-	o.sphere = sphere_new(center, r);
+	o.shape.sphere = sphere_new(center, r);
 	o.color = color;
 	return o;
 }
@@ -62,7 +64,7 @@ object make_sphere(point3 center, float r, fcolor color) {
 float Intersect(object *obj, ray *r) {
 	switch (obj->id) {
 		case Sphere:
-			return IntersectSphere(&obj->sphere, r);
+			return IntersectSphere(&obj->shape.sphere, r);
 			break;
 		case Triangle:
 		default:
