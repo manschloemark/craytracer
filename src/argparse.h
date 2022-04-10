@@ -27,6 +27,7 @@ static struct argp_option options[] = {
 	{"verbose", 'v', 0, 0, "Verbose output. Prints extra info while rendering.", 3},
 	// TODO :: implement proper logging capability.
 	// {"logfile",         'l', 0, 0, "The file to which log messages will be sent", 2},
+	{"seed", 's', "SEED", 0, "Seed to pass to stdlib.h srand()"},
 	{0} // This needs to be here to argp knows where the options list ends.
 };
 
@@ -36,6 +37,7 @@ struct arguments {
 	int image_width, image_height;
 	//int samples_per_pixel, max_depth, num_threads;
 	int verbose;
+	unsigned int seed;
 };
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
@@ -71,6 +73,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	*/
 	case 'v':
 		args->verbose = 1;
+		break;
+	case 's':
+		args->seed = (unsigned int)atoi(arg);
 		break;
 	default:
 		return ARGP_ERR_UNKNOWN;

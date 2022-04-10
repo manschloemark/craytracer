@@ -109,7 +109,12 @@ void Render(fcolor *pixels, int height, int width, point3 origin, point3 vp_corn
 
 int main(int argc, char **argv) {
 	struct arguments args = {};
+	args.seed = 0;
 	argp_parse(&argp, argc, argv, 0, 0, &args);
+
+	if (args.seed) {
+		srand(args.seed);
+	}
 
 	int bytes_per_channel = sizeof(char);
 	FILE *ppm_file = MakePPMFile(
