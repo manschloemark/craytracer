@@ -10,14 +10,14 @@
 #include <math.h>
 
 #include "argparse.h"
-#include "vector3.h"
+#include "common.h"
 #include "color.h"
 #include "ray.h"
 
 #include "objects.h"
 #include "scene.h"
-/* Data Types */
 
+/* Data Types */
 
 static inline float Clamp(float n, float min, float max) {
 	if (n < min) return min;
