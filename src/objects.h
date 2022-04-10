@@ -26,7 +26,12 @@ float IntersectSphere(sphere *s, ray *r) {
 
 	float discriminant = b*b - 4.0*a*c;
 
-	return discriminant;
+	if (discriminant < 0.0) {
+		return discriminant;
+	}
+
+	return (-b - sqrt(discriminant)) / (2.0 * a);
+
 }
 
 typedef struct {
@@ -69,6 +74,17 @@ float Intersect(object *obj, ray *r) {
 		case Triangle:
 		default:
 			return -1.0;
+	}
+}
+
+vec3 Normal(object *obj, point3 intersection) {
+	switch (obj->id) {
+		case Sphere:
+			return vec3_unit(vec3_sub(intersection, obj->shape.sphere.center)); // NOTE : IDK if I need to move this to another function or not. Seems simple as is.
+			break;
+		case Triangle:
+		default:
+			return intersection;
 	}
 }
 

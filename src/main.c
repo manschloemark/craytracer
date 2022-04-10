@@ -86,7 +86,8 @@ fcolor TraceRay(ray *r, scene *scene) {
 		++c;
 	}
 	if (min_t > 0.0 && object_hit) {
-		return object_hit->color;
+		vec3 n = Normal(object_hit, pt_on_ray(r, min_t));
+		return color_mul(fcolor_new(n.x + 1.0, n.y + 1.0, n.z + 1.0), 0.5);
 	}
 	return fcolor_new(0.24, 0.55, 0.65);
 }
@@ -98,8 +99,7 @@ void Render(fcolor *pixels, int height, int width, point3 origin, point3 vp_corn
 			float u = (float)i / (float)(width-1);
 			float v = (float)j / (float)(height-1);
 
-			vec3 d = vec3_sub(vec3_add(vec3_add(vp_corner, vec3_mul(horizontal, u)), vec3_mul(vertical, v)), origin);
-			ray r = {&origin, &d};
+			vec3 d = vec3_sub(vec3_add(vec3_add(vp_corner, vec3_mul(horizontal, u)), vec3_mul(vertical, v)), origin); ray r = {&origin, &d};
 			fcolor sample = {0.0, 0.0, 0.0};
 			COLOR_ADD(*pixels, TraceRay(&r, s)); 
 			++pixels;
