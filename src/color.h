@@ -12,7 +12,7 @@ typedef struct Color fcolor;
   (macro_dest).b += (macro_color).b;
 
 fcolor fcolor_new(float r, float g, float b) {
-	fcolor c;
+	fcolor c = {};
 	c.r = r;
 	c.g = g;
 	c.b = b;
@@ -20,6 +20,15 @@ fcolor fcolor_new(float r, float g, float b) {
 }
 
 // Returns a new color that is f% color b and the rest color a.
+
+fcolor color_mul(fcolor a, float f) {
+	fcolor c = {};
+	c.r = a.r*f;
+	c.g = a.g*f;
+	c.b = a.b*f;
+	return c;
+}
+
 fcolor color_mix(fcolor a, fcolor b, float f) {
 	fcolor c = {};
 	c.r = (1.0 - f) * a.r + f * b.r;
