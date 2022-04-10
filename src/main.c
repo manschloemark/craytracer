@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
 	vec3 horizontal = {0.0, vp_width, 0.0};
 	vec3 vp_corner = vec3_sub(vec3_sub(vec3_sub(origin, vec3_div(horizontal, 2.0)), vec3_div(vertical, 2.0)), vec3_new(focal_length, 0.0, 0.0));
 
-	scene s = TestScene();
+	scene s = TestScene3();
 	fcolor *pixels = malloc(args.image_height * args.image_width * sizeof(fcolor)); 
 
 	Render(pixels, args.image_height, args.image_width, origin, vp_corner, horizontal, vertical, &s);
