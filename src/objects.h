@@ -70,7 +70,6 @@ float Intersect(object *obj, ray *r) {
 	switch (obj->id) {
 		case Sphere:
 			return IntersectSphere(&obj->shape.sphere, r);
-			break;
 		case Triangle:
 		default:
 			return -1.0;
@@ -81,7 +80,6 @@ vec3 Normal(object *obj, point3 intersection) {
 	switch (obj->id) {
 		case Sphere:
 			return vec3_unit(vec3_sub(intersection, obj->shape.sphere.center)); // NOTE : IDK if I need to move this to another function or not. Seems simple as is.
-			break;
 		case Triangle:
 		default:
 			return intersection;
