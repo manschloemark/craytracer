@@ -20,17 +20,17 @@ sphere sphere_new(vec3 center, float radius) {
 
 float IntersectSphere(sphere *s, ray *r) {
 	vec3 T = vec3_sub(*r->pt, s->center);
-	float a = vec3_dot(*r->dir, *r->dir);
-	float b = 2.0 * vec3_dot(T, *r->dir);
-	float c = vec3_dot(T, T) - s->radius*s->radius; 
+	float a = vec3_lensq(*r->dir);
+	float half_b = vec3_dot(T, *r->dir);
+	float c = vec3_lensq(T) - s->radius*s->radius; 
 
-	float discriminant = b*b - 4.0*a*c;
+	float discriminant = half_b*half_b - a*c;
 
 	if (discriminant < 0.0) {
-		return discriminant;
+		return -1.0;
 	}
 
-	return (-b - sqrt(discriminant)) / (2.0 * a);
+	return (-half_b - sqrt(discriminant)) / a;
 
 }
 
