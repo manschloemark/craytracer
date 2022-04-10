@@ -1,7 +1,7 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "vector3.h"
+#include "common.h"
 #include "color.h"
 #include "objects.h"
 
@@ -15,9 +15,9 @@ scene TestScene() {
 	object **object_list = (object **)malloc(sizeof(object *) * object_count);
 
 	int i;
-	for(i = 0; i < 10; ++i) {
+	for(i = 0; i < object_count; ++i) {
 		object *o = (object *)malloc(sizeof(object));
-		*o = make_sphere(vec3_new(-5.0 - i, i % 3, i), 0.8, fcolor_new(0.8, (float)i/10.0, (float)i/10.0));
+		*o = make_sphere(vec3_new(-random_float_between(2.0, 20.0), random_float_between(-(float)i, (float)i), random_float_between(-10.0, 10.0)), random_float() * 2.0, fcolor_new(random_float(), random_float(), random_float()));
 		object_list[i] = o;
 	}
 	scene scene = {};
