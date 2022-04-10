@@ -19,7 +19,7 @@ static struct argp_option options[] = {
 	// TODO :: specify scene files insead of hardcoded functions
 	//{"scene", 's', "SCENE", 0, "Which scene to generate -- SCENE is an integer used in a switch statement.", 1},
 	// Performance related
-	//{"num-samples", 'n', "N_SAMPLES", 0, "Take a sample from each pixel N_SAMPLES times", 2},
+	{"num-samples", 'n', "N_SAMPLES", 0, "Take a sample from each pixel N_SAMPLES times", 2},
 	//{"max-depth", 'd', "MAX_DEPTH", 0, "MAX_DEPTH is the number of times a ray can be reflected.", 2},
 	//{"num-threads", 't', "N_THREADS", 0, "Create N_THREADS threads to render the image in parallel. Default is estimated number of cores.", 2},
 	// TODO :: should this be a runtime flag or a compile time flag? 
@@ -35,7 +35,7 @@ struct arguments {
 	//int scene;
 	char *outfile;
 	int image_width, image_height;
-	//int samples_per_pixel, max_depth, num_threads;
+	int samples_per_pixel, max_depth, num_threads;
 	int verbose;
 	unsigned int seed;
 };
@@ -60,10 +60,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	case 'h':
 		args->image_height = atoi(arg);
 		break;
-	/*
 	case 'n':
 		args->samples_per_pixel = atoi(arg);
 		break;
+	/*
 	case 'd':
 		args->max_depth = atoi(arg);
 		break;

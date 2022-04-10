@@ -57,22 +57,24 @@ FILE *MakePPMFile(char *filename, int height, int width) {
 }
 
 
-void WriteToPPM(fcolor *pixels, int height, int width, int bytes_per_channel, FILE *dest) {
+void WriteToPPM(fcolor *pixels, int samples, int height, int width, int bytes_per_channel, FILE *dest) {
 	unsigned char *temp = malloc(height * width * bytes_per_channel * 3);
 	int count;
 	for (count = 0; count < height * width * 3; count = count + 3) {
-		temp[count] = (unsigned char)(Clamp(pixels->r, 0.0, 0.999) * 256);
-		temp[count+1] = (unsigned char)(Clamp(pixels->g, 0.0, 0.999) * 256);
-		temp[count+2] = (unsigned char)(Clamp(pixels->b, 0.0, 0.999) * 256);
+		float r = pixels->r / samples;
+		float g = pixels->g / samples;
+		float b = pixels->b / samples;
+		temp[count] = (unsigned char)(Clamp(r, 0.0, 0.999) * 256);
+		temp[count+1] = (unsigned char)(Clamp(g, 0.0, 0.999) * 256);
+		temp[count+2] = (unsigned char)(Clamp(b, 0.0, 0.999) * 256);
 		++pixels;
 	}
 	fwrite(temp, height * width * 3, bytes_per_channel, dest);
 	fflush(dest);
 	free(temp);
 }
+
 /* Rendering */
-
-
 fcolor TraceRay(ray *r, scene *scene) {
 	int c = 0;
 	object *object_hit = NULL;
@@ -92,16 +94,19 @@ fcolor TraceRay(ray *r, scene *scene) {
 	return fcolor_new(0.24, 0.55, 0.65);
 }
 
-void Render(fcolor *pixels, int height, int width, point3 origin, point3 vp_corner, vec3 horizontal, vec3 vertical, scene *s) {
+void Render(fcolor *pixels, int samples, int height, int width, point3 origin, point3 vp_corner, vec3 horizontal, vec3 vertical, scene *scene) {
 	int i, j;
 	for (j = height-1; j >= 0; --j) {
 		for (i = 0; i < width; ++i) {
-			float u = (float)i / (float)(width-1);
-			float v = (float)j / (float)(height-1);
+			int s;
+			for (s = 0; s < samples; ++s) {
+				float u = ((float)i + random_float()) / (float)(width-1);
+				float v = ((float)j + random_float()) / (float)(height-1);
 
-			vec3 d = vec3_sub(vec3_add(vec3_add(vp_corner, vec3_mul(horizontal, u)), vec3_mul(vertical, v)), origin); ray r = {&origin, &d};
-			fcolor sample = {0.0, 0.0, 0.0};
-			COLOR_ADD(*pixels, TraceRay(&r, s)); 
+				vec3 d = vec3_sub(vec3_add(vec3_add(vp_corner, vec3_mul(horizontal, u)), vec3_mul(vertical, v)), origin); ray r = {&origin, &d};
+				fcolor sample = {0.0, 0.0, 0.0};
+				COLOR_ADD(*pixels, TraceRay(&r, scene)); 
+			}
 			++pixels;
 		}
 	}
@@ -109,11 +114,23 @@ void Render(fcolor *pixels, int height, int width, point3 origin, point3 vp_corn
 
 int main(int argc, char **argv) {
 	struct arguments args = {};
+	// Set default arguments in case they are not given
+	args.samples_per_pixel = 10;
+	args.image_width = 720;
+	args.image_height = 0;
 	args.seed = 0;
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 
 	if (args.seed) {
 		srand(args.seed);
+	}
+
+	float aspect_ratio;
+	if (args.image_height) {
+		aspect_ratio = (float)args.image_width / (float)args.image_height;
+	} else {
+		aspect_ratio = 16.0 / 9.0;
+		args.image_height = args.image_width / aspect_ratio;
 	}
 
 	int bytes_per_channel = sizeof(char);
@@ -123,9 +140,11 @@ int main(int argc, char **argv) {
 				args.image_width
 				);
 
-	if (!ppm_file) return -1;
+	if (!ppm_file) {
+		puts("Could not open given file name.");
+		return -1;
+	}
 
-	float aspect_ratio = (float)args.image_width / (float)args.image_height;
 
 	float vp_height = 2.0;
 	float vp_width = vp_height * aspect_ratio;
@@ -139,9 +158,9 @@ int main(int argc, char **argv) {
 	scene s = TestScene3();
 	fcolor *pixels = malloc(args.image_height * args.image_width * sizeof(fcolor)); 
 
-	Render(pixels, args.image_height, args.image_width, origin, vp_corner, horizontal, vertical, &s);
+	Render(pixels, args.samples_per_pixel, args.image_height, args.image_width, origin, vp_corner, horizontal, vertical, &s);
 
-	WriteToPPM(pixels, args.image_height, args.image_width, bytes_per_channel, ppm_file);
+	WriteToPPM(pixels, args.samples_per_pixel, args.image_height, args.image_width, bytes_per_channel, ppm_file);
 	fclose(ppm_file);
 
 	free(pixels);
