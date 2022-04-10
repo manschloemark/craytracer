@@ -16,8 +16,11 @@ scene TestScene() {
 
 	int i;
 	for(i = 0; i < object_count; ++i) {
+		float obj_color = (float)i / (float)object_count;
 		object *o = (object *)malloc(sizeof(object));
-		*o = make_sphere(vec3_new(-random_float_between(2.0, 20.0), random_float_between(-(float)i, (float)i), random_float_between(-10.0, 10.0)), random_float() * 2.0, fcolor_new(random_float(), random_float(), random_float()));
+		*o = make_sphere(vec3_new(-random_float_between(2.0, 20.0), random_float_between(-(float)i, (float)i), random_float_between(-10.0, 10.0)),
+											random_float() * 2.0,
+											fcolor_new(obj_color, obj_color, obj_color));
 		object_list[i] = o;
 	}
 	scene scene = {};
