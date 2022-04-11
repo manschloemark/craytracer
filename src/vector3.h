@@ -18,21 +18,21 @@ static inline vec3 vec3_new(float x, float y, float z) {
 }
 
 // Vector/Vector operations
-vec3 vec3_add(vec3 a, vec3 b) {
+static inline vec3 vec3_add(vec3 a, vec3 b) {
 	vec3 v = {a.x+b.x, a.y+b.y, a.z+b.z};
 	return v;
 }
 
-vec3 vec3_sub(vec3 a, vec3 b) {
+static inline vec3 vec3_sub(vec3 a, vec3 b) {
 	vec3 v = {a.x-b.x, a.y-b.y, a.z-b.z};
 	return v;
 }
 
-float vec3_dot(vec3 a, vec3 b) {
+static inline float vec3_dot(vec3 a, vec3 b) {
 	return a.x*b.x + a.y*b.y + a.z*b.z;
 }
 
-vec3 vec3_cross(vec3 a, vec3 b) {
+static inline vec3 vec3_cross(vec3 a, vec3 b) {
 	vec3 v;
 	v.x = a.y*b.z - a.z*b.y;   // i
 	v.y = (a.z*b.x - a.x*b.z); // -j
@@ -41,18 +41,18 @@ vec3 vec3_cross(vec3 a, vec3 b) {
 }
 
 // Vector/Scalar operations
-vec3 vec3_mul(vec3 a, float s) {
+static inline vec3 vec3_mul(vec3 a, float s) {
 	vec3 v = {a.x*s, a.y*s, a.z*s};
 	return v;
 }
 
-vec3 vec3_div(vec3 a, float s) {
+static inline vec3 vec3_div(vec3 a, float s) {
 	vec3 v = {a.x/s, a.y/s, a.z/s};
 	return v;
 }
 
 // Vector functions
-float vec3_lensq(vec3 a) {
+static inline float vec3_lensq(vec3 a) {
 	return a.x*a.x + a.y*a.y + a.z*a.z;
 }
 
@@ -60,7 +60,7 @@ float vec3_len(vec3 a) {
 	return sqrtf(vec3_lensq(a));
 }
 
-vec3 vec3_neg(vec3 a) {
+static inline vec3 vec3_neg(vec3 a) {
 	vec3 v = {-a.x, -a.y, -a.z};
 	return v;
 }

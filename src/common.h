@@ -4,7 +4,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-float random_float() {
+static inline float random_float() {
 	return (float)rand() / (RAND_MAX + 1.0);
 }
 
