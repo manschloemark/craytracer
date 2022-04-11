@@ -78,7 +78,7 @@ void WriteToPPM(fcolor *pixels, int samples, int height, int width, int bytes_pe
 fcolor TraceRay(ray *r, scene *scene) {
 	int c = 0;
 	object *object_hit = NULL;
-	float min_t = 1023021312;
+	float min_t = 1023021312.0;
 	while(c < scene->object_count) {
 		float t = Intersect(scene->objects[c], r);
 		if (t < min_t && t > 0.0) {

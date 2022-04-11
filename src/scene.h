@@ -55,7 +55,6 @@ scene TestScene3() {
 	return scene;
 }
 
-
 void FreeScene(scene *scene) {
 	int i = 0;
 	while(i < scene->object_count) {
