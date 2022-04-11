@@ -80,7 +80,7 @@ fcolor TraceRay(ray *r, scene *scene) {
 	object *object_hit = NULL;
 	float min_t = 1023021312;
 	while(c < scene->object_count) {
-		int t = Intersect(scene->objects[c], r);
+		float t = Intersect(scene->objects[c], r);
 		if (t < min_t && t > 0.0) {
 			min_t = t;
 			object_hit = scene->objects[c];
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
 	vec3 horizontal = {0.0, vp_width, 0.0};
 	vec3 vp_corner = vec3_sub(vec3_sub(vec3_sub(origin, vec3_div(horizontal, 2.0)), vec3_div(vertical, 2.0)), vec3_new(focal_length, 0.0, 0.0));
 
-	scene s = TestScene3();
+	scene s = TestScene();
 	fcolor *pixels = malloc(args.image_height * args.image_width * sizeof(fcolor)); 
 
 	Render(pixels, args.samples_per_pixel, args.image_height, args.image_width, origin, vp_corner, horizontal, vertical, &s);
