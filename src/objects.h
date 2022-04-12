@@ -35,16 +35,49 @@ float IntersectSphere(sphere *s, ray *r) {
 }
 
 typedef struct {
-	point3 x, y, z;
+	point3 a, b, c;
 } triangle;
+
+triangle triangle_new(point3 x, point3 y, point3 z) {
+	triangle t = {};
+	t.a = x;
+	t.b = y;
+	t.c = z;
+	return t;
+}
+
+float IntersectTriangle(triangle *tri, ray *r ){
+	vec3 BA = vec3_sub(tri->b, tri->a);
+	vec3 CA = vec3_sub(tri->c, tri->a);
+
+	vec3 dir_cross_CA = vec3_cross(*r->dir, CA);
+	float determinant = vec3_dot(BA, dir_cross_CA);
+
+	// TODO : change this small value to a variable
+	if (fabs(determinant) < 0.0001) return -1.0;
+
+	float inv_determinant = 1.0 / determinant;
+
+	vec3 dirA = vec3_sub(*r->dir, tri->a);
+
+	float u = vec3_dot(dirA, dir_cross_CA) * inv_determinant;
+
+	if (u < 0.0 || u > 1.0) return -1.0;
+
+	vec3 dirA_cross_BA = vec3_cross(dirA, BA);
+	float v = vec3_dot(*r->dir, dirA_cross_BA) * inv_determinant;
+
+	if (v < 0.0 || u + v > 1.0) return -1.0;
+
+	float t = vec3_dot(CA, dirA_cross_BA) * inv_determinant;
+
+	// NOTE : u and v are the uv coordinates. I don't need them yet but that'll be useful.
+
+	return t;
+}
 
 enum ShapeID {
 	Sphere, Triangle
-};
-
-union Shape {
-	sphere *sphere;
-	triangle *triangle;
 };
 
 union shape {
@@ -53,9 +86,9 @@ union shape {
 };
 
 typedef struct {
-	enum ShapeID id;
-	fcolor color;
 	union shape shape;
+	fcolor color;
+	enum ShapeID id;
 } object;
 
 object make_sphere(point3 center, float r, fcolor color) {
@@ -66,11 +99,19 @@ object make_sphere(point3 center, float r, fcolor color) {
 	return o;
 }
 
+object make_triangle(point3 a, point3 b, point3 c, fcolor color) {
+	object o;
+	o.id = Triangle;
+	o.shape.triangle = triangle_new(a, b, c);
+	o.color = color;
+	return o;
+}
 float Intersect(object *obj, ray *r) {
 	switch (obj->id) {
 		case Sphere:
 			return IntersectSphere(&obj->shape.sphere, r);
 		case Triangle:
+			return IntersectTriangle(&obj->shape.triangle, r);
 		default:
 			return -1.0;
 	}
@@ -81,6 +122,8 @@ vec3 Normal(object *obj, point3 intersection) {
 		case Sphere:
 			return vec3_unit(vec3_sub(intersection, obj->shape.sphere.center)); // NOTE : IDK if I need to move this to another function or not. Seems simple as is.
 		case Triangle:
+			// NOTE : This is not at all correct but it's close enough for now
+			return vec3_cross(obj->shape.triangle.a, obj->shape.triangle.b);
 		default:
 			return intersection;
 	}

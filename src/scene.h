@@ -55,6 +55,18 @@ scene TestScene3() {
 	return scene;
 }
 
+scene TestTriangle() {
+	object **object_list = (object **)malloc(sizeof(object *));
+	object *o = (object *)malloc(sizeof(object));
+	*o = make_triangle(vec3_new(-2.0, 0.0, -1.0), vec3_new(-2.0, 0.0, 1.0), vec3_new(-2.0, 2.0, 0.0), fcolor_new(1.0, 0.0, 0.0));
+	object_list[0] = o;
+	scene scene = {};
+	scene.objects = object_list;
+	scene.object_count = 1;
+	return scene;
+
+}
+
 void FreeScene(scene *scene) {
 	int i = 0;
 	while(i < scene->object_count) {
