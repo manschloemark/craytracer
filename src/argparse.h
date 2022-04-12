@@ -28,6 +28,7 @@ static struct argp_option options[] = {
 	// TODO :: implement proper logging capability.
 	// {"logfile",         'l', 0, 0, "The file to which log messages will be sent", 2},
 	{"seed", 's', "SEED", 0, "Seed to pass to stdlib.h srand()"},
+	{"debug-scene", 'd', "DEBUG", 0, "1 = use DebugScene which should have an intersection at pixel 0, 0"},
 	{0} // This needs to be here to argp knows where the options list ends.
 };
 
@@ -38,6 +39,7 @@ struct arguments {
 	int samples_per_pixel, max_depth, num_threads;
 	int verbose;
 	unsigned int seed;
+	int debug_scene;
 };
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
@@ -76,6 +78,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 		break;
 	case 's':
 		args->seed = (unsigned int)atoi(arg);
+		break;
+	case 'd':
+		args->debug_scene = 1;
 		break;
 	default:
 		return ARGP_ERR_UNKNOWN;

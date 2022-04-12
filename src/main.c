@@ -74,25 +74,29 @@ void WriteToPPM(fcolor *pixels, int samples, int height, int width, int bytes_pe
 
 /* Rendering */
 fcolor TraceRay(ray *r, scene *scene) {
+	struct hit_record hitrec = {};
+	hitrec.t_min = 0.0;
+	hitrec.t = 123123902.0; // TODO : make some const to use for this instead
 	int c = 0;
+
+	// Find first object hit by ray
 	object *object_hit = NULL;
-	float min_t = 1023021312.0;
 	while(c < scene->object_count) {
-		float t = Intersect(scene->objects[c], r);
-		if (t < min_t && t > 0.0) {
-			min_t = t;
+		int hit = Intersect(scene->objects[c], r, &hitrec);
+		if (hit) {
 			object_hit = scene->objects[c];
 		}
 		++c;
 	}
-	if (min_t > 0.0 && object_hit) {
-		vec3 n = Normal(object_hit, pt_on_ray(r, min_t));
-		if(object_hit->id == Sphere) {
-			return color_mul(fcolor_new(n.x + 1.0, n.y + 1.0, n.z + 1.0), 0.5);
-		}
-		return object_hit->color;
+
+	// Determine the color the ray would be 'carrying'
+	// Currently this is just based on the normal and it's hard-coded.
+	// TODO : add properties to objects that can be called on to determine the color instead.
+	if (object_hit) {
+		vec3 n = hitrec.n;
+		return color_mul(fcolor_new(n.x + 1.0, n.y + 1.0, n.z + 1.0), 0.5);
 	}
-	return fcolor_new(0.24, 0.55, 0.65);
+	return fcolor_new(0.24, 0.55, 1.0);
 }
 
 void Render(fcolor *pixels, int samples, int height, int width, point3 origin, point3 vp_corner, vec3 horizontal, vec3 vertical, scene *scene) {
@@ -115,6 +119,9 @@ void Render(fcolor *pixels, int samples, int height, int width, point3 origin, p
 
 int main(int argc, char **argv) {
 	struct arguments args = {};
+
+	args.debug_scene = 0;
+
 	// Set default arguments in case they are not given
 	args.samples_per_pixel = 10;
 	args.image_width = 720;
@@ -156,7 +163,8 @@ int main(int argc, char **argv) {
 	vec3 horizontal = {0.0, vp_width, 0.0};
 	vec3 vp_corner = vec3_sub(vec3_sub(vec3_sub(origin, vec3_div(horizontal, 2.0)), vec3_div(vertical, 2.0)), vec3_new(focal_length, 0.0, 0.0));
 
-	scene s = RandomTestScene();
+
+	scene s = (args.debug_scene) ? DebugScene() : RandomTestScene();
 	fcolor *pixels = malloc(args.image_height * args.image_width * sizeof(fcolor)); 
 
 	Render(pixels, args.samples_per_pixel, args.image_height, args.image_width, origin, vp_corner, horizontal, vertical, &s);

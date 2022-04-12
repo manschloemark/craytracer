@@ -6,6 +6,18 @@
 #include "ray.h"
 #include "color.h"
 
+struct hit_record {
+	point3 pt;
+	vec3 n;
+	//material *mat;
+	float t_min, t_max, t;
+};
+
+// Ensure the normal is pointing in the opposite direction of the incident ray
+void outward_normal(vec3 *incident, vec3 *normal) {
+	if(vec3_dot(*incident, *normal) > 0.0) *normal = vec3_neg(*normal);
+}
+
 typedef struct {
 	vec3 center;
 	float radius;
@@ -18,7 +30,7 @@ sphere sphere_new(vec3 center, float radius) {
 	return s;
 }
 
-float IntersectSphere(sphere *s, ray *r) {
+int IntersectSphere(sphere *s, ray *r, struct hit_record *hitrec) {
 	vec3 T = vec3_sub(*r->pt, s->center);
 	float a = vec3_lensq(*r->dir);
 	float half_b = vec3_dot(T, *r->dir);
@@ -27,11 +39,21 @@ float IntersectSphere(sphere *s, ray *r) {
 	float discriminant = half_b*half_b - a*c;
 
 	if (discriminant < 0.0) {
-		return -1.0;
+		return 0;
 	}
 
-	return (-half_b - sqrt(discriminant)) / a;
+	float root = (-half_b - sqrt(discriminant)) / a;
+	if (root < hitrec->t_min || root > hitrec->t) {
+		root = (- half_b + sqrt(discriminant)) / a;
+		if (root < hitrec->t_min || root > hitrec->t) return 0;
+	}
 
+	hitrec->t = root;
+	hitrec->pt = pt_on_ray(r, root);
+	vec3 n = vec3_unit(vec3_sub(hitrec->pt, s->center));
+	outward_normal(r->dir, &n); // NOTE : IDK if I need to move this to another function or not. Seems simple as is.
+	hitrec->n = n;
+	return 1;
 }
 
 typedef struct {
@@ -46,7 +68,7 @@ triangle triangle_new(point3 x, point3 y, point3 z) {
 	return t;
 }
 
-float IntersectTriangle(triangle *tri, ray *r ){
+int IntersectTriangle(triangle *tri, ray *r, struct hit_record *hitrec){
 	vec3 BA = vec3_sub(tri->b, tri->a);
 	vec3 CA = vec3_sub(tri->c, tri->a);
 
@@ -54,7 +76,7 @@ float IntersectTriangle(triangle *tri, ray *r ){
 	float determinant = vec3_dot(BA, dir_cross_CA);
 
 	// TODO : change this small value to a variable
-	if (fabs(determinant) < 0.0001) return -1.0;
+	if (fabs(determinant) < 0.0001) return 0;
 
 	float inv_determinant = 1.0 / determinant;
 
@@ -62,18 +84,25 @@ float IntersectTriangle(triangle *tri, ray *r ){
 
 	float u = vec3_dot(dirA, dir_cross_CA) * inv_determinant;
 
-	if (u < 0.0 || u > 1.0) return -1.0;
+	if (u < 0.0 || u > 1.0) return 0;
 
 	vec3 dirA_cross_BA = vec3_cross(dirA, BA);
 	float v = vec3_dot(*r->dir, dirA_cross_BA) * inv_determinant;
 
-	if (v < 0.0 || u + v > 1.0) return -1.0;
+	if (v < 0.0 || u + v > 1.0) return 0;
 
 	float t = vec3_dot(CA, dirA_cross_BA) * inv_determinant;
 
-	// NOTE : u and v are the uv coordinates. I don't need them yet but that'll be useful.
+	if (t < hitrec->t_min || t > hitrec->t) return 0;
 
-	return t;
+	hitrec->t = t;
+	hitrec->pt = pt_on_ray(r, t);
+	vec3 n = vec3_cross(BA, CA);
+	outward_normal(r->dir, &n);
+	hitrec->n = n;
+
+	return 1;
+	// NOTE : u and v are the uv coordinates. I don't need them yet but that'll be useful.
 }
 
 enum ShapeID {
@@ -106,26 +135,15 @@ object make_triangle(point3 a, point3 b, point3 c, fcolor color) {
 	o.color = color;
 	return o;
 }
-float Intersect(object *obj, ray *r) {
-	switch (obj->id) {
-		case Sphere:
-			return IntersectSphere(&obj->shape.sphere, r);
-		case Triangle:
-			return IntersectTriangle(&obj->shape.triangle, r);
-		default:
-			return -1.0;
-	}
-}
 
-vec3 Normal(object *obj, point3 intersection) {
+int Intersect(object *obj, ray *r, struct hit_record *hitrec) {
 	switch (obj->id) {
 		case Sphere:
-			return vec3_unit(vec3_sub(intersection, obj->shape.sphere.center)); // NOTE : IDK if I need to move this to another function or not. Seems simple as is.
+			return IntersectSphere(&obj->shape.sphere, r, hitrec);
 		case Triangle:
-			// NOTE : This is not at all correct but it's close enough for now
-			return vec3_cross(obj->shape.triangle.a, obj->shape.triangle.b);
+			return IntersectTriangle(&obj->shape.triangle, r, hitrec);
 		default:
-			return intersection;
+			return 0;
 	}
 }
 

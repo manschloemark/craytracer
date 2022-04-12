@@ -81,6 +81,24 @@ scene TestTriangle() {
 
 }
 
+scene DebugScene() {
+	int object_count = 3;
+	object **object_list = (object **)malloc(object_count * sizeof(object *));
+	object *o = (object *)malloc(sizeof(object));
+	*o = make_triangle(vec3_new(-2.0, 5.0, 0.0), vec3_new(-2.0, 5.0, 10.0), vec3_new(-2.0, 0.0, -10.0), fcolor_new(1.0, 0.0, 0.0));
+	object_list[0] = o;
+	object *o2 = (object *)malloc(sizeof(object));
+	*o2 = make_sphere(vec3_new(-4.0, 0.0, 0.0), 1.0, fcolor_new(1.0, 0.0, 0.0));
+	object_list[1] = o2;
+	object *o3 = (object *)malloc(sizeof(object));
+	*o3 = make_sphere(vec3_new(-10.0, 0.0, 3.0), 4.0, fcolor_new(1.0, 0.0, 0.0));
+	object_list[2] = o3;
+	scene scene = {};
+	scene.objects = object_list;
+	scene.object_count = object_count;
+	return scene;
+}
+
 void FreeScene(scene *scene) {
 	int i = 0;
 	while(i < scene->object_count) {
