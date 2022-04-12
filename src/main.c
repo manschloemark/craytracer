@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
 	vec3 vp_corner = vec3_sub(vec3_sub(vec3_sub(origin, vec3_div(horizontal, 2.0)), vec3_div(vertical, 2.0)), vec3_new(focal_length, 0.0, 0.0));
 
 
-	memory_region mem_region = make_memory_region(256);
+	memory_region mem_region = make_memory_region(1024);
 	scene s = (args.debug_scene > 0) ? DebugScene(&mem_region) : RandomTestScene(&mem_region);
 	fcolor *pixels = malloc(args.image_height * args.image_width * sizeof(fcolor)); 
 
