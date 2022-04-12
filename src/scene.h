@@ -10,20 +10,34 @@ typedef struct {
 	int object_count;
 } scene;
 
-scene TestScene() {
+scene RandomTestScene() {
 	int object_count = 10;
 	object **object_list = (object **)malloc(sizeof(object *) * object_count);
 
 	int i;
-	for(i = 0; i < object_count; ++i) {
+	for(i = 0; i < object_count / 2; ++i) {
 		float obj_color = (float)i / (float)object_count;
 		object *o = (object *)malloc(sizeof(object));
-		//*o = make_sphere(vec3_new((float)i * -2.0 - 2.0, random_float_between(-(float)i, (float)i), random_float_between(-10.0, 10.0)),
-		*o = make_sphere(vec3_new((float)i * -2.0 - 2.0, 0.0, (float)i - 5.0),
-											0.5,
+		*o = make_sphere(vec3_new((float)i * -2.0 - 2.0,
+											random_float_between(-(float)i, (float)i),
+											random_float_between(-10.0, 10.0)),
+										random_float() + 0.2,
+										fcolor_new(obj_color, obj_color, obj_color));
+		object_list[i] = o;
+	}
+
+	for(; i < object_count; ++i) {
+		float obj_color = (float)i / (float)object_count;
+		object *o = (object *)malloc(sizeof(object));
+		float anchor = random_float_between(-5.0, 5.0);
+		*o = make_triangle(
+				vec3_new(random_float_between(-2, -3), anchor + random_float_between(0, 1), anchor + random_float_between(0, 4)),
+				vec3_new(random_float_between(-2, -3), anchor + random_float_between(-2, 2), anchor + random_float_between(-1, 2)),
+				vec3_new(random_float_between(-2, -3), anchor + random_float_between(0, 4), anchor + random_float_between(0, 4)),
 											fcolor_new(obj_color, obj_color, obj_color));
 		object_list[i] = o;
 	}
+	
 	scene scene = {};
 	scene.objects = object_list;
 	scene.object_count = object_count;

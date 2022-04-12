@@ -87,7 +87,10 @@ fcolor TraceRay(ray *r, scene *scene) {
 	}
 	if (min_t > 0.0 && object_hit) {
 		vec3 n = Normal(object_hit, pt_on_ray(r, min_t));
-		return color_mul(fcolor_new(n.x + 1.0, n.y + 1.0, n.z + 1.0), 0.5);
+		if(object_hit->id == Sphere) {
+			return color_mul(fcolor_new(n.x + 1.0, n.y + 1.0, n.z + 1.0), 0.5);
+		}
+		return object_hit->color;
 	}
 	return fcolor_new(0.24, 0.55, 0.65);
 }
@@ -153,7 +156,7 @@ int main(int argc, char **argv) {
 	vec3 horizontal = {0.0, vp_width, 0.0};
 	vec3 vp_corner = vec3_sub(vec3_sub(vec3_sub(origin, vec3_div(horizontal, 2.0)), vec3_div(vertical, 2.0)), vec3_new(focal_length, 0.0, 0.0));
 
-	scene s = TestTriangle();
+	scene s = RandomTestScene();
 	fcolor *pixels = malloc(args.image_height * args.image_width * sizeof(fcolor)); 
 
 	Render(pixels, args.samples_per_pixel, args.image_height, args.image_width, origin, vp_corner, horizontal, vertical, &s);
