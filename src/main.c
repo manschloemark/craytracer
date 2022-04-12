@@ -55,6 +55,7 @@ FILE *MakePPMFile(char *filename, int height, int width) {
 	snprintf(header, 64, "P6 %i %i %i\n", width, height, 255);
 	fputs(header, newfile);
 	fflush(newfile);
+	free(header);
 	return newfile;
 }
 
