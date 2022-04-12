@@ -31,9 +31,9 @@ scene RandomTestScene() {
 		object *o = (object *)malloc(sizeof(object));
 		float anchor = random_float_between(-5.0, 5.0);
 		*o = make_triangle(
-				vec3_new(random_float_between(-2, -3), anchor + random_float_between(0, 1), anchor + random_float_between(0, 4)),
-				vec3_new(random_float_between(-2, -3), anchor + random_float_between(-2, 2), anchor + random_float_between(-1, 2)),
-				vec3_new(random_float_between(-2, -3), anchor + random_float_between(0, 4), anchor + random_float_between(0, 4)),
+				vec3_new(random_float_between(-8, -5), anchor + random_float_between(0, 1), anchor + random_float_between(0, 4)),
+				vec3_new(random_float_between(-8, -3), anchor + random_float_between(-2, 2), anchor + random_float_between(-1, 2)),
+				vec3_new(random_float_between(-8, -3), anchor + random_float_between(0, 4), anchor + random_float_between(0, 4)),
 											fcolor_new(obj_color, obj_color, obj_color));
 		object_list[i] = o;
 	}

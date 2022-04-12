@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <time.h>
+
 #include <math.h>
 
 #include "argparse.h"
@@ -81,18 +83,16 @@ fcolor TraceRay(ray *r, scene *scene) {
 
 	// Find first object hit by ray
 	object *object_hit = NULL;
+	int hit = 0;
 	while(c < scene->object_count) {
-		int hit = Intersect(scene->objects[c], r, &hitrec);
-		if (hit) {
-			object_hit = scene->objects[c];
-		}
+		hit |= Intersect(scene->objects[c], r, &hitrec);
 		++c;
 	}
 
 	// Determine the color the ray would be 'carrying'
 	// Currently this is just based on the normal and it's hard-coded.
 	// TODO : add properties to objects that can be called on to determine the color instead.
-	if (object_hit) {
+	if (hit) {
 		vec3 n = hitrec.n;
 		return color_mul(fcolor_new(n.x + 1.0, n.y + 1.0, n.z + 1.0), 0.5);
 	}
@@ -129,8 +129,10 @@ int main(int argc, char **argv) {
 	args.seed = 0;
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 
-	if (args.seed) {
+	if (args.seed != 0) {
 		srand(args.seed);
+	} else {
+		srand(time(NULL)); // Default seed is 1 so this ensures the seed changes each run
 	}
 
 	float aspect_ratio;
@@ -164,7 +166,7 @@ int main(int argc, char **argv) {
 	vec3 vp_corner = vec3_sub(vec3_sub(vec3_sub(origin, vec3_div(horizontal, 2.0)), vec3_div(vertical, 2.0)), vec3_new(focal_length, 0.0, 0.0));
 
 
-	scene s = (args.debug_scene) ? DebugScene() : RandomTestScene();
+	scene s = (args.debug_scene > 0) ? DebugScene() : RandomTestScene();
 	fcolor *pixels = malloc(args.image_height * args.image_width * sizeof(fcolor)); 
 
 	Render(pixels, args.samples_per_pixel, args.image_height, args.image_width, origin, vp_corner, horizontal, vertical, &s);
