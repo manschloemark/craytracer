@@ -79,8 +79,9 @@ void WriteToPPM(fcolor *pixels, int samples, int height, int width, int bytes_pe
 }
 
 /* Rendering */
-fcolor TraceRay(ray r, scene *scene, int calldepth) {
+fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 	if (calldepth <= 0) return fcolor_new(0.0, 0.0, 0.0);
+
 	hit_record hitrec = {};
 	hitrec.t_min = 0.0;
 	hitrec.t = 123123902.0; // TODO : make some const to use for this instead
@@ -93,20 +94,21 @@ fcolor TraceRay(ray r, scene *scene, int calldepth) {
 		++c;
 	}
 
-	if (!hit) return fcolor_new(0.24, 0.55, 1.0);
+	if (!hit) return *bgcolor;
 
 	vec3 scatter_dir = {};
 	int scattered = Scatter(hitrec.mat, &hitrec.pt, &hitrec.n, &scatter_dir);
 
 	if (!scattered) return *hitrec.color;
 
-	fcolor recursive_result = TraceRay(ray_new(hitrec.pt, vec3_sub(scatter_dir, hitrec.pt)), scene, calldepth - 1);
+	fcolor recursive_result = TraceRay(ray_new(hitrec.pt, vec3_sub(scatter_dir, hitrec.pt)), scene, bgcolor, calldepth - 1);
 	// NOTE : assign this to a variable for debugging purposes
 	COLOR_MUL(recursive_result, *hitrec.color);
 	return recursive_result;
 }
 
 void Render(fcolor *pixels, int samples, int height, int width, int max_depth, point3 origin, point3 vp_corner, vec3 horizontal, vec3 vertical, scene *scene) {
+	fcolor bgcolor = fcolor_new(0.5, 0.6, 0.9);
 	int i, j;
 	for (j = height-1; j >= 0; --j) {
 		for (i = 0; i < width; ++i) {
@@ -117,7 +119,7 @@ void Render(fcolor *pixels, int samples, int height, int width, int max_depth, p
 
 				vec3 d = vec3_sub(vec3_add(vec3_add(vp_corner, vec3_mul(horizontal, u)), vec3_mul(vertical, v)), origin);
 				ray r = {origin, d};
-				fcolor sample = TraceRay(r, scene, max_depth);
+				fcolor sample = TraceRay(r, scene, &bgcolor, max_depth);
 				COLOR_ADD(*pixels, sample); 
 			}
 			++pixels;
@@ -182,7 +184,8 @@ int main(int argc, char **argv) {
 				);
 
 	memory_region mem_region = make_memory_region(1024);
-	scene s = TestMaterial(&mem_region);// (args.debug_scene > 0) ? DebugScene(&mem_region) : RandomTestScene(&mem_region);
+	scene s = (args.debug_scene > 0) ? TestMaterial(&mem_region) : RandomTestScene(&mem_region);
+	s = BlackWhite(&mem_region);
 
 	fcolor *pixels = malloc(args.img_height * args.img_width * sizeof(fcolor)); 
 
