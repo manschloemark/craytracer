@@ -22,6 +22,7 @@ memory_region make_memory_region(int start_size) {
 }
 
 void *memory_region_add(memory_region *region, void *item, int item_size) {
+	// TODO : fix this! It literally just doesn't work.
 	if (region->used + item_size >= region->max_size) {
 		void *new_memory = malloc(region->max_size * 2);
 		memcpy(new_memory, region->mem, region->used);

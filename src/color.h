@@ -11,6 +11,11 @@ typedef struct Color fcolor;
   (macro_dest).g += (macro_color).g; \
   (macro_dest).b += (macro_color).b;
 
+#define COLOR_MUL(macro_dest, macro_color) \
+	(macro_dest).r *= (macro_color).r; \
+  (macro_dest).g *= (macro_color).g; \
+  (macro_dest).b *= (macro_color).b;
+
 fcolor fcolor_new(float r, float g, float b) {
 	fcolor c = {};
 	c.r = r;

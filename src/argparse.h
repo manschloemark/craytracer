@@ -35,8 +35,8 @@ static struct argp_option options[] = {
 struct arguments {
 	//int scene;
 	char *outfile;
-	int image_width, image_height;
-	int samples_per_pixel, max_depth, num_threads;
+	int img_width, img_height;
+	int samples, max_depth, num_threads;
 	int verbose;
 	unsigned int seed;
 	int debug_scene;
@@ -57,13 +57,13 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 		args->outfile = arg;
 		break;
 	case 'w':
-		args->image_width = atoi(arg);
+		args->img_width = atoi(arg);
 		break;
 	case 'h':
-		args->image_height = atoi(arg);
+		args->img_height = atoi(arg);
 		break;
 	case 'n':
-		args->samples_per_pixel = atoi(arg);
+		args->samples = atoi(arg);
 		break;
 	/*
 	case 'd':

@@ -4,6 +4,7 @@
 #include "common.h"
 #include "color.h"
 #include "objects.h"
+#include "material.h"
 
 #include "memory.h"
 
@@ -12,6 +13,7 @@ typedef struct {
 	int object_count;
 } scene;
 
+/*
 scene RandomTestScene(memory_region *region) {
 	int object_count = 10;
 	object **object_list = (object **)malloc(sizeof(object *) * object_count);
@@ -90,6 +92,23 @@ scene DebugScene(memory_region *region) {
 	object_list[1] = (object *)memory_region_add(region, &o2, sizeof(object));
 	object o3 = make_sphere(vec3_new(-10.0, 0.0, 3.0), 4.0, fcolor_new(1.0, 0.0, 0.0));
 	object_list[2] = (object *)memory_region_add(region, &o3, sizeof(object));
+	scene scene = {};
+	scene.objects = object_list;
+	scene.object_count = object_count;
+	return scene;
+}
+*/
+scene TestMaterial(memory_region *region) {
+	int object_count = 2;
+	object **object_list = (object **)malloc(object_count * sizeof(object));
+	material mat = make_diffuse();
+	material *matptr = (material *)memory_region_add(region, &mat, sizeof(material));
+	object o = make_sphere(vec3_new(-5.0, 0.0, 0.0), 1.0, fcolor_new(1.0, 0.0, 0.0), matptr);
+	object_list[0] = (object *)memory_region_add(region, &o, sizeof(object));
+
+	object o2 = make_sphere(vec3_new(-5.0, 0.0, -101.0), 100.0, fcolor_new(0.0, 0.8, 0.0), matptr);
+	object_list[1] = (object *)memory_region_add(region, &o2, sizeof(object));
+
 	scene scene = {};
 	scene.objects = object_list;
 	scene.object_count = object_count;

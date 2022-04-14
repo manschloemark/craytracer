@@ -2,6 +2,7 @@
 #define VECTOR3_H
 
 #include <math.h>
+#include "common.h"
 
 struct Vector3 {
 	float x, y, z;
@@ -72,5 +73,29 @@ vec3 vec3_abs(vec3 a) {
 
 vec3 vec3_unit(vec3 a) {
 	return vec3_div(a, vec3_len(a));
+}
+
+vec3 vec3_random() {
+	vec3 v = {};
+	v.x = random_float();
+	v.y = random_float();
+	v.z = random_float();
+	return v;
+}
+
+vec3 vec3_bounded_random(float min, float max) {
+	vec3 v = {};
+	v.x = random_float_between(min, max);
+	v.y = random_float_between(min, max);
+	v.z = random_float_between(min, max);
+	return v;
+}
+
+// Pretty much copied from Raytracing in One Weekend.
+vec3 vec3_random_in_unit_sphere() {
+	while(1) {
+		vec3 v = vec3_bounded_random(-1.0, 1.0);
+		if (vec3_lensq(v) < 1.0) return v;
+	}
 }
 #endif

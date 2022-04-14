@@ -17,6 +17,7 @@
 #include "ray.h"
 
 #include "objects.h"
+#include "material.h"
 #include "scene.h"
 
 #include "memory.h"
@@ -78,31 +79,34 @@ void WriteToPPM(fcolor *pixels, int samples, int height, int width, int bytes_pe
 }
 
 /* Rendering */
-fcolor TraceRay(ray *r, scene *scene) {
-	struct hit_record hitrec = {};
+fcolor TraceRay(ray r, scene *scene, int calldepth) {
+	if (calldepth <= 0) return fcolor_new(0.0, 0.0, 0.0);
+	hit_record hitrec = {};
 	hitrec.t_min = 0.0;
 	hitrec.t = 123123902.0; // TODO : make some const to use for this instead
 	int c = 0;
 
 	// Find first object hit by ray
-	object *object_hit = NULL;
 	int hit = 0;
 	while(c < scene->object_count) {
-		hit |= Intersect(scene->objects[c], r, &hitrec);
+		hit |= Intersect(scene->objects[c], &r, &hitrec);
 		++c;
 	}
 
-	// Determine the color the ray would be 'carrying'
-	// Currently this is just based on the normal and it's hard-coded.
-	// TODO : add properties to objects that can be called on to determine the color instead.
-	if (hit) {
-		vec3 n = hitrec.n;
-		return color_mul(fcolor_new(n.x + 1.0, n.y + 1.0, n.z + 1.0), 0.5);
-	}
-	return fcolor_new(0.24, 0.55, 1.0);
+	if (!hit) return fcolor_new(0.24, 0.55, 1.0);
+
+	vec3 scatter_dir = {};
+	int scattered = Scatter(hitrec.mat, &hitrec.pt, &hitrec.n, &scatter_dir);
+
+	if (!scattered) return *hitrec.color;
+
+	fcolor recursive_result = TraceRay(ray_new(hitrec.pt, vec3_sub(scatter_dir, hitrec.pt)), scene, calldepth - 1);
+	// NOTE : assign this to a variable for debugging purposes
+	COLOR_MUL(recursive_result, *hitrec.color);
+	return recursive_result;
 }
 
-void Render(fcolor *pixels, int samples, int height, int width, point3 origin, point3 vp_corner, vec3 horizontal, vec3 vertical, scene *scene) {
+void Render(fcolor *pixels, int samples, int height, int width, int max_depth, point3 origin, point3 vp_corner, vec3 horizontal, vec3 vertical, scene *scene) {
 	int i, j;
 	for (j = height-1; j >= 0; --j) {
 		for (i = 0; i < width; ++i) {
@@ -111,24 +115,26 @@ void Render(fcolor *pixels, int samples, int height, int width, point3 origin, p
 				float u = ((float)i + random_float()) / (float)(width-1);
 				float v = ((float)j + random_float()) / (float)(height-1);
 
-				vec3 d = vec3_sub(vec3_add(vec3_add(vp_corner, vec3_mul(horizontal, u)), vec3_mul(vertical, v)), origin); ray r = {&origin, &d};
-				fcolor sample = {0.0, 0.0, 0.0};
-				COLOR_ADD(*pixels, TraceRay(&r, scene)); 
+				vec3 d = vec3_sub(vec3_add(vec3_add(vp_corner, vec3_mul(horizontal, u)), vec3_mul(vertical, v)), origin);
+				ray r = {origin, d};
+				fcolor sample = TraceRay(r, scene, max_depth);
+				COLOR_ADD(*pixels, sample); 
 			}
 			++pixels;
 		}
 	}
 }
 
+// TODO :::: finish implementing materials
+
 int main(int argc, char **argv) {
 	struct arguments args = {};
 
+	// Default args
 	args.debug_scene = 0;
-
-	// Set default arguments in case they are not given
-	args.samples_per_pixel = 10;
-	args.image_width = 720;
-	args.image_height = 0;
+	args.samples = 10;
+	args.img_width = 720;
+	args.img_height = 0;
 	args.seed = 0;
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 
@@ -139,18 +145,18 @@ int main(int argc, char **argv) {
 	}
 
 	float aspect_ratio;
-	if (args.image_height) {
-		aspect_ratio = (float)args.image_width / (float)args.image_height;
+	if (args.img_height) {
+		aspect_ratio = (float)args.img_width / (float)args.img_height;
 	} else {
 		aspect_ratio = 16.0 / 9.0;
-		args.image_height = args.image_width / aspect_ratio;
+		args.img_height = args.img_width / aspect_ratio;
 	}
 
 	int bytes_per_channel = sizeof(char);
 	FILE *ppm_file = MakePPMFile(
 				args.outfile,
-				args.image_height,
-				args.image_width
+				args.img_height,
+				args.img_width
 				);
 
 	if (!ppm_file) {
@@ -158,6 +164,7 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
+	int max_depth = 20;
 
 	float vp_height = 2.0;
 	float vp_width = vp_height * aspect_ratio;
@@ -166,18 +173,23 @@ int main(int argc, char **argv) {
 	point3 origin = {0.0, 0.0, 0.0};
 	vec3 vertical = {0.0, 0.0, vp_height};
 	vec3 horizontal = {0.0, vp_width, 0.0};
-	vec3 vp_corner = vec3_sub(vec3_sub(vec3_sub(origin, vec3_div(horizontal, 2.0)), vec3_div(vertical, 2.0)), vec3_new(focal_length, 0.0, 0.0));
-
+	vec3 vp_corner = vec3_sub(
+				vec3_sub(
+					vec3_sub(origin, vec3_div(horizontal, 2.0)),
+					vec3_div(vertical, 2.0)
+					),
+				vec3_new(focal_length, 0.0, 0.0)
+				);
 
 	memory_region mem_region = make_memory_region(1024);
-	scene s = (args.debug_scene > 0) ? DebugScene(&mem_region) : RandomTestScene(&mem_region);
-	fcolor *pixels = malloc(args.image_height * args.image_width * sizeof(fcolor)); 
+	scene s = TestMaterial(&mem_region);// (args.debug_scene > 0) ? DebugScene(&mem_region) : RandomTestScene(&mem_region);
 
-	Render(pixels, args.samples_per_pixel, args.image_height, args.image_width, origin, vp_corner, horizontal, vertical, &s);
+	fcolor *pixels = malloc(args.img_height * args.img_width * sizeof(fcolor)); 
 
-	WriteToPPM(pixels, args.samples_per_pixel, args.image_height, args.image_width, bytes_per_channel, ppm_file);
+	Render(pixels, args.samples, args.img_height, args.img_width, max_depth, origin, vp_corner, horizontal, vertical, &s);
+
+	WriteToPPM(pixels, args.samples, args.img_height, args.img_width, bytes_per_channel, ppm_file);
 	fclose(ppm_file);
-
 	free(pixels);
 	FreeScene(&s);
 	FreeMemoryRegion(&mem_region);
