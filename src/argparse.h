@@ -17,7 +17,7 @@ static struct argp_option options[] = {
 	{"height", 'h', "HEIGHT", 0, "Height of output image in pixels.", 0},
 	// Render options
 	// TODO :: specify scene files insead of hardcoded functions
-	//{"scene", 's', "SCENE", 0, "Which scene to generate -- SCENE is an integer used in a switch statement.", 1},
+	{"scene", 'c', "SCENE", 0, "Which scene to generate -- SCENE is an integer used in a switch statement.", 1},
 	// Performance related
 	{"num-samples", 'n', "N_SAMPLES", 0, "Take a sample from each pixel N_SAMPLES times", 2},
 	//{"max-depth", 'd', "MAX_DEPTH", 0, "MAX_DEPTH is the number of times a ray can be reflected.", 2},
@@ -28,7 +28,6 @@ static struct argp_option options[] = {
 	// TODO :: implement proper logging capability.
 	// {"logfile",         'l', 0, 0, "The file to which log messages will be sent", 2},
 	{"seed", 's', "SEED", 0, "Seed to pass to stdlib.h srand()"},
-	{"debug-scene", 'd', "DEBUG", 0, "1 = use DebugScene which should have an intersection at pixel 0, 0"},
 	{0} // This needs to be here to argp knows where the options list ends.
 };
 
@@ -39,7 +38,7 @@ struct arguments {
 	int samples, max_depth, num_threads;
 	int verbose;
 	unsigned int seed;
-	int debug_scene;
+	int scene;
 };
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
@@ -65,9 +64,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 		args->samples = atoi(arg);
 		break;
 	/*
-	case 'd':
-		args->max_depth = atoi(arg);
-		break;
 	case 't':
 		args->num_threads = atoi(arg);
 		break;
@@ -78,8 +74,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	case 's':
 		args->seed = (unsigned int)atoi(arg);
 		break;
-	case 'd':
-		args->debug_scene = 1;
+	case 'c':
+		args->scene = atoi(arg);
 		break;
 	default:
 		return ARGP_ERR_UNKNOWN;

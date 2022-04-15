@@ -75,10 +75,9 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 	hit_record hitrec = {};
 	hitrec.t_min = 0.0001; // Prevent rounding errors when t ~~ 0.0;
 	hitrec.t = 123123902.0; // TODO : make some const to use for this instead
-	int c = 0;
 
-	// Find first object hit by ray
 	int hit = 0;
+	int c = 0;
 	while(c < scene->object_count) {
 		hit |= Intersect(scene->objects[c], &r, &hitrec);
 		++c;
@@ -86,13 +85,15 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 
 	if (!hit) return *bgcolor;
 
-	vec3 scatter_dir = {};
-	int scattered = Scatter(hitrec.mat, &hitrec.pt, &hitrec.n, &scatter_dir);
+	ray scattered_ray = {};
+	scattered_ray.pt = hitrec.pt;
+	scattered_ray.dir = r.dir;
+	int scattered = Scatter(hitrec.mat, &hitrec.n, &scattered_ray);
 
-	if (!scattered) return *hitrec.color;
+	if (scattered == 0) return fcolor_new(0.0, 0.0, 0.0);
 
-	fcolor recursive_result = TraceRay(ray_new(hitrec.pt, vec3_sub(scatter_dir, hitrec.pt)), scene, bgcolor, calldepth - 1);
 	// NOTE : assign this to a variable for debugging purposes
+	fcolor recursive_result = TraceRay(scattered_ray, scene, bgcolor, calldepth - 1);
 	COLOR_MUL(recursive_result, *hitrec.color);
 	return recursive_result;
 }
@@ -123,11 +124,11 @@ int main(int argc, char **argv) {
 	struct arguments args = {};
 
 	// Default args
-	args.debug_scene = 0;
 	args.samples = 10;
 	args.img_width = 720;
 	args.img_height = 0;
 	args.seed = 0;
+	args.scene = -1;
 
 	if (argp_parse(&argp, argc, argv, 0, 0, &args)) {
 		puts("Error parsing arguments. Use -? for help.");
@@ -178,7 +179,7 @@ int main(int argc, char **argv) {
 				);
 
 	memory_region mem_region = make_memory_region(1024);
-	scene s = RainbowCircle(&mem_region);
+	scene s = SceneSelect(&mem_region, args.scene);
 
 	fcolor *pixels = malloc(args.img_height * args.img_width * sizeof(fcolor)); 
 
