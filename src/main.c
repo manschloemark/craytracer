@@ -65,9 +65,10 @@ void WriteToPPM(fcolor *pixels, int samples, int height, int width, int bytes_pe
 	unsigned char *temp = malloc(height * width * bytes_per_channel * 3);
 	int count;
 	for (count = 0; count < height * width * 3; count = count + 3) {
-		float r = pixels->r / samples;
-		float g = pixels->g / samples;
-		float b = pixels->b / samples;
+		// gamma 2 correction
+		float r = sqrt(pixels->r / (float)samples);
+		float g = sqrt(pixels->g / (float)samples);
+		float b = sqrt(pixels->b / (float)samples);
 		temp[count] = (unsigned char)(Clamp(r, 0.0, 0.999) * 256);
 		temp[count+1] = (unsigned char)(Clamp(g, 0.0, 0.999) * 256);
 		temp[count+2] = (unsigned char)(Clamp(b, 0.0, 0.999) * 256);
@@ -83,7 +84,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 	if (calldepth <= 0) return fcolor_new(0.0, 0.0, 0.0);
 
 	hit_record hitrec = {};
-	hitrec.t_min = 0.0;
+	hitrec.t_min = 0.0001; // Prevent rounding errors when t ~~ 0.0;
 	hitrec.t = 123123902.0; // TODO : make some const to use for this instead
 	int c = 0;
 
