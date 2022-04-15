@@ -27,17 +27,6 @@
 static inline float Clamp(float n, float min, float max) {
 	return (n < min) ? min : (n > max) ? max : n;
 }
-
-static inline int Min(int a, int b) {
-	if (a > b) return b;
-	return a;
-}
-
-static inline int Max(int a, int b) {
-	if (a > b) return a;
-	return b;
-}
-
 /* File I/O */
 
 // TODO :: at some point it would be nice to make it so instead of overwriting
@@ -139,7 +128,11 @@ int main(int argc, char **argv) {
 	args.img_width = 720;
 	args.img_height = 0;
 	args.seed = 0;
-	argp_parse(&argp, argc, argv, 0, 0, &args);
+
+	if (argp_parse(&argp, argc, argv, 0, 0, &args)) {
+		puts("Error parsing arguments. Use -? for help.");
+		return -1;
+	}
 
 	if (args.seed != 0) {
 		srand(args.seed);

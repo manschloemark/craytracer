@@ -5,9 +5,9 @@
 #include <string.h>
 #include <math.h>
 
-const char *argp_program_version = "weekend-raytracing 0.2.2";
+const char *argp_program_version = "craytracer 0.1"; // NOTE : I don't really use version numbers. Maybe I should start.
 const char *argp_program_bug_address = "<markofwisdumb@gmail.com>";
-static char doc[] = "Weekend Raytracing -- A personal ray-tracer based off of Peter Shirley's _Ray Tracing in One Weekend_ book series.";
+static char doc[] = "craytracer -- a personal minimal ray tracer written in C.";
 
 static struct argp_option options[] = {
 	// Output options
