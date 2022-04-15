@@ -77,6 +77,51 @@ scene BlackWhite(memory_region *region) {
 	return s;
 }
 
+scene RainbowCircle(memory_region *region) {
+	int object_count = 8;
+	int object_index = 0;
+	object **object_list = (object **)malloc(sizeof(object *) * object_count);
+
+	material lambertian = make_lambertian();
+	material *matptr = (material *)memory_region_add(region, &lambertian, sizeof(material));
+
+	vec3 x_offset = vec3_new(-4.0, 0.0, 0.0);
+
+	object center_sphere = make_sphere(vec3_add(x_offset, vec3_new(0.0, 0.0, 0.0)), 1.0, fcolor_new(1.0, 1.0, 1.0), matptr);
+	object *centerptr = (object *)memory_region_add(region, &center_sphere, sizeof(object));
+	object_list[object_index] = centerptr;
+	++object_index;
+
+	vec3 offset = vec3_new(0.0, 1.0, 0.0);
+
+	int outer_count = 7;
+	float outer_radius = 2.1;
+	float r = 0.9;
+	fcolor rainbow[7];
+	rainbow[0] = fcolor_new(1.0, 0.0, 0.0);
+	rainbow[1] = fcolor_new(0.7, 0.5, 0.0);
+	rainbow[2] = fcolor_new(0.8, 0.8, 0.0);
+	rainbow[3] = fcolor_new(0.0, 1.0, 0.0);
+	rainbow[4] = fcolor_new(0.0, 0.0, 1.0);
+	rainbow[5] = fcolor_new(0.12, 0.0, 0.6);
+	rainbow[6] = fcolor_new(0.77, 0.0, 0.77);
+	float theta_inc = 360.0 / (float)(outer_count);
+	for (int i = 0; i < outer_count; ++i) {
+		float theta = -degrees_to_radians(theta_inc * (float)i);
+		vec3 center = vec3_mul(vec3_new(0.0, cosf(theta), sinf(theta)), outer_radius);
+		center = vec3_add(x_offset, center);
+		object o = make_sphere(center, r, rainbow[i], matptr);
+		object *optr = (object *)memory_region_add(region, &o, sizeof(object));
+		object_list[object_index] = optr;
+		++object_index;
+	}
+
+	scene s = {};
+	s.objects = object_list;
+	s.object_count = object_index;
+	return s;
+}
+
 /*
 scene TestScene2() {
 	object **object_list = (object **)malloc(sizeof(object *));
