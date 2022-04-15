@@ -45,7 +45,6 @@ struct arguments {
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	struct arguments *args = (struct arguments *)state->input;
 
-	// TODO :: some of my options need values -- how do I properly retrieve them? What if they are ints instead of chars? Do I need to parse them?
 	switch (key)
 	{
 	/*
