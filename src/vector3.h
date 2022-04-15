@@ -98,4 +98,14 @@ vec3 vec3_random_in_unit_sphere() {
 		if (vec3_lensq(v) < 1.0) return v;
 	}
 }
+
+// According to Raytracing in One Weekend this provides a better distribution
+// for lambertian surfaces
+vec3 vec3_random_in_hemisphere(vec3 n) {
+	vec3 v = vec3_random_in_unit_sphere();
+	if (vec3_dot(v, n) > 0.0) return v;
+	else return vec3_neg(v);
+
+}
+
 #endif

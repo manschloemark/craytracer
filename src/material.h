@@ -8,18 +8,17 @@
 // TODO : maybe decouple color from material that way I don't need two materials just for a different color object
 
 typedef struct {
-} diffuse;
+} lambertian;
 
 enum MaterialID {
-	Diffuse,
+	Lambertian,
 	Metal,
-	Matte
 };
 
 // NOTE : I wanted this to be analgous to the union shape from objects.hit
 // but right now I can't of how to name this. I'll go with surface for now.
 union surface {
-	diffuse diffuse;
+	lambertian lambertian;
 };
 
 typedef struct {
@@ -28,9 +27,9 @@ typedef struct {
 	int has_color;
 } material;
 
-material make_diffuse() {
+material make_lambertian() {
 	material mat = {};
-	mat.id = Diffuse;
+	mat.id = Lambertian;
 	mat.has_color = 1;
 	return mat;
 }
@@ -38,8 +37,9 @@ material make_diffuse() {
 // 1 = Scattered ray, 0 = no scatter
 int Scatter(material *mat, vec3 *pt, vec3 *n, vec3 *reflection) {
 	switch (mat->id) {
-		case Diffuse:
-			*reflection = vec3_add(*n, vec3_add(*pt, vec3_random_in_unit_sphere()));
+		case Lambertian:
+			//*reflection = vec3_add(*n, vec3_add(*pt, vec3_random_in_unit_sphere()));
+			*reflection = vec3_add(*pt, vec3_random_in_hemisphere(*n));
 			return 1;
 		default:
 			return 0;

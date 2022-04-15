@@ -17,7 +17,7 @@ scene RandomTestScene(memory_region *region) {
 	int object_count = 10;
 	object **object_list = (object **)malloc(sizeof(object *) * object_count);
 
-	material diff = make_diffuse();
+	material diff = make_lambertian();
 	material *matptr = (material *)memory_region_add(region, &diff, sizeof(material));
 
 	int i;
@@ -48,7 +48,7 @@ scene RandomTestScene(memory_region *region) {
 
 scene BlackWhite(memory_region *region) {
 	int obj_ct = 0;
-	material diff = make_diffuse();
+	material diff = make_lambertian();
 	material *matptr = (material *)memory_region_add(region, &diff, sizeof(material));
 
 	object white_sphere = make_sphere(vec3_new(-5.0, -1.0, 0.5), 1.0, fcolor_new(1.0, 1.0, 1.0), matptr);
@@ -59,6 +59,7 @@ scene BlackWhite(memory_region *region) {
 	object *black_sphereptr = (object *)memory_region_add(region, &black_sphere, sizeof(object));
 	++obj_ct;
 
+	// For some reason this does not get a shadown on it... idk why.
 	object base = make_triangle(vec3_new(20.0, 0.0, -5.0), vec3_new(-20.0, -20.0, -0.5), vec3_new(-20.0, 20.0, -0.5), fcolor_new(0.3, 0.5, 0.33), matptr);
 	object *baseptr = (object *)memory_region_add(region, &base, sizeof(object));
 	++obj_ct;
@@ -132,7 +133,7 @@ scene DebugScene(memory_region *region) {
 scene TestMaterial(memory_region *region) {
 	int object_count = 2;
 	object **object_list = (object **)malloc(object_count * sizeof(object));
-	material mat = make_diffuse();
+	material mat = make_lambertian();
 	material *matptr = (material *)memory_region_add(region, &mat, sizeof(material));
 	object o = make_sphere(vec3_new(-5.0, 0.0, 0.0), 1.0, fcolor_new(1.0, 0.0, 0.0), matptr);
 	object_list[0] = (object *)memory_region_add(region, &o, sizeof(object));
