@@ -18,6 +18,11 @@ vec3 vec3_new(float x, float y, float z) {
 	return v;
 }
 
+static inline int vec3_near_zero(vec3 v) {
+	const float epsilon = 0.0000001;
+	return (v.x < epsilon) && (v.y < epsilon) && (v.z < epsilon);
+}
+
 // Vector/Vector operations
 vec3 vec3_add(vec3 a, vec3 b) {
 	vec3 v = {a.x+b.x, a.y+b.y, a.z+b.z};
