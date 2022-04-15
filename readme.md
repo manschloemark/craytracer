@@ -8,6 +8,8 @@ This project will help me practice C, architecture, graphics programming princip
 This is largely based off of Peter Shirley's Ray Tracing in One Weekend except in C rather than C++.
 I am using the book as a reference rather than plainly copying it.
 
+![A demo scene](./examples/ex.jpg)
+
 Usage
 ---
 Currently must be ran on a Linux machine.  
@@ -22,4 +24,5 @@ To compile run `source build.sh` in ./src/
 | -s, --seed=SEED              | Seed to pass to stdlib.h srand(). | Uses current time as seed|
 | -?, --help                   | Give this help list |
 | --usage                  | Give a short usage message |
+
 
