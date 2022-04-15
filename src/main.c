@@ -178,8 +178,7 @@ int main(int argc, char **argv) {
 				);
 
 	memory_region mem_region = make_memory_region(1024);
-	scene s = (args.debug_scene > 0) ? TestMaterial(&mem_region) : RandomTestScene(&mem_region);
-	s = RainbowCircle(&mem_region);
+	scene s = RainbowCircle(&mem_region);
 
 	fcolor *pixels = malloc(args.img_height * args.img_width * sizeof(fcolor)); 
 
