@@ -5,6 +5,8 @@
 #include "color.h"
 #include "objects.h"
 
+#include "memory.h"
+
 // TODO : maybe decouple color from material that way I don't need two materials just for a different color object
 
 typedef struct {
@@ -32,6 +34,11 @@ material make_lambertian() {
 	mat.id = Lambertian;
 	mat.has_color = 1;
 	return mat;
+}
+
+material *add_lambertian(memory_region *region) {
+	material mat = make_lambertian();
+	return (material *)memory_region_add(region, &mat, sizeof(material));
 }
 
 // 1 = Scattered ray, 0 = no scatter

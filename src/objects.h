@@ -7,6 +7,8 @@
 #include "color.h"
 #include "material.h"
 
+#include "memory.h"
+
 typedef struct {
 	point3 pt;
 	vec3 n;
@@ -148,6 +150,16 @@ object make_triangle(point3 a, point3 b, point3 c, fcolor color, material *mat) 
 	o.color = color;
 	o.mat = mat;
 	return o;
+}
+
+object *add_sphere(memory_region *region, point3 center, float r, fcolor color, material *mat) {
+	object o = make_sphere(center, r, color, mat);
+	return (object *)memory_region_add(region, &o, sizeof(object));
+}
+
+object *add_triangle(memory_region *region, point3 a, point3 b, point3 c, fcolor color, material *mat) {
+	object o = make_triangle(a, b, c, color, mat);
+	return (object *)memory_region_add(region, &o, sizeof(object));
 }
 
 int Intersect(object *obj, ray *r, hit_record *hitrec) {

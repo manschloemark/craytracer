@@ -51,24 +51,21 @@ scene BlackWhite(memory_region *region) {
 	material diff = make_lambertian();
 	material *matptr = (material *)memory_region_add(region, &diff, sizeof(material));
 
-	object white_sphere = make_sphere(vec3_new(-5.0, -1.0, 0.5), 1.0, fcolor_new(1.0, 1.0, 1.0), matptr);
-	object *white_sphereptr = (object *)memory_region_add(region, &white_sphere, sizeof(object));
+	object *white_sphere = add_sphere(region, vec3_new(-5.0, -1.0, 0.5), 1.0, fcolor_new(1.0, 1.0, 1.0), matptr);
 	++obj_ct;
 
-	object black_sphere = make_sphere(vec3_new(-5.0, 1.0, 0.5), 1.0, fcolor_new(0.0, 0.0, 0.0), matptr);
-	object *black_sphereptr = (object *)memory_region_add(region, &black_sphere, sizeof(object));
+	object *black_sphere = add_sphere(region, vec3_new(-5.0, 1.0, 0.5), 1.0, fcolor_new(0.0, 0.0, 0.0), matptr);
 	++obj_ct;
 
 	// For some reason this does not get a shadown on it... idk why.
-	object base = make_triangle(vec3_new(20.0, 0.0, -5.0), vec3_new(-20.0, -20.0, -0.5), vec3_new(-20.0, 20.0, -0.5), fcolor_new(0.3, 0.5, 0.33), matptr);
-	object *baseptr = (object *)memory_region_add(region, &base, sizeof(object));
+	object *base = add_triangle(region, vec3_new(20.0, 0.0, -5.0), vec3_new(-20.0, -20.0, -0.5), vec3_new(-20.0, 20.0, -0.5), fcolor_new(0.3, 0.5, 0.33), matptr);
 	++obj_ct;
 
 	object **objects = (object **)malloc(obj_ct * sizeof(object));
 
-	objects[0] = white_sphereptr;
-	objects[1] = black_sphereptr;
-	objects[2] = baseptr;
+	objects[0] = white_sphere;
+	objects[1] = black_sphere;
+	objects[2] = base;
 
 	scene s = {};
 
@@ -82,14 +79,12 @@ scene RainbowCircle(memory_region *region) {
 	int object_index = 0;
 	object **object_list = (object **)malloc(sizeof(object *) * object_count);
 
-	material lambertian = make_lambertian();
-	material *matptr = (material *)memory_region_add(region, &lambertian, sizeof(material));
+	material *lambertian = add_lambertian(region);
 
 	vec3 x_offset = vec3_new(-4.0, 0.0, 0.0);
 
-	object center_sphere = make_sphere(vec3_add(x_offset, vec3_new(0.0, 0.0, 0.0)), 1.0, fcolor_new(1.0, 1.0, 1.0), matptr);
-	object *centerptr = (object *)memory_region_add(region, &center_sphere, sizeof(object));
-	object_list[object_index] = centerptr;
+	object *center_sphere = add_sphere(region, vec3_add(x_offset, vec3_new(0.0, 0.0, 0.0)), 1.0, fcolor_new(1.0, 1.0, 1.0), lambertian);
+	object_list[object_index] = center_sphere;
 	++object_index;
 
 	vec3 offset = vec3_new(0.0, 1.0, 0.0);
@@ -110,9 +105,8 @@ scene RainbowCircle(memory_region *region) {
 		float theta = -degrees_to_radians(theta_inc * (float)i);
 		vec3 center = vec3_mul(vec3_new(0.0, cosf(theta), sinf(theta)), outer_radius);
 		center = vec3_add(x_offset, center);
-		object o = make_sphere(center, r, rainbow[i], matptr);
-		object *optr = (object *)memory_region_add(region, &o, sizeof(object));
-		object_list[object_index] = optr;
+		object *o = add_sphere(region, center, r, rainbow[i], lambertian);
+		object_list[object_index] = o;
 		++object_index;
 	}
 
