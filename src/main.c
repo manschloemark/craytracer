@@ -22,6 +22,7 @@
 
 #include "memory.h"
 
+#include "timer.h"
 /* Data Types */
 
 static inline float Clamp(float n, float min, float max) {
@@ -120,6 +121,8 @@ void Render(fcolor *pixels, int samples, int height, int width, int max_depth, p
 
 
 int main(int argc, char **argv) {
+	timer runtime = {};
+	TIMER_START(runtime);
 	struct arguments args = {};
 
 	// Default args
@@ -182,13 +185,22 @@ int main(int argc, char **argv) {
 
 	fcolor *pixels = malloc(args.img_height * args.img_width * sizeof(fcolor)); 
 
+	timer render_timer = {};
+	TIMER_START(render_timer);
+
 	Render(pixels, args.samples, args.img_height, args.img_width, max_depth, origin, vp_corner, horizontal, vertical, &s);
+	TIMER_END(render_timer);
 
 	WriteToPPM(pixels, args.samples, args.img_height, args.img_width, bytes_per_channel, ppm_file);
 	fclose(ppm_file);
 	free(pixels);
 	FreeScene(&s);
 	FreeMemoryRegion(&mem_region);
+
+	TIMER_END(runtime);
+		
+	printf("Render Time: %fs\n", TIMER_DURATION_S(render_timer));
+	printf("Total Time: %fs\n", TIMER_DURATION_S(runtime));
 
 	return 0;
 }
