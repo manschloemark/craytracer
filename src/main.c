@@ -118,14 +118,13 @@ void Render(fcolor *pixels, int samples, int height, int width, int max_depth, p
 	}
 }
 
-// TODO :::: finish implementing materials
 
 int main(int argc, char **argv) {
 	struct arguments args = {};
 
 	// Default args
 	args.samples = 10;
-	args.img_width = 720;
+	args.img_width = 1280;
 	args.img_height = 0;
 	args.seed = 0;
 	args.scene = -1;
