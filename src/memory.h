@@ -8,8 +8,7 @@
 
 typedef struct {
 	void *mem;
-	int max_size;
-	int used;
+	int max_size, used;
 } memory_region;
 
 memory_region make_memory_region(int start_size) {
@@ -17,7 +16,6 @@ memory_region make_memory_region(int start_size) {
 	region.mem = malloc(start_size);
 	region.max_size = start_size;
 	region.used = 0;
-
 	return region;
 }
 

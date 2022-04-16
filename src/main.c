@@ -99,7 +99,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 }
 
 void Render(fcolor *pixels, int samples, int height, int width, int max_depth, point3 origin, point3 vp_corner, vec3 horizontal, vec3 vertical, scene *scene) {
-	fcolor bgcolor = fcolor_new(0.5, 0.6, 0.9);
+	fcolor bgcolor = fcolor_new(0.55, 0.8, 0.9);
 	int i, j;
 	for (j = height-1; j >= 0; --j) {
 		for (i = 0; i < width; ++i) {

@@ -117,6 +117,52 @@ scene RainbowCircle(memory_region *region) {
 	return s;
 }
 
+scene TestReflection(memory_region *region) {
+	int object_count = 9;
+	int object_index = 0;
+	object **object_list = (object **)malloc(sizeof(object *) * object_count);
+
+	material *blurrymetal = add_metal(region, 0.65);
+	material *clearmetal = add_metal(region, 0.0);
+
+	vec3 x_offset = vec3_new(-5.0, 0.0, 0.0);
+
+	object *center_sphere = add_sphere(region, vec3_add(x_offset, vec3_new(-5.0, 0.0, -102.0)), 100.0, fcolor_new(0.8, 0.8, 0.8), clearmetal);
+	object_list[object_index] = center_sphere;
+	++object_index;
+
+	int outer_count = 7;
+	float outer_radius = 2.1;
+	float r = 0.6;
+	fcolor rainbow[7];
+	rainbow[0] = fcolor_new(1.0, 0.0, 0.0);
+	rainbow[1] = fcolor_new(0.7, 0.5, 0.0);
+	rainbow[2] = fcolor_new(0.8, 0.8, 0.0);
+	rainbow[3] = fcolor_new(0.0, 1.0, 0.0);
+	rainbow[4] = fcolor_new(0.0, 0.0, 1.0);
+	rainbow[5] = fcolor_new(0.12, 0.0, 0.6);
+	rainbow[6] = fcolor_new(0.77, 0.0, 0.77);
+	float theta_inc = pi / (float)(outer_count-1);
+	for (int i = 0; i < outer_count; ++i) {
+		float theta = -theta_inc * (float)i;
+		vec3 center = vec3_mul(vec3_new(sinf(theta), cosf(theta), 0.0), outer_radius);
+		center = vec3_add(vec3_add(x_offset, vec3_new(0.0, 0.0, -1.0)), center);
+		object *o = add_sphere(region, center, r, rainbow[i], blurrymetal);
+		object_list[object_index] = o;
+		++object_index;
+	}
+
+	object *tri = add_triangle(region, vec3_new(-10.0, -20.0, -5.0), vec3_new(-8.0, 0.0, 20.0), vec3_new(-10.0, 20.0, -5.0), fcolor_new(0.5, 0.5, 0.5), blurrymetal);
+	object_list[object_index] = tri;
+	++object_index;
+
+	scene s = {};
+	s.objects = object_list;
+	s.object_count = object_index;
+	return s;
+
+}
+
 scene TestMetal(memory_region *region) {
 	int object_count = 0;
 
@@ -171,6 +217,8 @@ scene SceneSelect(memory_region *region, int selection) {
 			return RainbowCircle(region);
 		case 3:
 			return TestMetal(region);
+		case 4:
+			return TestReflection(region);
 		default:
 			return RandomTestScene(region);
 
