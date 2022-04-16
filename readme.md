@@ -9,12 +9,12 @@ This project will help me practice C, architecture, graphics programming princip
 
 Usage
 ---
-Written on Manjaro Linux and I have not tested other distros.
-To compile:
-`cd src/`
-`source build.sh`
-build.sh compiles the program using gcc.
-the executable, crt.exe will be in craytracer/build/
+Written on Manjaro Linux and I have not tested other distros.  
+To compile:  
+`cd src/`  
+`source build.sh`  
+build.sh compiles the program using gcc.  
+the executable, crt.exe will be in craytracer/build/  
 
 | Command Line Argument | Description | Default |
 --- | --- | ---
