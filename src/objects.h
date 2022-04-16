@@ -18,8 +18,8 @@ typedef struct {
 } hit_record;
 
 // Ensure the normal is pointing in the opposite direction of the incident ray
-void outward_normal(vec3 incident, vec3 normal) {
-	if(vec3_dot(incident, normal) > 0.0) normal = vec3_neg(normal);
+void outward_normal(vec3 incident, vec3 *normal) {
+	if(vec3_dot(incident, *normal) > 0.0) *normal = vec3_neg(*normal);
 }
 
 typedef struct {
@@ -86,7 +86,7 @@ int IntersectSphere(object *obj, ray *r, hit_record *hitrec) {
 	hitrec->t = root;
 	hitrec->pt = pt_on_ray(r, root);
 	vec3 n = vec3_unit(vec3_sub(hitrec->pt, s->center));
-	outward_normal(r->dir, n);
+	outward_normal(r->dir, &n);
 	hitrec->n = n;
 	hitrec->mat = obj->mat;
 	hitrec->color = &obj->color;
@@ -125,8 +125,8 @@ int IntersectTriangle(object *obj, ray *r, hit_record *hitrec){
 	hitrec->t = t;
 	hitrec->pt = pt_on_ray(r, t);
 	vec3 n = vec3_cross(BA, CA);
-	outward_normal(r->dir, n);
-	hitrec->n = n;
+	outward_normal(r->dir, &n);
+	hitrec->n = vec3_unit(n);
 	hitrec->mat = obj->mat;
 	hitrec->color = &obj->color;
 
