@@ -9,25 +9,22 @@ const char *argp_program_version = "craytracer 0.1"; // NOTE : I don't really us
 const char *argp_program_bug_address = "<markofwisdumb@gmail.com>";
 static char doc[] = "craytracer -- a personal minimal ray tracer written in C.";
 
+// Format of argument options:
+// {argument_name, key, input_name, argp_flags, documentation_string, group_number}
+// Groups: 1 = output. 2 = render. 3 = performance. 4 = debugging.
 static struct argp_option options[] = {
-	// Output options
-	// NOTE: should be .ppm format in this version"
-	{"output", 'o', "FILE", 0, "Path where render is stored. Should be PPM!"},
-	{"width", 'w', "WIDTH", 0, "Width of output image in pixels.", 0},
-	{"height", 'h', "HEIGHT", 0, "Height of output image in pixels.", 0},
-	// Render options
-	// TODO :: specify scene files insead of hardcoded functions
-	{"scene", 'c', "SCENE", 0, "Which scene to generate -- SCENE is an integer used in a switch statement.", 1},
-	// Performance related
+	{"output", 'o', "FILE", 0, "Path where render is stored. Should be PPM!", 1},
+	{"width", 'w', "WIDTH", 0, "Width of output image in pixels.", 1},
+	{"height", 'h', "HEIGHT", 0, "Height of output image in pixels.", 1},
+	{"scene", 'c', "SCENE", 0, "Which scene to generate -- SCENE is an integer used in a switch statement.", 2},
 	{"num-samples", 'n', "N_SAMPLES", 0, "Take a sample from each pixel N_SAMPLES times", 2},
-	//{"max-depth", 'd', "MAX_DEPTH", 0, "MAX_DEPTH is the number of times a ray can be reflected.", 2},
+	{"max-depth", 'd', "MAX_DEPTH", 0, "MAX_DEPTH is the number of times a ray can be reflected.", 2},
+	{"seed", 's', "SEED", 0, "Seed to pass to stdlib.h srand()", 2},
 	//{"num-threads", 't', "N_THREADS", 0, "Create N_THREADS threads to render the image in parallel. Default is estimated number of cores.", 2},
-	// TODO :: should this be a runtime flag or a compile time flag? 
 	// Debugging related
-	{"verbose", 'v', 0, 0, "Verbose output. Prints extra info while rendering.", 3},
+	{"verbose", 'v', 0, OPTION_NO_USAGE, "Verbose output. Prints extra info while rendering.", 4},
 	// TODO :: implement proper logging capability.
-	// {"logfile",         'l', 0, 0, "The file to which log messages will be sent", 2},
-	{"seed", 's', "SEED", 0, "Seed to pass to stdlib.h srand()"},
+	// {"logfile",         'l', "LOGFILE", OPTION_HIDDEN | OPTION_ARG_OPTIONAL, "The file to which log messages will be sent", 4},
 	{0} // This needs to be here to argp knows where the options list ends.
 };
 
@@ -46,11 +43,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 
 	switch (key)
 	{
-	/*
-	case 's':
-		args->scene = atoi(arg);
-		break;
-	*/
 	case 'o':
 		args->outfile = arg;
 		break;
@@ -63,6 +55,15 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	case 'n':
 		args->samples = atoi(arg);
 		break;
+	case 'c':
+		args->scene = atoi(arg);
+		break;
+	case 'd':
+		args->max_depth = atoi(arg);
+		break;
+	case 's':
+		args->seed = (unsigned int)atoi(arg);
+		break;
 	/*
 	case 't':
 		args->num_threads = atoi(arg);
@@ -70,12 +71,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	*/
 	case 'v':
 		args->verbose = 1;
-		break;
-	case 's':
-		args->seed = (unsigned int)atoi(arg);
-		break;
-	case 'c':
-		args->scene = atoi(arg);
 		break;
 	default:
 		return ARGP_ERR_UNKNOWN;

@@ -123,14 +123,15 @@ void Render(fcolor *pixels, int samples, int height, int width, int max_depth, p
 int main(int argc, char **argv) {
 	timer runtime = {};
 	TIMER_START(runtime);
-	struct arguments args = {};
 
+	struct arguments args = {};
 	// Default args
-	args.samples = 10;
 	args.img_width = 1280;
 	args.img_height = 0;
-	args.seed = 0;
+	args.samples = 10;
+	args.max_depth = 10;
 	args.scene = -1;
+	args.seed = 0;
 
 	if (argp_parse(&argp, argc, argv, 0, 0, &args)) {
 		puts("Error parsing arguments. Use -? for help.");
@@ -163,8 +164,6 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-	int max_depth = 20;
-
 	float vp_height = 2.0;
 	float vp_width = vp_height * aspect_ratio;
 	float focal_length = 1.0;
@@ -188,7 +187,7 @@ int main(int argc, char **argv) {
 	timer render_timer = {};
 	TIMER_START(render_timer);
 
-	Render(pixels, args.samples, args.img_height, args.img_width, max_depth, origin, vp_corner, horizontal, vertical, &s);
+	Render(pixels, args.samples, args.img_height, args.img_width, args.max_depth, origin, vp_corner, horizontal, vertical, &s);
 	TIMER_END(render_timer);
 
 	WriteToPPM(pixels, args.samples, args.img_height, args.img_width, bytes_per_channel, ppm_file);
