@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
 				);
 
 	if (!ppm_file) {
-		puts("Could not open given file name.");
+		puts("ERROR: Could not open given file name.");
 		return -1;
 	}
 
