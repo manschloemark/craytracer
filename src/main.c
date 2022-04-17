@@ -89,7 +89,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 	ray scattered_ray = {};
 	scattered_ray.pt = hitrec.pt;
 	scattered_ray.dir = r.dir;
-	int scattered = Scatter(hitrec.mat, &hitrec.n, &scattered_ray);
+	int scattered = Scatter(hitrec.mat, hitrec.hit_front, &hitrec.n, &scattered_ray);
 
 	if (scattered == 0) return fcolor_new(0.0, 0.0, 0.0);
 
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
 				vec3_new(focal_length, 0.0, 0.0)
 				);
 
-	memory_region mem_region = make_memory_region(1024);
+	memory_region mem_region = make_memory_region(4096);
 	scene s = SceneSelect(&mem_region, args.scene);
 
 	fcolor *pixels = malloc(args.img_height * args.img_width * sizeof(fcolor)); 
