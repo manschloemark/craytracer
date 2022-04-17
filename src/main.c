@@ -103,6 +103,7 @@ void Render(fcolor *pixels, int samples, int height, int width, int max_depth, p
 	fcolor bgcolor = fcolor_new(0.55, 0.8, 0.9);
 	int i, j;
 	for (j = height-1; j >= 0; --j) {
+		printf("\r%d lines remaining", j);
 		for (i = 0; i < width; ++i) {
 			int s;
 			for (s = 0; s < samples; ++s) {
@@ -117,6 +118,7 @@ void Render(fcolor *pixels, int samples, int height, int width, int max_depth, p
 			++pixels;
 		}
 	}
+	printf("\r");
 }
 
 
