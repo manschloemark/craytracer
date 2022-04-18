@@ -95,7 +95,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 
 	// NOTE : assign this to a variable for debugging purposes
 	fcolor recursive_result = TraceRay(scattered_ray, scene, bgcolor, calldepth - 1);
-	COLOR_MUL(recursive_result, *hitrec.color);
+	COLOR_MUL(recursive_result, TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt));
 	return recursive_result;
 }
 
@@ -183,6 +183,9 @@ int main(int argc, char **argv) {
 
 	memory_region mem_region = make_memory_region(4096);
 	scene s = SceneSelect(&mem_region, args.scene);
+
+	// NOTE : undo the || eventually
+	if (args.verbose || 1) printf("Memory region use: %d / %d bytes.\n", mem_region.used, mem_region.max_size);
 
 	fcolor *pixels = malloc(args.img_height * args.img_width * sizeof(fcolor)); 
 

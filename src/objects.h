@@ -6,6 +6,7 @@
 #include "ray.h"
 #include "color.h"
 #include "material.h"
+#include "texture.h"
 
 #include "memory.h"
 
@@ -13,8 +14,9 @@ typedef struct {
 	point3 pt;
 	vec3 n;
 	material *mat;
-	fcolor *color;
+	texture *text;
 	float t_min, t_max, t;
+	float u, v;
 	int hit_front;
 } hit_record;
 
@@ -62,9 +64,9 @@ union shape {
 
 typedef struct {
 	union shape shape;
-	fcolor color;
-	enum ShapeID id;
 	material *mat;
+	texture *text;
+	enum ShapeID id;
 } object;
 
 // TODO : I only make s a pointer here because I don't feel like fixing all the ->, fix it later (also in IntersectTriangle)
@@ -94,7 +96,11 @@ int IntersectSphere(object *obj, ray *r, hit_record *hitrec) {
 	hitrec->hit_front = outward_normal(r->dir, &n);
 	hitrec->n = n;
 	hitrec->mat = obj->mat;
-	hitrec->color = &obj->color;
+	hitrec->text = obj->text;
+	float phi = acosf(-hitrec->n.z);
+	float theta = atan2(-hitrec->n.x, hitrec->n.y) + pi;
+	hitrec->u = theta / (2.0 * pi);
+	hitrec->v = phi / pi;
 
 	return 1;
 }
@@ -133,37 +139,41 @@ int IntersectTriangle(object *obj, ray *r, hit_record *hitrec){
 	hitrec->hit_front = outward_normal(r->dir, &n);
 	hitrec->n = vec3_unit(n);
 	hitrec->mat = obj->mat;
-	hitrec->color = &obj->color;
+	hitrec->text = obj->text;
+
+	// Sphere uv coords
+	hitrec->u = u;
+	hitrec->v = v;
 
 	return 1;
 	// NOTE : u and v are the uv coordinates. I don't need them yet but that'll be useful.
 }
 
-object make_sphere(point3 center, float r, fcolor color, material *mat) {
+object make_sphere(point3 center, float r, texture *text, material *mat) {
 	object o;
 	o.id = Sphere;
 	o.shape.sphere = sphere_new(center, r);
-	o.color = color;
+	o.text = text;
 	o.mat = mat;
 	return o;
 }
 
-object make_triangle(point3 a, point3 b, point3 c, fcolor color, material *mat) {
+object make_triangle(point3 a, point3 b, point3 c, texture *text, material *mat) {
 	object o;
 	o.id = Triangle;
 	o.shape.triangle = triangle_new(a, b, c);
-	o.color = color;
+	o.text = text;
 	o.mat = mat;
 	return o;
 }
 
-object *add_sphere(memory_region *region, point3 center, float r, fcolor color, material *mat) {
-	object o = make_sphere(center, r, color, mat);
+object *add_sphere(memory_region *region, point3 center, float r, texture *text, material *mat) {
+	object o = make_sphere(center, r, text, mat);
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }
 
-object *add_triangle(memory_region *region, point3 a, point3 b, point3 c, fcolor color, material *mat) {
-	object o = make_triangle(a, b, c, color, mat);
+object *add_triangle(memory_region *region, point3 a, point3 b, point3 c, texture *text, material *mat) {
+	object o = make_triangle(a, b, c, text, mat);
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }
 
