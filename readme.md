@@ -6,6 +6,7 @@ This is largely inspired by Peter Shirley's Ray Tracing in One Weekend, but it u
 This project will help me practice C, architecture, graphics programming principles, and math.  
 
 ![A demo scene](./examples/ex.jpg)
+![A scene showcasing reflections](./examples/reflection.jpg)
 
 Usage
 ---
