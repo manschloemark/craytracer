@@ -19,7 +19,8 @@ the executable, crt.exe will be in craytracer/build/
 
 | Command Line Argument | Description | Default |
 --- | --- | ---
-| -o, --output=FILE          | Path where render is stored. Must be .ppm file | N/A |
+| -o, --output=FILE          | Path where render is stored. Accepts .jpg, .png, .ppm, .bmp | N/A |
+| -j, --jpeg_quality=QUALITY | Int from [1, 100] that determines quality of jpg output. (1 has really bad artifacts) | 100 |
 | -w, --width=WIDTH          | Width of output image in pixels. | 720 |
 | -h, --height=HEIGHT        | Height of output image in pixels. | width * 9/16  |
 | -n, --num-samples=N_SAMPLES  | Use (integer) N_SAMPLES for each pixel | 10 |
