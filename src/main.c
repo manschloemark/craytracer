@@ -22,54 +22,10 @@
 
 #include "memory.h"
 
+#include "output.h"
+
 #include "timer.h"
-/* Data Types */
 
-static inline float Clamp(float n, float min, float max) {
-	return (n < min) ? min : (n > max) ? max : n;
-}
-/* File I/O */
-
-// TODO :: at some point it would be nice to make it so instead of overwriting
-//         this function does it so if filename = test.ppm and test.ppm exists it changes the
-//         filename to test(1).ppm or something like that.
-void GetUniqueFilename(char *filename) {
-	return;
-}
-
-FILE *MakePPMFile(char *filename, int height, int width) {
-	FILE *newfile = fopen(filename, "w");
-	if (!newfile) return NULL;
-
-	char *header;
-	header = malloc(sizeof(char) * 64);
-	snprintf(header, 64, "P6 %i %i %i\n", width, height, 255);
-	fputs(header, newfile);
-	fflush(newfile);
-	free(header);
-	return newfile;
-}
-
-
-void WriteToPPM(fcolor *pixels, int samples, int height, int width, int bytes_per_channel, FILE *dest) {
-	unsigned char *temp = malloc(height * width * bytes_per_channel * 3);
-	int count;
-	for (count = 0; count < height * width * 3; count = count + 3) {
-		// gamma 2 correction
-		float r = sqrt(pixels->r / (float)samples);
-		float g = sqrt(pixels->g / (float)samples);
-		float b = sqrt(pixels->b / (float)samples);
-		temp[count] = (unsigned char)(Clamp(r, 0.0, 0.999) * 256);
-		temp[count+1] = (unsigned char)(Clamp(g, 0.0, 0.999) * 256);
-		temp[count+2] = (unsigned char)(Clamp(b, 0.0, 0.999) * 256);
-		++pixels;
-	}
-	fwrite(temp, height * width * 3, bytes_per_channel, dest);
-	fflush(dest);
-	free(temp);
-}
-
-/* Rendering */
 fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 	if (calldepth <= 0) return fcolor_new(0.0, 0.0, 0.0);
 
@@ -134,9 +90,16 @@ int main(int argc, char **argv) {
 	args.max_depth = 10;
 	args.scene = -1;
 	args.seed = 0;
+	args.jpeg_quality = 100;
 
 	if (argp_parse(&argp, argc, argv, 0, 0, &args)) {
 		puts("Error parsing arguments. Use -? for help.");
+		return -1;
+	}
+
+	enum FileExtension output_extension = GetImageType(args.outfile);
+	if (output_extension == ERROR) {
+		printf("Error -- cannot handle given filetype.");
 		return -1;
 	}
 
@@ -155,16 +118,6 @@ int main(int argc, char **argv) {
 	}
 
 	int bytes_per_channel = sizeof(char);
-	FILE *ppm_file = MakePPMFile(
-				args.outfile,
-				args.img_height,
-				args.img_width
-				);
-
-	if (!ppm_file) {
-		puts("ERROR: Could not open given file name.");
-		return -1;
-	}
 
 	float vp_height = 2.0;
 	float vp_width = vp_height * aspect_ratio;
@@ -195,9 +148,14 @@ int main(int argc, char **argv) {
 	Render(pixels, args.samples, args.img_height, args.img_width, args.max_depth, origin, vp_corner, horizontal, vertical, &s);
 	TIMER_END(render_timer);
 
-	WriteToPPM(pixels, args.samples, args.img_height, args.img_width, bytes_per_channel, ppm_file);
-	fclose(ppm_file);
+
+	uint8_t *uchar_pixels = PixelToUInt8(pixels, args.samples, args.img_height, args.img_width, bytes_per_channel);
+
 	free(pixels);
+
+	int saved = SaveRenderToImage(args.outfile, uchar_pixels, args.img_height, args.img_width, output_extension, args.jpeg_quality);
+
+	free(uchar_pixels);
 	FreeScene(&s);
 	FreeMemoryRegion(&mem_region);
 
@@ -205,6 +163,12 @@ int main(int argc, char **argv) {
 		
 	printf("Render Time: %fs\n", TIMER_DURATION_S(render_timer));
 	printf("Total Time: %fs\n", TIMER_DURATION_S(runtime));
+
+	if (saved) {
+		puts("Image saved successfully.");
+	} else {
+		puts("ERROR: failed to write output image!");
+	}
 
 	return 0;
 }

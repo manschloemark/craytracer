@@ -6,7 +6,9 @@
 #endif
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "external/stb_image.h"
+#include "external/stb_image_write.h"
 
 #ifdef _MSC_VER
 #pragma warning(pop)

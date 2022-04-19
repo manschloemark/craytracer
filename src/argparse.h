@@ -14,6 +14,7 @@ static char doc[] = "craytracer -- a personal minimal ray tracer written in C.";
 // Groups: 1 = output. 2 = render. 3 = performance. 4 = debugging.
 static struct argp_option options[] = {
 	{"output", 'o', "FILE", 0, "Path where render is stored. Should be PPM!", 1},
+	{"jpeg-quality", 'j', "QUALITY", 0, "Int in [1-100]. Sets of JPEG output. Default is 100.", 1},
 	{"width", 'w', "WIDTH", 0, "Width of output image in pixels.", 1},
 	{"height", 'h', "HEIGHT", 0, "Height of output image in pixels.", 1},
 	{"scene", 'c', "SCENE", 0, "Which scene to generate -- SCENE is an integer used in a switch statement.", 2},
@@ -31,6 +32,7 @@ static struct argp_option options[] = {
 struct arguments {
 	//int scene;
 	char *outfile;
+	int jpeg_quality;
 	int img_width, img_height;
 	int samples, max_depth, num_threads;
 	int verbose;
@@ -45,6 +47,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	{
 	case 'o':
 		args->outfile = arg;
+		break;
+	case 'j':
+		args->jpeg_quality = atoi(arg);
 		break;
 	case 'w':
 		args->img_width = atoi(arg);
