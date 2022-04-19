@@ -17,6 +17,7 @@ enum FileExtension {
 	JPEG, PPM, PNG, BMP, ERROR
 };
 
+// From stack overflow
 const char *GetFileExtension(const char *filename) {
 	const char *c = filename;
 
@@ -50,23 +51,23 @@ void GetUniqueFilename(char *filename) {
 }
 
 void *PixelToUInt8(fcolor *pixels, int samples, int height, int width, int bytes_per_channel) {
-	unsigned char *temp = (unsigned char *)malloc(height * width * bytes_per_channel * 3);
+	uint8_t *temp = (uint8_t *)malloc(height * width * bytes_per_channel * 3);
 	int count;
 	for (count = 0; count < height * width * 3; count = count + 3) {
 		// gamma 2 correction
 		float r = sqrt(pixels->r / (float)samples);
 		float g = sqrt(pixels->g / (float)samples);
 		float b = sqrt(pixels->b / (float)samples);
-		temp[count] = (unsigned char)(clamp(r, 0.0, 0.999) * 256);
-		temp[count+1] = (unsigned char)(clamp(g, 0.0, 0.999) * 256);
-		temp[count+2] = (unsigned char)(clamp(b, 0.0, 0.999) * 256);
+		temp[count] = (uint8_t)(clamp(r, 0.0, 0.999) * 256);
+		temp[count+1] = (uint8_t)(clamp(g, 0.0, 0.999) * 256);
+		temp[count+2] = (uint8_t)(clamp(b, 0.0, 0.999) * 256);
 		++pixels;
 	}
 	return temp;
 }
 
 // Following precedent from stb_image_write, 0 = error, non-0 = success
-int WriteToPPM(const char *filename, int height, int width, unsigned char *pixels) {
+int WriteToPPM(const char *filename, int height, int width, uint8_t *pixels) {
 	FILE *dest = fopen(filename, "w");
 	if (!dest) return 0;
 
@@ -77,7 +78,7 @@ int WriteToPPM(const char *filename, int height, int width, unsigned char *pixel
 	fflush(dest);
 	free(header);
 
-	fwrite(pixels, height * width * 3, sizeof(unsigned char), dest);
+	fwrite(pixels, height * width * 3, sizeof(uint8_t), dest);
 	fflush(dest);
 	fclose(dest);
 	return 1;
@@ -88,7 +89,7 @@ int SaveRenderToImage(const char *filename, void *pixels, int height, int width,
 	int stride_in_bytes;
 	switch (ext) {
 		case PPM:
-			return WriteToPPM(filename, height, width, (unsigned char *)pixels);
+			return WriteToPPM(filename, height, width, (uint8_t *)pixels);
 		case JPEG:
 			return stbi_write_jpg(filename, width, height, 3, pixels, quality);
 		case PNG:

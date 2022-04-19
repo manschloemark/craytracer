@@ -149,13 +149,13 @@ int main(int argc, char **argv) {
 	TIMER_END(render_timer);
 
 
-	uint8_t *uchar_pixels = PixelToUInt8(pixels, args.samples, args.img_height, args.img_width, bytes_per_channel);
+	uint8_t *uint8_t_pixels = PixelToUInt8(pixels, args.samples, args.img_height, args.img_width, bytes_per_channel);
 
-	free(pixels);
+	free(pixels); // no longer need float pixels
 
-	int saved = SaveRenderToImage(args.outfile, uchar_pixels, args.img_height, args.img_width, output_extension, args.jpeg_quality);
+	int saved = SaveRenderToImage(args.outfile, uint8_t_pixels, args.img_height, args.img_width, output_extension, args.jpeg_quality);
 
-	free(uchar_pixels);
+	free(uint8_t_pixels);
 	FreeScene(&s);
 	FreeMemoryRegion(&mem_region);
 
