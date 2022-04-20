@@ -87,16 +87,17 @@ int WriteToPPM(const char *filename, int height, int width, uint8_t *pixels) {
 // NOTE : quality is an optional arg only used with .jpg
 int SaveRenderToImage(const char *filename, void *pixels, int height, int width, enum FileExtension ext, int quality) {
 	int stride_in_bytes;
+	int num_channels = 3;
 	switch (ext) {
 		case PPM:
 			return WriteToPPM(filename, height, width, (uint8_t *)pixels);
 		case JPEG:
-			return stbi_write_jpg(filename, width, height, 3, pixels, quality);
+			return stbi_write_jpg(filename, width, height, num_channels, pixels, quality);
 		case PNG:
-			stride_in_bytes = width * sizeof(uint32_t);
-			return stbi_write_png(filename, width, height, 3, pixels, stride_in_bytes);
+			stride_in_bytes = width * sizeof(uint8_t) * num_channels;
+			return stbi_write_png(filename, width, height, num_channels, pixels, stride_in_bytes);
 		case BMP:
-			return stbi_write_bmp(filename, width, height, 3, pixels);
+			return stbi_write_bmp(filename, width, height, num_channels, pixels);
 		default:
 			return 0;
 	}
