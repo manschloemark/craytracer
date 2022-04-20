@@ -168,6 +168,7 @@ int main(int argc, char **argv) {
 		puts("Image saved successfully.");
 	} else {
 		puts("ERROR: failed to write output image!");
+		return -1;
 	}
 
 	return 0;
