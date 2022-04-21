@@ -15,6 +15,7 @@
 #include "common.h"
 #include "color.h"
 #include "ray.h"
+#include "camera.h"
 
 #include "objects.h"
 #include "material.h"
@@ -55,7 +56,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 	return recursive_result;
 }
 
-void Render(fcolor *pixels, int samples, int height, int width, int max_depth, point3 origin, point3 vp_corner, vec3 horizontal, vec3 vertical, scene *scene) {
+void Render(fcolor *pixels, int samples, int height, int width, int max_depth, camera *cam, scene *scene) {
 	fcolor bgcolor = fcolor_new(0.55, 0.8, 0.9);
 	int i, j;
 	for (j = height-1; j >= 0; --j) {
@@ -66,8 +67,7 @@ void Render(fcolor *pixels, int samples, int height, int width, int max_depth, p
 				float u = ((float)i + random_float()) / (float)(width-1);
 				float v = ((float)j + random_float()) / (float)(height-1);
 
-				vec3 d = vec3_sub(vec3_add(vec3_add(vp_corner, vec3_mul(horizontal, u)), vec3_mul(vertical, v)), origin);
-				ray r = {origin, d};
+				ray r = camera_cast_ray(cam, u, v);
 				fcolor sample = TraceRay(r, scene, &bgcolor, max_depth);
 				COLOR_ADD(*pixels, sample); 
 			}
@@ -119,20 +119,13 @@ int main(int argc, char **argv) {
 
 	int bytes_per_channel = sizeof(char);
 
-	float vp_height = 2.0;
-	float vp_width = vp_height * aspect_ratio;
-	float focal_length = 1.0;
 
-	point3 origin = {0.0, 0.0, 0.0};
-	vec3 vertical = {0.0, 0.0, vp_height};
-	vec3 horizontal = {0.0, vp_width, 0.0};
-	vec3 vp_corner = vec3_sub(
-				vec3_sub(
-					vec3_sub(origin, vec3_div(horizontal, 2.0)),
-					vec3_div(vertical, 2.0)
-					),
-				vec3_new(focal_length, 0.0, 0.0)
-				);
+	point3 origin = vec3_new(0.0, 0.0, 0.0);
+	point3 target = {-1.0, 0.0, 0.0};
+	vec3 vup = {0.0, 0.0, 1.0};
+	float vfov = 60.0;
+	float focal_length = vec3_len(vec3_sub(target, origin));
+	camera cam = make_camera(origin, target, vup, vfov, aspect_ratio, focal_length);
 
 	memory_region mem_region = make_memory_region(4096);
 	scene s = SceneSelect(&mem_region, args.scene);
@@ -145,7 +138,7 @@ int main(int argc, char **argv) {
 	timer render_timer = {};
 	TIMER_START(render_timer);
 
-	Render(pixels, args.samples, args.img_height, args.img_width, args.max_depth, origin, vp_corner, horizontal, vertical, &s);
+	Render(pixels, args.samples, args.img_height, args.img_width, args.max_depth, &cam, &s);
 	TIMER_END(render_timer);
 
 
