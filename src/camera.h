@@ -25,7 +25,9 @@ camera make_camera(point3 origin, point3 target, vec3 vup, float vfov, float asp
 	// NOTE : when vup and (origin - target) are parallel the cross product is the 0 vector. This is not good.
 	//        Since vup is hard-coded to be (0, 0, 1) This is only an issue when the camera is looking straight down.
 	//        In that case I'll assume (-1, 0, 0) is a suitable vup.
-	if (vec3_near_zero(vec3_cross(vup, cam.w))) vup = vec3_new(-1.0, 0.0, 0.0);
+	if (vec3_near_zero(vec3_cross(vup, cam.w))) {
+		vup = vec3_new(-1.0, 0.0, 0.0);
+	}
 	cam.u = vec3_unit(vec3_cross(vup, cam.w));
 	cam.v = vec3_cross(cam.w, cam.u);
 
@@ -46,7 +48,7 @@ camera make_camera(point3 origin, point3 target, vec3 vup, float vfov, float asp
 static inline ray camera_cast_ray(camera *cam, float u, float v) {
 	//dir = vp_corner + (horizontal * %across) + (vertical + %across) - origin
 	vec3 dir = vec3_sub(vec3_add(vec3_add(cam->vp_corner, vec3_mul(cam->horizontal, u)), vec3_mul(cam->vertical, v)), cam->origin);
-	ray r = {cam->origin, dir};
+	ray r = ray_new(cam->origin, dir);
 	return r;
 }
 #endif
