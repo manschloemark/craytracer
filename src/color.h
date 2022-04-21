@@ -48,7 +48,7 @@ static inline fcolor color_mix(fcolor a, fcolor b, float f) {
 #define COLOR_BLACK fcolor_new(0.0, 0.0, 0.0)
 #define COLOR_WHITE fcolor_new(1.0, 1.0, 1.0)
 // Color to be used when textures go bad or something
-#define COLOR_UNDEFPURP fcolor_new(1.0, 0.65, 1.0);
+#define COLOR_UNDEFPURP fcolor_new(1.0, 0.65, 1.0)
 
 
 #endif
