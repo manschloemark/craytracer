@@ -92,7 +92,7 @@ int IntersectSphere(object *obj, ray *r, hit_record *hitrec) {
 
 	hitrec->t = root;
 	hitrec->pt = pt_on_ray(r, root);
-	vec3 n = vec3_unit(vec3_sub(hitrec->pt, s->center));
+	vec3 n = vec3_div(vec3_sub(hitrec->pt, s->center), s->radius); // dividing by radius is a fast way to get unit vector
 	hitrec->hit_front = outward_normal(r->dir, &n);
 	hitrec->n = n;
 	hitrec->mat = obj->mat;
