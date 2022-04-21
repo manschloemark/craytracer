@@ -118,18 +118,18 @@ int IntersectTriangle(object *obj, ray *r, hit_record *hitrec){
 
 	float inv_determinant = 1.0 / determinant;
 
-	vec3 dirA = vec3_sub(r->dir, tri->a);
+	vec3 raypointA = vec3_sub(r->pt, tri->a);
 
-	float u = vec3_dot(dirA, dir_cross_CA) * inv_determinant;
+	float u = vec3_dot(raypointA, dir_cross_CA) * inv_determinant;
 
 	if (u < 0.0 || u > 1.0) return 0;
 
-	vec3 dirA_cross_BA = vec3_cross(dirA, BA);
-	float v = vec3_dot(r->dir, dirA_cross_BA) * inv_determinant;
+	vec3 raypointA_cross_BA = vec3_cross(raypointA, BA);
+	float v = vec3_dot(r->dir, raypointA_cross_BA) * inv_determinant;
 
 	if (v < 0.0 || u + v > 1.0) return 0;
 
-	float t = vec3_dot(CA, dirA_cross_BA) * inv_determinant;
+	float t = vec3_dot(CA, raypointA_cross_BA) * inv_determinant;
 
 	if (t < hitrec->t_min || t > hitrec->t) return 0;
 
