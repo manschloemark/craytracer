@@ -1,2 +1,4 @@
-gcc $@ main.c -o ../build/crt.exe -lm
+#!/usr/bin/env bash
+filename=$(git branch --show-current).exe
+gcc $@ main.c -o ../build/$filename -lm
 
