@@ -18,10 +18,6 @@ vec3 vec3_new(float x, float y, float z) {
 	return v;
 }
 
-static inline int vec3_near_zero(vec3 v) {
-	const float epsilon = 0.0000001;
-	return (v.x < epsilon) && (v.y < epsilon) && (v.z < epsilon);
-}
 
 // Vector/Vector operations
 vec3 vec3_add(vec3 a, vec3 b) {
@@ -74,6 +70,12 @@ static inline vec3 vec3_neg(vec3 a) {
 vec3 vec3_abs(vec3 a) {
 	vec3 v = {fabsf(a.x), fabsf(a.y), fabsf(a.z)};
 	return v;
+}
+
+static inline int vec3_near_zero(vec3 v) {
+	const float epsilon = 0.000001;
+	vec3 abs_v = vec3_abs(v);
+	return (v.x < epsilon) && (v.y < epsilon) && (v.z < epsilon);
 }
 
 vec3 vec3_unit(vec3 a) {
