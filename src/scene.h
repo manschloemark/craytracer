@@ -293,19 +293,27 @@ scene TestGlass(memory_region *region) {
 	int object_index = 0;
 	object **object_list = (object **)malloc(sizeof(object *) * object_count);
 
+	texture *rainbow[7];
+	rainbow[0] = add_color_texture(region, COLOR_RED);
+	rainbow[1] = add_color_texture(region, fcolor_new(0.7, 0.5, 0.0));
+	rainbow[2] = add_color_texture(region, fcolor_new(0.8, 0.8, 0.0));
+	rainbow[3] = add_color_texture(region, fcolor_new(0.0, 1.0, 0.0));
+	rainbow[4] = add_color_texture(region, fcolor_new(0.0, 0.0, 1.0));
+	rainbow[5] = add_color_texture(region, fcolor_new(0.12, 0.0, 0.6));
+	rainbow[6] = add_color_texture(region, fcolor_new(0.77, 0.0, 0.77));
+	texture *white = add_color_texture(region, COLOR_WHITE);
+	texture *purple = add_color_texture(region, COLOR_UNDEFPURP);
+
 	material *lambertian = add_lambertian(region);
 	material *clearmetal = add_metal(region, 0.0);
 	material *glass = add_glass(region, 1.52);
 
 	vec3 x_offset = vec3_new(-15.0, 0.0, 0.0);
 
-	texture *white = add_color_texture(region, COLOR_WHITE);
-
-	object *glass_sphere = add_sphere(region, vec3_new(-5.0, 0.0, 0.0), 1.2, white, glass);
+	object *glass_sphere = add_sphere(region, vec3_new(-5.0, 0.0, 0.0), 1.2, purple, glass);
 	object_list[object_index] = glass_sphere;
 	++object_index;
 
-	texture *purple = add_color_texture(region, COLOR_UNDEFPURP);
 	object *sphere_below = add_sphere(region, vec3_new(-5.0, 0.0, -5.0), 0.8, purple, clearmetal);
 	object_list[object_index] = sphere_below;
 	++object_index;
@@ -319,14 +327,6 @@ scene TestGlass(memory_region *region) {
 	int outer_count = 7;
 	float outer_radius = 2.1;
 	float r = 0.9;
-	texture *rainbow[7];
-	rainbow[0] = add_color_texture(region, COLOR_RED);
-	rainbow[1] = add_color_texture(region, fcolor_new(0.7, 0.5, 0.0));
-	rainbow[2] = add_color_texture(region, fcolor_new(0.8, 0.8, 0.0));
-	rainbow[3] = add_color_texture(region, fcolor_new(0.0, 1.0, 0.0));
-	rainbow[4] = add_color_texture(region, fcolor_new(0.0, 0.0, 1.0));
-	rainbow[5] = add_color_texture(region, fcolor_new(0.12, 0.0, 0.6));
-	rainbow[6] = add_color_texture(region, fcolor_new(0.77, 0.0, 0.77));
 	float theta_inc = 360.0 / (float)(outer_count);
 	for (int i = 0; i < outer_count; ++i) {
 		float theta = -degrees_to_radians(theta_inc * (float)i);
