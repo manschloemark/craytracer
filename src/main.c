@@ -80,6 +80,7 @@ void Render(fcolor *pixels, int samples, int height, int width, int max_depth, c
 
 int main(int argc, char **argv) {
 	timer runtime = {};
+	timer render_timer = {};
 	TIMER_START(runtime);
 
 	struct arguments args = {};
@@ -117,11 +118,11 @@ int main(int argc, char **argv) {
 		args.img_height = args.img_width / aspect_ratio;
 	}
 
-	int bytes_per_channel = sizeof(char);
+	int bytes_per_channel = sizeof(uint8_t);
 
 
-	point3 origin = vec3_new(0.0, 0.0, 0.0);
-	point3 target = {-1.0, 0.0, 0.0};
+	point3 origin = vec3_new(-5.0, 0.0, 10.0);
+	point3 target = {-5.0, 0.0, 0.0};
 	vec3 vup = {0.0, 0.0, 1.0};
 	float vfov = 60.0;
 	float focal_length = vec3_len(vec3_sub(target, origin));
@@ -135,9 +136,7 @@ int main(int argc, char **argv) {
 
 	fcolor *pixels = malloc(args.img_height * args.img_width * sizeof(fcolor)); 
 
-	timer render_timer = {};
 	TIMER_START(render_timer);
-
 	Render(pixels, args.samples, args.img_height, args.img_width, args.max_depth, &cam, &s);
 	TIMER_END(render_timer);
 
