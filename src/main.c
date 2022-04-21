@@ -48,7 +48,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 	scattered_ray.dir = r.dir;
 	int scattered = Scatter(hitrec.mat, hitrec.hit_front, &hitrec.n, &scattered_ray);
 
-	if (scattered == 0) return fcolor_new(0.0, 0.0, 0.0);
+	if (scattered == 0) return TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt);
 
 	// NOTE : assign this to a variable for debugging purposes
 	fcolor recursive_result = TraceRay(scattered_ray, scene, bgcolor, calldepth - 1);
@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
 	int bytes_per_channel = sizeof(uint8_t);
 
 
-	point3 origin = vec3_new(10.0, 0.0, 5.0);
+	point3 origin = vec3_new(10.0, 6.2, 5.0);
 	point3 target = vec3_new(-5.0, 0.0, 0.0);
 	//point3 origin = vec3_new(0.0, 0.0, 0.0);
 	vec3 vup = {0.0, 0.0, 1.0};
