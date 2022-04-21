@@ -63,6 +63,11 @@ scene BlackWhite(memory_region *region) {
 	object *black_sphere = add_sphere(region, vec3_new(-5.0, 1.0, 0.5), 1.0, black, matptr);
 	++obj_ct;
 
+	texture *yellow = add_color_texture(region, fcolor_new(1.0, 0.8, 0.3));
+	material *clearmetal = add_metal(region, 0.0);
+	object *metal_sphere = add_sphere(region, vec3_new(-5.0, 0.0, -0.4), 0.1, yellow, clearmetal);
+	++obj_ct;
+
 	// For some reason this does not get a shadown on it... idk why.
 	texture *tritext = add_color_texture(region, fcolor_new(0.3, 0.5, 0.33));
 	object *base = add_triangle(region, vec3_new(20.0, 0.0, -5.0), vec3_new(-20.0, -20.0, -0.5), vec3_new(-20.0, 20.0, -0.5), tritext, matptr);
@@ -73,6 +78,44 @@ scene BlackWhite(memory_region *region) {
 	objects[0] = white_sphere;
 	objects[1] = black_sphere;
 	objects[2] = base;
+	objects[3] = metal_sphere;
+
+	scene s = {};
+
+	s.objects = objects;
+	s.object_count = obj_ct;
+	return s;
+}
+
+scene BlackWhiteGlass(memory_region *region) {
+	int obj_ct = 0;
+	material diff = make_glass(1.51);
+	material *matptr = (material *)memory_region_add(region, &diff, sizeof(material));
+
+	texture *white = add_color_texture(region, COLOR_WHITE);
+
+	object *white_sphere = add_sphere(region, vec3_new(-5.0, -1.0, 0.5), 1.0, white, matptr);
+	++obj_ct;
+
+	texture *black = add_color_texture(region, COLOR_BLACK);
+	object *black_sphere = add_sphere(region, vec3_new(-5.0, 1.0, 0.5), 1.0, black, matptr);
+	++obj_ct;
+
+	texture *yellow = add_color_texture(region, fcolor_new(1.0, 0.8, 0.3));
+	material *clearmetal = add_metal(region, 0.0);
+	object *metal_sphere = add_sphere(region, vec3_new(-5.0, 0.0, -0.4), 0.1, yellow, clearmetal);
+	++obj_ct;
+
+	texture *tritext = add_color_texture(region, fcolor_new(0.3, 0.5, 0.33));
+	object *base = add_triangle(region, vec3_new(20.0, 0.0, -0.5), vec3_new(-20.0, -20.0, -0.5), vec3_new(-20.0, 20.0, -0.5), tritext, clearmetal);
+	++obj_ct;
+
+	object **objects = (object **)malloc(obj_ct * sizeof(object));
+
+	objects[0] = white_sphere;
+	objects[1] = black_sphere;
+	objects[2] = base;
+	objects[3] = metal_sphere;
 
 	scene s = {};
 
@@ -246,7 +289,7 @@ scene TestMaterial(memory_region *region) {
 */
 
 scene TestGlass(memory_region *region) {
-	int object_count = 10;
+	int object_count = 11;
 	int object_index = 0;
 	object **object_list = (object **)malloc(sizeof(object *) * object_count);
 
@@ -260,6 +303,11 @@ scene TestGlass(memory_region *region) {
 
 	object *glass_sphere = add_sphere(region, vec3_new(-5.0, 0.0, 0.0), 1.2, white, glass);
 	object_list[object_index] = glass_sphere;
+	++object_index;
+
+	texture *purple = add_color_texture(region, COLOR_UNDEFPURP);
+	object *sphere_below = add_sphere(region, vec3_new(-5.0, 0.0, -5.0), 0.8, purple, clearmetal);
+	object_list[object_index] = sphere_below;
 	++object_index;
 
 	object *center_sphere = add_sphere(region, vec3_add(x_offset, vec3_new(0.0, 0.0, 0.0)), 1.0, white, clearmetal);
@@ -402,6 +450,8 @@ scene SceneSelect(memory_region *region, int selection) {
 			return TestTextures(region);
 		case 6:
 			return TestGlassAndTextures(region);
+		case 7:
+			return BlackWhiteGlass(region);
 		default:
 			return RandomTestScene(region);
 
