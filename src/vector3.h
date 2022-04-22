@@ -75,7 +75,7 @@ vec3 vec3_abs(vec3 a) {
 static inline int vec3_near_zero(vec3 v) {
 	const float epsilon = 0.000001;
 	vec3 abs_v = vec3_abs(v);
-	return (v.x < epsilon) && (v.y < epsilon) && (v.z < epsilon);
+	return (abs_v.x < epsilon) && (abs_v.y < epsilon) && (abs_v.z < epsilon);
 }
 
 vec3 vec3_unit(vec3 a) {
