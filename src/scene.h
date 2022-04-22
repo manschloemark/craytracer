@@ -288,6 +288,50 @@ scene TestMaterial(memory_region *region) {
 }
 */
 
+scene SimpleGlass(memory_region *region) {
+	int obj_count = 7;
+	int obj_index = 0;
+	object **objects = (object **)malloc(sizeof(object *) * obj_count);
+
+	texture *green = add_color_texture(region, fcolor_new(0.4, 0.77, 0.1));
+	texture *white = add_color_texture(region, COLOR_WHITE);
+	texture *light_blue = add_color_texture(region, fcolor_new(0.5, 0.6, 1.0));
+	texture *live_laugh_love = add_image_texture(region, "../resource/livelaughlove.jpg", 3);
+	texture *text = add_image_texture(region, "../resource/joycekozloff.jpg", 3);
+
+	material *glass = add_glass(region, 1.52);
+	material *water = add_glass(region, 1.333);
+	material *diamond = add_glass(region, 2.417);
+	material *lambertian = add_lambertian(region);
+	material *blurrymetal = add_metal(region, 0.55);
+
+	vec3 middle_line = vec3_new(-1.0, 0.0, 0.0);
+	vec3 left_line = vec3_new(cosf(pi/2), sinf(pi/2), 0.0);
+	vec3 right_line = vec3_new(cosf(pi/2), -sinf(pi/2), 0.0);
+
+	object *glass_ball = add_sphere(region, vec3_mul(middle_line, 4.0), 1.0, white, glass);
+	object *water_ball = add_sphere(region, vec3_mul(left_line, 4.0), 1.0, white, water);
+	object *diamond_ball = add_sphere(region, vec3_mul(right_line, 4.0), 1.0, white, diamond);
+	object *lll_1 = add_sphere(region, vec3_mul(middle_line, 8.0), 1.0, live_laugh_love, lambertian);
+	object *lll_2 = add_sphere(region, vec3_mul(left_line, 8.0), 1.0, live_laugh_love, lambertian);
+	object *lll_3 = add_sphere(region, vec3_mul(right_line, 8.0), 1.0, live_laugh_love, lambertian);
+
+	object *bg = add_sphere(region, vec3_new(-50.0, 0.0, 0.0), 30.0, text, lambertian);
+
+	objects[obj_index++] = glass_ball;
+	objects[obj_index++] = water_ball;
+	objects[obj_index++] = diamond_ball;
+	//objects[obj_index++] = lll_1;
+	//objects[obj_index++] = lll_2;
+	//objects[obj_index++] = lll_3;
+	objects[obj_index++] = bg;
+
+	scene s = {};
+	s.objects = objects;
+	s.object_count = obj_index;
+	return s;
+}
+
 scene TestGlass(memory_region *region) {
 	int object_count = 11;
 	int object_index = 0;
@@ -452,6 +496,8 @@ scene SceneSelect(memory_region *region, int selection) {
 			return TestGlassAndTextures(region);
 		case 7:
 			return BlackWhiteGlass(region);
+		case 8:
+			return SimpleGlass(region);
 		default:
 			return RandomTestScene(region);
 

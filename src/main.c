@@ -121,11 +121,11 @@ int main(int argc, char **argv) {
 	int bytes_per_channel = sizeof(uint8_t);
 
 
-	point3 origin = vec3_new(10.0, 6.2, 5.0);
+	point3 origin = vec3_new(0.0, 0.0, 5.0);
 	point3 target = vec3_new(-5.0, 0.0, 0.0);
 	//point3 origin = vec3_new(0.0, 0.0, 0.0);
 	vec3 vup = {0.0, 0.0, 1.0};
-	float vfov = 45.0;
+	float vfov = 90.0;
 	float focal_length = vec3_len(vec3_sub(target, origin));
 	camera cam = make_camera(origin, target, vup, vfov, aspect_ratio, focal_length);
 
