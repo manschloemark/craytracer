@@ -1,13 +1,13 @@
 #ifndef SCENE_H
 #define SCENE_H
 
+#include "memory.h"
 #include "common.h"
 #include "color.h"
 #include "objects.h"
 #include "texture.h"
 #include "material.h"
 
-#include "memory.h"
 
 typedef struct {
 	object **objects;
@@ -480,6 +480,37 @@ scene TestGlassAndTextures(memory_region *region) {
 	return s;
 }
 
+scene CheckerTest(memory_region *region) {
+	int max_obj = 10;
+	int obj_ct = 0;
+	object **objects = (object **)malloc(max_obj * sizeof(object));
+
+	material *lamb = add_lambertian(region);
+	material *clearmetal = add_metal(region, 0.0);
+
+	texture *white = add_color_texture(region, COLOR_WHITE);
+	texture *yellow = add_color_texture(region, fcolor_new(1.0, 0.8, 0.3));
+	texture *black = add_color_texture(region, COLOR_BLACK);
+	texture *checker = add_checker_texture(region, white, black, 2.0);
+
+	object *white_sphere = add_sphere(region, vec3_new(-5.0, -1.0, 0.5), 1.0, white, clearmetal);
+	objects[obj_ct++] = white_sphere;
+
+
+	object *black_sphere = add_sphere(region, vec3_new(-5.0, 1.0, 0.5), 1.0, black, clearmetal);
+	objects[obj_ct++] = black_sphere;
+
+	// For some reason this does not get a shadown on it... idk why.
+	object *base = add_triangle(region, vec3_new(20.0, 0.0, -5.0), vec3_new(-20.0, -20.0, -0.5), vec3_new(-20.0, 20.0, -0.5), checker, lamb);
+	objects[obj_ct++] = base;
+
+	scene s = {};
+
+	s.objects = objects;
+	s.object_count = obj_ct;
+	return s;
+}
+
 scene SceneSelect(memory_region *region, int selection) {
 	switch(selection) {
 		case 1:
@@ -498,6 +529,8 @@ scene SceneSelect(memory_region *region, int selection) {
 			return BlackWhiteGlass(region);
 		case 8:
 			return SimpleGlass(region);
+		case 9:
+			return CheckerTest(region);
 		default:
 			return RandomTestScene(region);
 

@@ -16,11 +16,8 @@ typedef struct Color fcolor;
   (macro_dest).g *= (macro_color).g; \
   (macro_dest).b *= (macro_color).b;
 
-fcolor fcolor_new(float r, float g, float b) {
-	fcolor c = {};
-	c.r = r;
-	c.g = g;
-	c.b = b;
+static inline fcolor fcolor_new(float r, float g, float b) {
+	fcolor c = {r, g, b};
 	return c;
 }
 

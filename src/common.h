@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-const float pi = 3.141592;
+static const float pi = 3.141592;
 
 static inline float clamp(float n, float min, float max) {
 	return (n < min) ? min : (n > max) ? max : n;
@@ -15,7 +15,7 @@ static inline float random_float() {
 	return (float)rand() / (RAND_MAX + 1.0);
 }
 
-float random_float_between(float min, float max) {
+static inline float random_float_between(float min, float max) {
 	float result = random_float()*(max - min) + min;
 	return result;
 }

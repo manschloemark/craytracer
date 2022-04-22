@@ -4,14 +4,14 @@
  * */
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <math.h>
 #include <time.h>
 
-#include <math.h>
-
 #include "argparse.h"
+
 #include "common.h"
 #include "color.h"
 #include "ray.h"
@@ -19,6 +19,7 @@
 
 #include "objects.h"
 #include "material.h"
+#include "texture.h"
 #include "scene.h"
 
 #include "memory.h"

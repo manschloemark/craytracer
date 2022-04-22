@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
 filename=$(git branch --show-current).exe
-gcc $@ main.c -o ../build/$filename -lm
+
+#echo "Starting $filename compilation..."
+#for cfile in *.c; do
+#	echo "    Compiling $cfile..."
+#	gcc -c "$cfile" -o ../build/obj/"${cfile%.c}.o"
+#done
+gcc $@ ./*.c -o ../build/$filename -lm
 
