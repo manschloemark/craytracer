@@ -36,6 +36,7 @@ enum TextureID {
 	Image,
 	UV,
 	Checker,
+	UVChecker,
 };
 
 union texture_type {
@@ -61,6 +62,9 @@ texture *add_uv_texture(memory_region *region);
 
 texture make_checker_texture(texture *odd, texture *even, float freq);
 texture *add_checker_texture(memory_region *region, texture *odd, texture *even, float freq);
+
+texture make_uv_checker_texture(texture *odd, texture *even, float freq);
+texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *even, float freq);
 
 fcolor TextureColor(texture *text, float u, float v, point3 pt);
 

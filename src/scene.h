@@ -491,18 +491,22 @@ scene CheckerTest(memory_region *region) {
 	texture *white = add_color_texture(region, COLOR_WHITE);
 	texture *yellow = add_color_texture(region, fcolor_new(1.0, 0.8, 0.3));
 	texture *black = add_color_texture(region, COLOR_BLACK);
-	texture *checker = add_checker_texture(region, white, black, 2.0);
-
-	object *white_sphere = add_sphere(region, vec3_new(-5.0, -1.0, 0.5), 1.0, white, clearmetal);
-	objects[obj_ct++] = white_sphere;
+	texture *checker = add_checker_texture(region, black, white, 1.0);
+	texture *uvchecker = add_uv_checker_texture(region, yellow, black, 100.0);
 
 
-	object *black_sphere = add_sphere(region, vec3_new(-5.0, 1.0, 0.5), 1.0, black, clearmetal);
-	objects[obj_ct++] = black_sphere;
-
-	// For some reason this does not get a shadown on it... idk why.
-	object *base = add_triangle(region, vec3_new(20.0, 0.0, -5.0), vec3_new(-20.0, -20.0, -0.5), vec3_new(-20.0, 20.0, -0.5), checker, lamb);
-	objects[obj_ct++] = base;
+	object *ls = add_sphere(region, vec3_new(0.0, -1.0, 1.0), 1.0, checker, lamb);
+	object *rs = add_sphere(region, vec3_new(0.0, 1.0, 1.0), 1.0, uvchecker, lamb);
+	objects[obj_ct++] = ls;
+	objects[obj_ct++] = rs;
+	vec3 a = vec3_new(20.0, 0.0, 0.0);
+	vec3 b = vec3_new(-20.0, 0.0, 0.0);
+	vec3 c = vec3_new(0.0, -20.0, 0.0);
+	vec3 d = vec3_new(0.0, 20.0, 0.0);
+	object *abd = add_triangle(region, a, b, d, checker, lamb);
+	object *abc = add_triangle(region, a, b, c, uvchecker, lamb);
+	objects[obj_ct++] = abc;
+	objects[obj_ct++] = abd;
 
 	scene s = {};
 

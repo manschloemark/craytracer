@@ -100,6 +100,23 @@ texture *add_checker_texture(memory_region *region, texture *odd, texture *even,
 	return checkerptr;
 }
 
+// UV Checker Texture -- this is like the Checker Texture from Peter Shirley's book, but instead of using xyz coordinates it uses uv to make checkers
+// this allows flat shapes to have tiles
+// Since it's identical in every way, this will just use checker_texture_new
+
+texture make_uv_checker_texture(texture *odd, texture *even, float freq) {
+	texture txt = {};
+	checker_texture checkertxt = checker_texture_new(odd, even, freq);
+	txt.id = UVChecker;
+	txt.type.checker = checkertxt;
+	return txt;
+}
+
+texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *even, float freq) {
+	texture checkertxt = make_uv_checker_texture(odd, even, freq);
+	texture *checkerptr = (texture *)memory_region_add(region, &checkertxt, sizeof(texture));
+	return checkerptr;
+}
 
 fcolor ImageTextureColor(image_texture *imgtxt, float u, float v) {
 	if (!imgtxt->pixels) return COLOR_UNDEFPURP;
@@ -115,7 +132,14 @@ fcolor ImageTextureColor(image_texture *imgtxt, float u, float v) {
 
 fcolor CheckerTextureColor(checker_texture *chtxt, float u, float v, vec3 pt) {
 	float sines = sinf(chtxt->freq * pt.x) * sinf(chtxt->freq * pt.y) * sinf(chtxt->freq * pt.z);
-	if (sines < 0)
+	if (sines < 0.0)
+		return TextureColor((texture *)chtxt->odd, u, v, pt);
+	return TextureColor((texture *)chtxt->even, u, v, pt);
+}
+
+fcolor UVCheckerTextureColor(checker_texture *chtxt, float u, float v, vec3 pt) {
+	float sines = sinf(chtxt->freq * u) * sinf(chtxt->freq * v);
+	if (sines < 0.0)
 		return TextureColor((texture *)chtxt->odd, u, v, pt);
 	return TextureColor((texture *)chtxt->even, u, v, pt);
 }
@@ -130,6 +154,8 @@ fcolor TextureColor(texture *text, float u, float v, point3 pt) {
 			return fcolor_new(u, (u + v) / 2.0, v); // NOTE : This is not very useful tbh
 		case Checker:
 			return CheckerTextureColor(&text->type.checker, u, v, pt);
+		case UVChecker:
+			return UVCheckerTextureColor(&text->type.checker, u, v, pt);
 		default:
 			return COLOR_UNDEFPURP;
 	}
