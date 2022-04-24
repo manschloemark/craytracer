@@ -134,9 +134,21 @@ texture make_perlin_noise_texture(memory_region *region, float scale, int pointc
 	return txt;
 }
 
-texture *add_perlin_noise_texture(memory_region *region, float scale, int bits) {
+texture *add_perlin_noise_texture(memory_region *region, float scale) {
 	// NOTE : this is not good practice imo, but for convencience sake
-	int pointcount = (bits > 8 || bits <= 0) ? 256 : pow(2, bits);
+	texture perltext = make_perlin_noise_texture(region, scale, 256);
+	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
+	return perlptr;
+}
+
+// Since C does not have function overloading
+// this is an alternive way to create a perlin_noise_texture.
+// Pass bits (must be in [1 - 10]) and the internal perlin structure will 
+// use that many points.
+// It basically determines how often the pattern repeats.
+texture *add_perlin_noise_texture_sized(memory_region *region, float scale, int bits) {
+	// NOTE : this is not good practice imo, but for convencience sake
+	int pointcount = (bits > 10 || bits <= 0) ? 256 : pow(2, bits);
 	texture perltext = make_perlin_noise_texture(region, scale, pointcount);
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;

@@ -80,7 +80,8 @@ texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *ev
 // I'm not happy with this because it makes everything else inconsistent.
 // But I need to somehow get the actual perlin struct into memory safely.
 texture make_perlin_noise_texture(memory_region *region, float scale, int pointcount);
-texture *add_perlin_noise_texture(memory_region *region, float scale, int bits);
+texture *add_perlin_noise_texture(memory_region *region, float scale);
+texture *add_perlin_noise_texture_sized(memory_region *region, float scale, int bits);
 
 fcolor TextureColor(texture *text, float u, float v, point3 pt);
 
