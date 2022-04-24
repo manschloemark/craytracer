@@ -492,11 +492,12 @@ scene MiscTextureTest(memory_region *region) {
 	texture *white = add_color_texture(region, COLOR_WHITE);
 	texture *yellow = add_color_texture(region, fcolor_new(1.0, 0.8, 0.3));
 	texture *black = add_color_texture(region, COLOR_BLACK);
+	texture *gray = add_color_texture(region, COLOR_VALUE(0.68));
 	texture *purple = add_color_texture(region, COLOR_UNDEFPURP);
 	texture *checker = add_checker_texture(region, black, white, 1.0);
-	texture *uvchecker = add_uv_checker_texture(region, yellow, black, 100.0);
-	texture *perlin = add_colored_perlin_noise_texture(region, 2.0, yellow);
-	texture *perlin2 = add_colored_perlin_turbulence_texture(region, 5.0, purple);
+	texture *uvchecker = add_uv_checker_texture(region, white, gray, 100.0);
+	texture *perlin = add_colored_perlin_noise_texture(region, 2.0, uvchecker);
+	texture *perlin2 = add_colored_perlin_turbulence_texture(region, 5.0, uvchecker);
 
 	object *ls = add_sphere(region, vec3_new(0.0, -1.0, 1.0), 1.0, perlin, lamb);
 	object *rs = add_sphere(region, vec3_new(0.0, 1.0, 1.0), 1.0, perlin2, lamb);
