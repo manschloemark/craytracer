@@ -34,11 +34,11 @@ checker_texture checker_texture_new(void *odd, void *even, float freq);
 
 typedef struct {
 	perlin *perlin;
-	void *color;
+	void *texture;
 	float scale;
 } perlin_texture;
 
-perlin_texture perlin_texture_new(memory_region *region, float scale, int pointcount);
+perlin_texture perlin_texture_new(memory_region *region, float scale, int pointcount, void *texture);
 
 enum TextureID {
 	Color,
@@ -81,13 +81,19 @@ texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *ev
 // This type of texture is unique in that make_perline_noise_texture and perlin_noise_texture_new both require the memory region passed as well.
 // I'm not happy with this because it makes everything else inconsistent.
 // But I need to somehow get the actual perlin struct into memory safely.
-texture make_perlin_noise_texture(memory_region *region, float scale, int pointcount);
+texture make_perlin_noise_texture(memory_region *region, float scale, int pointcount, texture *text);
 texture *add_perlin_noise_texture(memory_region *region, float scale);
 texture *add_perlin_noise_texture_sized(memory_region *region, float scale, int bits);
 
-texture make_perlin_turbulence_texture(memory_region *region, float scale, int pointcount);
+texture make_perlin_turbulence_texture(memory_region *region, float scale, int pointcount, texture *text);
 texture *add_perlin_turbulence_texture(memory_region *region, float scale);
 texture *add_perlin_turbulence_texture_sized(memory_region *region, float scale, int bits);
+
+texture *add_colored_perlin_noise_texture(memory_region *region, float scale, texture *text);
+texture *add_colored_perlin_noise_texture_sized(memory_region *region, float scale, int bits, texture *text);
+
+texture *add_colored_perlin_turbulence_texture(memory_region *region, float scale, texture *text);
+texture *add_colored_perlin_turbulence_texture_sized(memory_region *region, float scale, int bits, texture *text);
 
 fcolor TextureColor(texture *text, float u, float v, point3 pt);
 

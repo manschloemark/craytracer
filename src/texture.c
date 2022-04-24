@@ -119,16 +119,17 @@ texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *ev
 }
 
 // Perlin Noise Texture
-perlin_texture perlin_texture_new(memory_region *region, float scale, int pointcount) {
+perlin_texture perlin_texture_new(memory_region *region, float scale, int pointcount, void *texture) {
 	perlin_texture p = {};
 	p.perlin = add_perlin(region, pointcount);
+	p.texture = texture;
 	p.scale = scale;
 	return p;
 }
 
-texture make_perlin_noise_texture(memory_region *region, float scale, int pointcount) {
+texture make_perlin_noise_texture(memory_region *region, float scale, int pointcount, texture *text) {
 	texture txt = {};
-	perlin_texture perl = perlin_texture_new(region, scale, pointcount);
+	perlin_texture perl = perlin_texture_new(region, scale, pointcount, text);
 	txt.id = PerlinNoise;
 	txt.type.perlin = perl;
 	return txt;
@@ -136,7 +137,14 @@ texture make_perlin_noise_texture(memory_region *region, float scale, int pointc
 
 texture *add_perlin_noise_texture(memory_region *region, float scale) {
 	// NOTE : this is not good practice imo, but for convencience sake
-	texture perltext = make_perlin_noise_texture(region, scale, 256);
+	texture perltext = make_perlin_noise_texture(region, scale, 256, NULL);
+	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
+	return perlptr;
+}
+
+texture *add_colored_perlin_noise_texture(memory_region *region, float scale, texture *text) {
+	// NOTE : this is not good practice imo, but for convencience sake
+	texture perltext = make_perlin_noise_texture(region, scale, 256, text);
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
 }
@@ -149,14 +157,29 @@ texture *add_perlin_noise_texture(memory_region *region, float scale) {
 texture *add_perlin_noise_texture_sized(memory_region *region, float scale, int bits) {
 	// NOTE : this is not good practice imo, but for convencience sake
 	int pointcount = (bits > 10 || bits <= 0) ? 256 : pow(2, bits);
-	texture perltext = make_perlin_noise_texture(region, scale, pointcount);
+	texture perltext = make_perlin_noise_texture(region, scale, pointcount, NULL);
+	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
+	return perlptr;
+}
+
+texture *add_colored_perlin_noise_texture_sized(memory_region *region, float scale, int bits, texture *text) {
+	// NOTE : this is not good practice imo, but for convencience sake
+	int pointcount = (bits > 10 || bits <= 0) ? 256 : pow(2, bits);
+	texture perltext = make_perlin_noise_texture(region, scale, pointcount, text);
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
 }
 
 // Perlin Turbulence -- same as perlin_noise_texture but calls perlin_turbulence instead of perlin_noise
 texture *add_perlin_turbulence_texture(memory_region *region, float scale) {
-	texture perltext = make_perlin_noise_texture(region, scale, 256);
+	texture perltext = make_perlin_noise_texture(region, scale, 256, NULL);
+	perltext.id = PerlinTurbulence;
+	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
+	return perlptr;
+}
+
+texture *add_colored_perlin_turbulence_texture(memory_region *region, float scale, texture *text) {
+	texture perltext = make_perlin_noise_texture(region, scale, 256, text);
 	perltext.id = PerlinTurbulence;
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
@@ -189,7 +212,12 @@ fcolor UVCheckerTextureColor(checker_texture *chtxt, float u, float v, vec3 pt) 
 }
 
 fcolor PerlinNoiseTextureColor(perlin_texture *perl, float u, float v, vec3 pt) {
-	fcolor col = fcolor_new(1.0, 1.0, 1.0);
+	fcolor col;
+	if (perl->texture != NULL) {
+		col = TextureColor(perl->texture, u, v, pt);
+	} else {
+		col = fcolor_new(1.0, 1.0, 1.0);
+	}
 	point3 scaled_pt = vec3_mul(pt, perl->scale);
 	float noise = (1.0 + perlin_noise(perl->perlin, &scaled_pt)) * 0.5;
 	return color_mul(col, noise);
@@ -197,7 +225,13 @@ fcolor PerlinNoiseTextureColor(perlin_texture *perl, float u, float v, vec3 pt) 
 
 fcolor PerlinTurbulenceTextureColor(perlin_texture *perl, float u, float v, vec3 pt) {
 	int depth = 7;
-	fcolor col = fcolor_new(1.0, 1.0, 1.0);
+	fcolor col;
+	if (perl->texture != NULL) {
+		col = TextureColor(perl->texture, u, v, pt);
+	} else {
+		col = fcolor_new(1.0, 1.0, 1.0);
+	}
+
 	point3 scaled_pt = vec3_mul(pt, perl->scale);
 	return color_mul(col, perlin_turbulence(perl->perlin, &pt, depth));
 }

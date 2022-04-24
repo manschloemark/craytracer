@@ -481,7 +481,7 @@ scene TestGlassAndTextures(memory_region *region) {
 	return s;
 }
 
-scene CheckerTest(memory_region *region) {
+scene MiscTextureTest(memory_region *region) {
 	int max_obj = 10;
 	int obj_ct = 0;
 	object **objects = (object **)malloc(max_obj * sizeof(object));
@@ -492,10 +492,11 @@ scene CheckerTest(memory_region *region) {
 	texture *white = add_color_texture(region, COLOR_WHITE);
 	texture *yellow = add_color_texture(region, fcolor_new(1.0, 0.8, 0.3));
 	texture *black = add_color_texture(region, COLOR_BLACK);
+	texture *purple = add_color_texture(region, COLOR_UNDEFPURP);
 	texture *checker = add_checker_texture(region, black, white, 1.0);
 	texture *uvchecker = add_uv_checker_texture(region, yellow, black, 100.0);
-	texture *perlin = add_perlin_noise_texture(region, 2.0);
-	texture *perlin2 = add_perlin_turbulence_texture(region, 5.0);
+	texture *perlin = add_colored_perlin_noise_texture(region, 2.0, yellow);
+	texture *perlin2 = add_colored_perlin_turbulence_texture(region, 5.0, purple);
 
 	object *ls = add_sphere(region, vec3_new(0.0, -1.0, 1.0), 1.0, perlin, lamb);
 	object *rs = add_sphere(region, vec3_new(0.0, 1.0, 1.0), 1.0, perlin2, lamb);
@@ -536,7 +537,7 @@ scene SceneSelect(memory_region *region, int selection) {
 		case 8:
 			return SimpleGlass(region);
 		case 9:
-			return CheckerTest(region);
+			return MiscTextureTest(region);
 		default:
 			return RandomTestScene(region);
 
