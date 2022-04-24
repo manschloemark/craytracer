@@ -185,6 +185,13 @@ texture *add_colored_perlin_turbulence_texture(memory_region *region, float scal
 	return perlptr;
 }
 
+texture *add_marbled_noise_texture(memory_region *region, float scale, texture *text) {
+	texture perltext = make_perlin_noise_texture(region, scale, 256, text);
+	perltext.id = PerlinMarbled;
+	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
+	return perlptr;
+}
+
 fcolor ImageTextureColor(image_texture *imgtxt, float u, float v) {
 	if (!imgtxt->pixels) return COLOR_UNDEFPURP;
 	int x = clamp(u, 0.0, 1.0) * (float)imgtxt->width;
@@ -236,6 +243,19 @@ fcolor PerlinTurbulenceTextureColor(perlin_texture *perl, float u, float v, vec3
 	return color_mul(col, perlin_turbulence(perl->perlin, &pt, depth));
 }
 
+fcolor PerlinMarbledTextureColor(perlin_texture *perl, float u, float v, vec3 pt) {
+	int depth = 7;
+	fcolor col;
+	if (perl->texture != NULL) {
+		col = TextureColor(perl->texture, u, v, pt);
+	} else {
+		col = fcolor_new(1.0, 1.0, 1.0);
+	}
+	point3 scaled_pt = vec3_mul(pt, perl->scale);
+	float noise = 0.5 * (1.0 + sinf(scaled_pt.y + 10.0 * perlin_turbulence(perl->perlin, &pt, depth)));
+	return color_mul(col, noise);
+}
+
 fcolor TextureColor(texture *text, float u, float v, point3 pt) {
 	switch(text->id) {
 		case Image:
@@ -252,6 +272,8 @@ fcolor TextureColor(texture *text, float u, float v, point3 pt) {
 			return PerlinNoiseTextureColor(&text->type.perlin, u, v, pt);
 		case PerlinTurbulence:
 			return PerlinTurbulenceTextureColor(&text->type.perlin, u, v, pt);
+		case PerlinMarbled:
+			return PerlinMarbledTextureColor(&text->type.perlin, u, v, pt);
 		default:
 			return COLOR_UNDEFPURP;
 	}

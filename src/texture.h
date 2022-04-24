@@ -48,6 +48,7 @@ enum TextureID {
 	UVChecker,
 	PerlinNoise,
 	PerlinTurbulence,
+	PerlinMarbled,
 };
 
 union texture_type {
@@ -94,6 +95,8 @@ texture *add_colored_perlin_noise_texture_sized(memory_region *region, float sca
 
 texture *add_colored_perlin_turbulence_texture(memory_region *region, float scale, texture *text);
 texture *add_colored_perlin_turbulence_texture_sized(memory_region *region, float scale, int bits, texture *text);
+
+texture *add_marbled_noise_texture(memory_region *region, float scale, texture *text);
 
 fcolor TextureColor(texture *text, float u, float v, point3 pt);
 
