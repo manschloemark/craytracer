@@ -192,6 +192,32 @@ texture *add_marbled_noise_texture(memory_region *region, float scale, texture *
 	return perlptr;
 }
 
+// Multicolor Perlin Textures -- perlin textures that use two colors.
+multicolor_perlin_texture multicolor_perlin_texture_new(memory_region *region, float scale, int pointcount, void *colA, void *colB) {
+	multicolor_perlin_texture p = {};
+	p.perlin = add_perlin(region, pointcount);
+	p.colA = colA;
+	p.colB = colB;
+	p.scale = scale;
+	return p;
+}
+
+texture make_multicolor_perlin_texture(memory_region *region, float scale, int pointcount, texture *colA, texture *colB) {
+	texture txt = {};
+	multicolor_perlin_texture perl = multicolor_perlin_texture_new(region, scale, pointcount, colA, colB);
+	txt.id = Undefined;
+	txt.type.multicolor_perlin = perl;
+	return txt;
+}
+
+texture *add_perlin_sincos_texture(memory_region *region, float scale, texture *colA, texture *colB) {
+	int pointcount = 256;
+	texture mp = make_multicolor_perlin_texture(region, scale, pointcount, colA, colB);
+	mp.id = PerlinSinCos;
+	texture *mptr = (texture *)memory_region_add(region, &mp, sizeof(texture));
+	return mptr;
+}
+
 fcolor ImageTextureColor(image_texture *imgtxt, float u, float v) {
 	if (!imgtxt->pixels) return COLOR_UNDEFPURP;
 	int x = clamp(u, 0.0, 1.0) * (float)imgtxt->width;
@@ -256,6 +282,18 @@ fcolor PerlinMarbledTextureColor(perlin_texture *perl, float u, float v, vec3 pt
 	return color_mul(col, noise);
 }
 
+fcolor PerlinSinCosTextureColor(multicolor_perlin_texture *perl, float u, float v, vec3 pt) {
+	int depth = 7;
+	double turb = sin(perl->scale * 10.0 * perlin_turbulence(perl->perlin, &pt, depth));
+	vec3 swizzled = vec3_new(pt.z, pt.x, pt.y);
+	turb *= cos(perl->scale * perlin_turbulence(perl->perlin, &swizzled, depth));
+	if (turb > 0.0) {
+		return color_mul(TextureColor(perl->colA, u, v, pt), turb);
+	} else {
+		return color_mul(TextureColor(perl->colB, u, v, pt), fabs(turb));
+	}
+}
+
 fcolor TextureColor(texture *text, float u, float v, point3 pt) {
 	switch(text->id) {
 		case Image:
@@ -274,6 +312,8 @@ fcolor TextureColor(texture *text, float u, float v, point3 pt) {
 			return PerlinTurbulenceTextureColor(&text->type.perlin, u, v, pt);
 		case PerlinMarbled:
 			return PerlinMarbledTextureColor(&text->type.perlin, u, v, pt);
+		case PerlinSinCos:
+			return PerlinSinCosTextureColor(&text->type.multicolor_perlin, u, v, pt);
 		default:
 			return COLOR_UNDEFPURP;
 	}
