@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
 	float focal_length = vec3_len(vec3_sub(target, origin));
 	camera cam = make_camera(origin, target, vup, vfov, aspect_ratio, focal_length);
 
-	memory_region mem_region = make_memory_region(8192);
+	memory_region mem_region = make_memory_region(MEGABYTES(1));
 	scene s = SceneSelect(&mem_region, args.scene);
 
 	// NOTE : undo the || eventually

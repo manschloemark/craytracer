@@ -6,6 +6,11 @@
 #include <stdlib.h>
 #include <string.h> // for memcpy
 
+// Convenient sizes
+#define KILOBYTES(bytes) 1024*bytes
+#define MEGABYTES(bytes) 1024*KILOBYTES(bytes)
+#define GIGABYTES(bytes) 1024*MEGABYTES(bytes)
+
 typedef struct {
 	void *mem;
 	int max_size, used;
