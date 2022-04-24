@@ -44,7 +44,7 @@ perlin *add_perlin(memory_region *region, int pointcount) {
 	// This ends up taking A lot of memory compared to everything else
 	// (sizeof(vec3) * 256) + 3 * (sizeof(int) * 256) ~~ 3 kilobytes
 	vec3 *vec3_to_free = p.random_vectors;
-	p.random_vectors = (vec3 *)memory_region_add(region, vec3_to_free, sizeof(*p.random_vectors) * sizeof(vec3));
+	p.random_vectors = (vec3 *)memory_region_add(region, vec3_to_free, sizeof(*p.random_vectors) * p.pointcount);
 	free(vec3_to_free);
 
 	int *to_free_x = p.perm_x;
@@ -97,13 +97,15 @@ float perlin_noise(perlin *perl, point3 *pt) {
 
 	vec3 c[2][2][2];
 
+	int max_index = perl->pointcount - 1;
+
 	for (int di = 0; di < 2; ++di) {
 		for (int dj = 0; dj < 2; ++dj) {
 			for (int dk = 0; dk < 2; ++dk) {
 				c[di][dj][dk] = perl->random_vectors[
-					perl->perm_x[(i+di) & (perl->pointcount-1)] ^
-					perl->perm_y[(j+dj) & (perl->pointcount-1)] ^
-					perl->perm_z[(k+dk) & (perl->pointcount-1)]];
+					perl->perm_x[(i+di) & max_index] ^
+					perl->perm_y[(j+dj) & max_index] ^
+					perl->perm_z[(k+dk) & max_index]];
 			}
 		}
 	}
