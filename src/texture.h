@@ -34,6 +34,7 @@ checker_texture checker_texture_new(void *odd, void *even, float freq);
 
 typedef struct {
 	perlin *perlin;
+	void *color;
 	float scale;
 } perlin_texture;
 
@@ -46,6 +47,7 @@ enum TextureID {
 	Checker,
 	UVChecker,
 	PerlinNoise,
+	PerlinTurbulence,
 };
 
 union texture_type {
@@ -82,6 +84,10 @@ texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *ev
 texture make_perlin_noise_texture(memory_region *region, float scale, int pointcount);
 texture *add_perlin_noise_texture(memory_region *region, float scale);
 texture *add_perlin_noise_texture_sized(memory_region *region, float scale, int bits);
+
+texture make_perlin_turbulence_texture(memory_region *region, float scale, int pointcount);
+texture *add_perlin_turbulence_texture(memory_region *region, float scale);
+texture *add_perlin_turbulence_texture_sized(memory_region *region, float scale, int bits);
 
 fcolor TextureColor(texture *text, float u, float v, point3 pt);
 

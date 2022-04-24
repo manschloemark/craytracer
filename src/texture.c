@@ -154,6 +154,14 @@ texture *add_perlin_noise_texture_sized(memory_region *region, float scale, int 
 	return perlptr;
 }
 
+// Perlin Turbulence -- same as perlin_noise_texture but calls perlin_turbulence instead of perlin_noise
+texture *add_perlin_turbulence_texture(memory_region *region, float scale) {
+	texture perltext = make_perlin_noise_texture(region, scale, 256);
+	perltext.id = PerlinTurbulence;
+	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
+	return perlptr;
+}
+
 fcolor ImageTextureColor(image_texture *imgtxt, float u, float v) {
 	if (!imgtxt->pixels) return COLOR_UNDEFPURP;
 	int x = clamp(u, 0.0, 1.0) * (float)imgtxt->width;
@@ -187,6 +195,13 @@ fcolor PerlinNoiseTextureColor(perlin_texture *perl, float u, float v, vec3 pt) 
 	return color_mul(col, noise);
 }
 
+fcolor PerlinTurbulenceTextureColor(perlin_texture *perl, float u, float v, vec3 pt) {
+	int depth = 7;
+	fcolor col = fcolor_new(1.0, 1.0, 1.0);
+	point3 scaled_pt = vec3_mul(pt, perl->scale);
+	return color_mul(col, perlin_turbulence(perl->perlin, &pt, depth));
+}
+
 fcolor TextureColor(texture *text, float u, float v, point3 pt) {
 	switch(text->id) {
 		case Image:
@@ -201,6 +216,8 @@ fcolor TextureColor(texture *text, float u, float v, point3 pt) {
 			return UVCheckerTextureColor(&text->type.checker, u, v, pt);
 		case PerlinNoise:
 			return PerlinNoiseTextureColor(&text->type.perlin, u, v, pt);
+		case PerlinTurbulence:
+			return PerlinTurbulenceTextureColor(&text->type.perlin, u, v, pt);
 		default:
 			return COLOR_UNDEFPURP;
 	}

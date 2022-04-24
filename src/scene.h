@@ -495,7 +495,7 @@ scene CheckerTest(memory_region *region) {
 	texture *checker = add_checker_texture(region, black, white, 1.0);
 	texture *uvchecker = add_uv_checker_texture(region, yellow, black, 100.0);
 	texture *perlin = add_perlin_noise_texture(region, 2.0);
-	texture *perlin2 = add_perlin_noise_texture_sized(region, 5.0, 10);
+	texture *perlin2 = add_perlin_turbulence_texture(region, 5.0);
 
 	object *ls = add_sphere(region, vec3_new(0.0, -1.0, 1.0), 1.0, perlin, lamb);
 	object *rs = add_sphere(region, vec3_new(0.0, 1.0, 1.0), 1.0, perlin2, lamb);
