@@ -4,6 +4,7 @@
 #include "common.h"
 #include "color.h"
 #include "memory.h"
+#include "perlin_noise.h"
 
 typedef struct {
 	fcolor rgb;
@@ -31,12 +32,20 @@ typedef struct {
 
 checker_texture checker_texture_new(void *odd, void *even, float freq);
 
+typedef struct {
+	perlin *perlin;
+	float scale;
+} perlin_texture;
+
+perlin_texture perlin_texture_new(memory_region *region, float scale, int pointcount);
+
 enum TextureID {
 	Color,
 	Image,
 	UV,
 	Checker,
 	UVChecker,
+	PerlinNoise,
 };
 
 union texture_type {
@@ -44,6 +53,7 @@ union texture_type {
 	image_texture image;
 	uv_texture uv;
 	checker_texture checker;
+	perlin_texture perlin;
 };
 
 typedef struct {
@@ -65,6 +75,12 @@ texture *add_checker_texture(memory_region *region, texture *odd, texture *even,
 
 texture make_uv_checker_texture(texture *odd, texture *even, float freq);
 texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *even, float freq);
+
+// This type of texture is unique in that make_perline_noise_texture and perlin_noise_texture_new both require the memory region passed as well.
+// I'm not happy with this because it makes everything else inconsistent.
+// But I need to somehow get the actual perlin struct into memory safely.
+texture make_perlin_noise_texture(memory_region *region, float scale, int pointcount);
+texture *add_perlin_noise_texture(memory_region *region, float scale, int bits);
 
 fcolor TextureColor(texture *text, float u, float v, point3 pt);
 

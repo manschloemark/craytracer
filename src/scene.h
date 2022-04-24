@@ -106,8 +106,9 @@ scene BlackWhiteGlass(memory_region *region) {
 	object *metal_sphere = add_sphere(region, vec3_new(-5.0, 0.0, -0.4), 0.1, yellow, clearmetal);
 	++obj_ct;
 
-	texture *tritext = add_color_texture(region, fcolor_new(0.3, 0.5, 0.33));
-	object *base = add_triangle(region, vec3_new(20.0, 0.0, -0.5), vec3_new(-20.0, -20.0, -0.5), vec3_new(-20.0, 20.0, -0.5), tritext, clearmetal);
+	material *lamb = add_lambertian(region);
+	texture *noisetext = add_perlin_noise_texture(region, 1.0, 0);
+	object *base = add_triangle(region, vec3_new(20.0, 0.0, -0.5), vec3_new(-20.0, -20.0, -0.5), vec3_new(-20.0, 20.0, -0.5), noisetext, lamb);
 	++obj_ct;
 
 	object **objects = (object **)malloc(obj_ct * sizeof(object));
@@ -493,18 +494,19 @@ scene CheckerTest(memory_region *region) {
 	texture *black = add_color_texture(region, COLOR_BLACK);
 	texture *checker = add_checker_texture(region, black, white, 1.0);
 	texture *uvchecker = add_uv_checker_texture(region, yellow, black, 100.0);
+	texture *perlin = add_perlin_noise_texture(region, 10.0, 6);
+	texture *perlin2 = add_perlin_noise_texture(region, 2.0, 6);
 
-
-	object *ls = add_sphere(region, vec3_new(0.0, -1.0, 1.0), 1.0, checker, lamb);
-	object *rs = add_sphere(region, vec3_new(0.0, 1.0, 1.0), 1.0, uvchecker, lamb);
+	object *ls = add_sphere(region, vec3_new(0.0, -1.0, 1.0), 1.0, perlin, lamb);
+	object *rs = add_sphere(region, vec3_new(0.0, 1.0, 1.0), 1.0, perlin2, lamb);
 	objects[obj_ct++] = ls;
 	objects[obj_ct++] = rs;
 	vec3 a = vec3_new(20.0, 0.0, 0.0);
 	vec3 b = vec3_new(-20.0, 0.0, 0.0);
 	vec3 c = vec3_new(0.0, -20.0, 0.0);
 	vec3 d = vec3_new(0.0, 20.0, 0.0);
-	object *abd = add_triangle(region, a, b, d, checker, lamb);
-	object *abc = add_triangle(region, a, b, c, uvchecker, lamb);
+	object *abd = add_triangle(region, a, b, d, perlin, lamb);
+	object *abc = add_triangle(region, a, b, c, perlin2, lamb);
 	objects[obj_ct++] = abc;
 	objects[obj_ct++] = abd;
 

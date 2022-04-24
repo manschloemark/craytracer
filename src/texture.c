@@ -118,6 +118,30 @@ texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *ev
 	return checkerptr;
 }
 
+// Perlin Noise Texture
+perlin_texture perlin_texture_new(memory_region *region, float scale, int pointcount) {
+	perlin_texture p = {};
+	p.perlin = add_perlin(region, pointcount);
+	p.scale = scale;
+	return p;
+}
+
+texture make_perlin_noise_texture(memory_region *region, float scale, int pointcount) {
+	texture txt = {};
+	perlin_texture perl = perlin_texture_new(region, scale, pointcount);
+	txt.id = PerlinNoise;
+	txt.type.perlin = perl;
+	return txt;
+}
+
+texture *add_perlin_noise_texture(memory_region *region, float scale, int bits) {
+	// NOTE : this is not good practice imo, but for convencience sake
+	int pointcount = (bits > 8 || bits <= 0) ? 256 : pow(2, bits);
+	texture perltext = make_perlin_noise_texture(region, scale, pointcount);
+	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
+	return perlptr;
+}
+
 fcolor ImageTextureColor(image_texture *imgtxt, float u, float v) {
 	if (!imgtxt->pixels) return COLOR_UNDEFPURP;
 	int x = clamp(u, 0.0, 1.0) * (float)imgtxt->width;
@@ -144,6 +168,13 @@ fcolor UVCheckerTextureColor(checker_texture *chtxt, float u, float v, vec3 pt) 
 	return TextureColor((texture *)chtxt->even, u, v, pt);
 }
 
+fcolor PerlinNoiseTextureColor(perlin_texture *perl, float u, float v, vec3 pt) {
+	fcolor col = fcolor_new(1.0, 1.0, 1.0);
+	point3 scaled_pt = vec3_mul(pt, perl->scale);
+	float noise = (1.0 + perlin_noise(perl->perlin, &scaled_pt)) * 0.5;
+	return color_mul(col, noise);
+}
+
 fcolor TextureColor(texture *text, float u, float v, point3 pt) {
 	switch(text->id) {
 		case Image:
@@ -156,6 +187,8 @@ fcolor TextureColor(texture *text, float u, float v, point3 pt) {
 			return CheckerTextureColor(&text->type.checker, u, v, pt);
 		case UVChecker:
 			return UVCheckerTextureColor(&text->type.checker, u, v, pt);
+		case PerlinNoise:
+			return PerlinNoiseTextureColor(&text->type.perlin, u, v, pt);
 		default:
 			return COLOR_UNDEFPURP;
 	}
