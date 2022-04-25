@@ -124,14 +124,17 @@ int main(int argc, char **argv) {
 
 	point3 origin = vec3_new(0.0, 0.0, 10.0);
 	point3 target = vec3_new(0.0, 0.0, 0.0);
+
+	memory_region mem_region = make_memory_region(MEGABYTES(1));
+	scene s = {};
+	SceneSelect(&mem_region, args.scene, &s, &origin, &target);
+
 	//point3 origin = vec3_new(0.0, 0.0, 0.0);
 	vec3 vup = {0.0, 0.0, 1.0};
 	float vfov = 90.0;
 	float focal_length = vec3_len(vec3_sub(target, origin));
 	camera cam = make_camera(origin, target, vup, vfov, aspect_ratio, focal_length);
 
-	memory_region mem_region = make_memory_region(MEGABYTES(1));
-	scene s = SceneSelect(&mem_region, args.scene);
 
 	// NOTE : undo the || eventually
 	if (args.verbose || 1) printf("Memory region use: %d / %d bytes.\n", mem_region.used, mem_region.max_size);

@@ -14,6 +14,57 @@ typedef struct {
 	int object_count;
 } scene;
 
+scene Demo(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
+	int max_object_count = 64;
+	int index = 0;
+
+	*origin = vec3_new(5.0, 0.0, 0.0);
+	*target = vec3_new(-2.0, 0.0, 0.0);
+
+	object **obj_list = (object **)malloc(sizeof(object *) * max_object_count);
+
+	material *glass = add_glass(region, 1.52);
+	material *steel = add_metal(region, 0.0);
+	material *iron = add_metal(region, 0.65);
+	material *lambertian = add_lambertian(region);
+
+	texture *white = add_color_texture(region, COLOR_WHITE);
+	texture *lightgray = add_color_texture(region, COLOR_VALUE(0.8));
+	texture *darkgray = add_color_texture(region, COLOR_VALUE(0.3));
+	texture *black = add_color_texture(region, COLOR_BLACK);
+
+	texture *ivory = add_color_texture(region, fcolor_new(0.8, 0.8, 0.75));
+	texture *dullgreen = add_color_texture(region, fcolor_new(0.3, 0.66, 0.56));
+
+	texture *purple = add_color_texture(region, fcolor_new(0.7, 0.2, 0.65));
+	texture *red = add_color_texture(region, COLOR_RED);
+
+	texture *marbled = add_marbled_noise_texture(region, 16.0, purple);
+	texture *trippy = add_perlin_sincos_texture(region, 1.0, purple, black);
+
+	texture *checkerboard = add_checker_texture(region, darkgray, white, 2.0);
+	texture *chessboard = add_checker_texture(region, ivory, dullgreen, 0.5);
+	texture *checkception = add_checker_texture(region, checkerboard, chessboard, 1.0);
+
+
+	object *glassball = add_sphere(region, vec3_new(-2.0, 0.0, 1.0), 1.0, white, glass);
+	object *base = add_sphere(region, vec3_new(-5.0, 0.0, -100.0), 100.0, trippy, lambertian);
+	object *leftball = add_sphere(region, vec3_new(-10.0, -4, 1.0), 0.8, lightgray, steel);
+	float trifloat = 500.0;
+	object *back = add_triangle(region, vec3_new(-50.0, 0.0, -trifloat), vec3_new(-50.0, -trifloat, trifloat), vec3_new(-50.0, trifloat, trifloat), chessboard, lambertian);
+
+	obj_list[index++] = glassball;
+	obj_list[index++] = base;
+	obj_list[index++] = leftball;
+	obj_list[index++] = back;
+
+	scene new_scene = {};
+	new_scene.objects = obj_list;
+	new_scene.object_count = index;
+	*s = new_scene;
+	return new_scene;
+}
+
 scene RandomTestScene(memory_region *region) {
 	int object_count = 10;
 	object **object_list = (object **)malloc(sizeof(object *) * object_count);
@@ -520,7 +571,7 @@ scene MiscTextureTest(memory_region *region) {
 	return s;
 }
 
-scene SceneSelect(memory_region *region, int selection) {
+scene SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *t) {
 	switch(selection) {
 		case 1:
 			return BlackWhite(region);
@@ -541,7 +592,7 @@ scene SceneSelect(memory_region *region, int selection) {
 		case 9:
 			return MiscTextureTest(region);
 		default:
-			return RandomTestScene(region);
+			return Demo(region, s, o, t);
 
 	}
 }
