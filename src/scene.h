@@ -40,7 +40,7 @@ scene Demo(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
 	texture *red = add_color_texture(region, COLOR_RED);
 
 	texture *marbled = add_marbled_noise_texture(region, 16.0, purple);
-	texture *trippy = add_perlin_sincos_texture(region, 1.0, purple, black);
+	texture *trippy = add_perlin_sincos_texture(region, 2.0, purple, darkgray);
 
 	texture *checkerboard = add_checker_texture(region, darkgray, white, 2.0);
 	texture *chessboard = add_checker_texture(region, ivory, dullgreen, 0.5);
@@ -49,7 +49,7 @@ scene Demo(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
 
 	object *glassball = add_sphere(region, vec3_new(-2.0, 0.0, 1.0), 1.0, white, glass);
 	object *base = add_sphere(region, vec3_new(-5.0, 0.0, -100.0), 100.0, trippy, lambertian);
-	object *leftball = add_sphere(region, vec3_new(-10.0, -4, 1.0), 0.8, lightgray, steel);
+	object *leftball = add_sphere(region, vec3_new(-10.0, -4, 1.0), 0.8, ivory, steel);
 	float trifloat = 500.0;
 	object *back = add_triangle(region, vec3_new(-50.0, 0.0, -trifloat), vec3_new(-50.0, -trifloat, trifloat), vec3_new(-50.0, trifloat, trifloat), chessboard, lambertian);
 
@@ -574,23 +574,23 @@ scene MiscTextureTest(memory_region *region) {
 scene SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *t) {
 	switch(selection) {
 		case 1:
-			return BlackWhite(region);
+			*s = BlackWhite(region);
 		case 2:
-			return RainbowCircle(region);
+			*s =  RainbowCircle(region);
 		case 3:
-			return TestReflection(region);
+			*s =  TestReflection(region);
 		case 4:
-			return TestGlass(region);
+			*s =  TestGlass(region);
 		case 5:
-			return TestTextures(region);
+			*s =  TestTextures(region);
 		case 6:
-			return TestGlassAndTextures(region);
+			*s =  TestGlassAndTextures(region);
 		case 7:
-			return BlackWhiteGlass(region);
+			*s =  BlackWhiteGlass(region);
 		case 8:
-			return SimpleGlass(region);
+			*s =  SimpleGlass(region);
 		case 9:
-			return MiscTextureTest(region);
+			*s =  MiscTextureTest(region);
 		default:
 			return Demo(region, s, o, t);
 
