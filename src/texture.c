@@ -284,9 +284,9 @@ fcolor PerlinMarbledTextureColor(perlin_texture *perl, float u, float v, vec3 pt
 
 fcolor PerlinSinCosTextureColor(multicolor_perlin_texture *perl, float u, float v, vec3 pt) {
 	int depth = 7;
-	double turb = sin(perl->scale * 10.0 * perlin_turbulence(perl->perlin, &pt, depth));
 	vec3 swizzled = vec3_new(pt.z, pt.x, pt.y);
-	turb *= cos(perl->scale * perlin_turbulence(perl->perlin, &swizzled, depth));
+	float turb = sinf(perl->scale * 10.0 * perlin_turbulence(perl->perlin, &pt, depth));
+	turb *= cosf(perl->scale * perlin_turbulence(perl->perlin, &swizzled, depth));
 	if (turb > 0.0) {
 		return color_mul(TextureColor(perl->colA, u, v, pt), turb);
 	} else {
