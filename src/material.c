@@ -74,6 +74,12 @@ material make_glass(float ior) {
 	return mat;
 }
 
+material make_diffuse_light() {
+	material mat = {};
+	mat.id = DiffuseLight;
+	return mat;
+}
+
 material *add_lambertian(memory_region *region) {
 	material mat = make_lambertian();
 	return (material *)memory_region_add(region, &mat, sizeof(material));
@@ -89,6 +95,11 @@ material *add_glass(memory_region *region, float ior) {
 	return (material *)memory_region_add(region, &mat, sizeof(material));
 }
 
+material *add_diffuse_light(memory_region *region) {
+	material mat = make_diffuse_light();
+	return (material *)memory_region_add(region, &mat, sizeof(material));
+}
+
 // 1 = Scattered ray, 0 = no scatter
 int Scatter(material *mat, int hit_front, vec3 *n, ray *r) {
 	switch (mat->id) {
@@ -101,6 +112,8 @@ int Scatter(material *mat, int hit_front, vec3 *n, ray *r) {
 		case Glass:
 			r->dir = ScatterGlass(mat->surface.glass, r->dir, n, 1.0, hit_front);
 			return 1;
+		case DiffuseLight:
+			return 0;
 		default:
 			return 0;
 	}

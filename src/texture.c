@@ -277,8 +277,7 @@ fcolor PerlinMarbledTextureColor(perlin_texture *perl, float u, float v, vec3 pt
 	} else {
 		col = fcolor_new(1.0, 1.0, 1.0);
 	}
-	point3 scaled_pt = vec3_mul(pt, perl->scale);
-	float noise = 0.5 * (1.0 + sinf(scaled_pt.y + 10.0 * perlin_turbulence(perl->perlin, &pt, depth)));
+	float noise = 0.5 * (1.0 + sinf(pt.y + 10.0 * perlin_turbulence(perl->perlin, &pt, depth)));
 	return color_mul(col, noise);
 }
 

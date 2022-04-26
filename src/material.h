@@ -36,6 +36,10 @@ static inline glass glass_new(float ior) {
 	return glass;
 }
 
+// This feels kind of pointless, like the lambertian struct. But for posterity I guess I'll do this
+typedef struct {
+} diffuse_light;
+
 // Schlick's Approximation is a formula for approximating contribution of Fresnel factor in specular reflection
 // 1.0 here is tecnically n1 but it is assumed to be air all the time.
 float schlick_approximation(float cos_incident, float ior_ratio);
@@ -46,6 +50,7 @@ enum MaterialID {
 	Lambertian,
 	Metal,
 	Glass,
+	DiffuseLight,
 };
 
 // NOTE : I wanted this to be analgous to the union shape from objects.hit
@@ -68,11 +73,15 @@ material make_metal(float blur);
 
 material make_glass(float ior); 
 
+material make_diffuse_light(); 
+
 material *add_lambertian(memory_region *region); 
 
 material *add_metal(memory_region *region, float blur); 
 
 material *add_glass(memory_region *region, float ior); 
+
+material *add_diffuse_light(memory_region *region); 
 
 int Scatter(material *mat, int hit_front, vec3 *n, ray *r); 
 #endif
