@@ -27,6 +27,9 @@ scene Demo(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
 	material *steel = add_metal(region, 0.0);
 	material *iron = add_metal(region, 0.65);
 	material *lambertian = add_lambertian(region);
+	material *light = add_diffuse_light(region);
+
+	texture *white_light = add_color_texture(region, COLOR_VALUE(7.0));
 
 	texture *white = add_color_texture(region, COLOR_WHITE);
 	texture *lightgray = add_color_texture(region, COLOR_VALUE(0.8));
@@ -49,7 +52,7 @@ scene Demo(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
 
 	object *glassball = add_sphere(region, vec3_new(-2.0, 0.0, 1.0), 1.0, white, glass);
 	object *base = add_sphere(region, vec3_new(-5.0, 0.0, -100.0), 100.0, trippy, lambertian);
-	object *leftball = add_sphere(region, vec3_new(-10.0, -4, 1.0), 0.8, ivory, steel);
+	object *leftball = add_sphere(region, vec3_new(-10.0, -4, 1.0), 0.8, white_light, light);
 	float trifloat = 500.0;
 	object *back = add_triangle(region, vec3_new(-50.0, 0.0, -trifloat), vec3_new(-50.0, -trifloat, trifloat), vec3_new(-50.0, trifloat, trifloat), chessboard, lambertian);
 
@@ -57,6 +60,89 @@ scene Demo(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
 	obj_list[index++] = base;
 	obj_list[index++] = leftball;
 	obj_list[index++] = back;
+
+	scene new_scene = {};
+	new_scene.objects = obj_list;
+	new_scene.object_count = index;
+	*s = new_scene;
+	return new_scene;
+}
+
+scene TestLight(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
+	int max_object_count = 64;
+	int index = 0;
+
+	*origin = vec3_new(5.0, 0.0, 1.0);
+	*target = vec3_new(-2.0, 0.0, 0.0);
+
+	object **obj_list = (object **)malloc(sizeof(object *) * max_object_count);
+
+	material *glass = add_glass(region, 1.52);
+	material *steel = add_metal(region, 0.2);
+	material *iron = add_metal(region, 0.8);
+	material *lambertian = add_lambertian(region);
+	material *light = add_diffuse_light(region);
+
+	texture *white_light = add_color_texture(region, COLOR_VALUE(7.0));
+	texture *red_light = add_color_texture(region, fcolor_new(5.0, 0.0, 0.0));
+	texture *green_light = add_color_texture(region, fcolor_new(0.0, 5.0, 0.0));
+	texture *blue_light = add_color_texture(region, fcolor_new(0.0, 0.0, 5.0));
+
+	texture *white = add_color_texture(region, COLOR_WHITE);
+	texture *lightgray = add_color_texture(region, COLOR_VALUE(0.8));
+	texture *darkgray = add_color_texture(region, COLOR_VALUE(0.3));
+	texture *black = add_color_texture(region, COLOR_VALUE(0.001));
+
+	texture *ivory = add_color_texture(region, fcolor_new(0.8, 0.8, 0.75));
+	texture *dullgreen = add_color_texture(region, fcolor_new(0.3, 0.66, 0.56));
+
+	texture *purple = add_color_texture(region, fcolor_new(0.7, 0.2, 0.65));
+	texture *red = add_color_texture(region, COLOR_RED);
+
+	texture *noisetext = add_perlin_noise_texture(region, 4.0);
+	texture *marbled = add_marbled_noise_texture(region, 16.0, white);
+	texture *trippy = add_perlin_sincos_texture(region, 2.0, black, white);
+	texture *trippy_light = add_perlin_sincos_texture(region, 2.0, green_light, black);
+
+	//object *glassball = add_sphere(region, vec3_new(-2.0, 0.0, 1.0), 1.0, white, glass);
+	// Left side - Red
+	float divider = 2.0;
+	object *left_metalball = add_sphere(region, vec3_new(-6.0, -(2.0 + divider), 2.0), 2.0, white, iron);
+	object *sincosball = add_sphere(region, vec3_new(-6.0, -2.0 - divider, 2.0), 2.0, trippy, lambertian);
+	vec3 lighta =vec3_new(-6.0, -5.0 - divider, 4.0);
+	vec3 lightb = vec3_new(-4.0, -5.5 - divider, 2.0);
+	vec3 lightc = vec3_new(-8.0, -4.5 - divider, 2.0);
+	object *r_sphere = add_sphere(region, vec3_new(-4.0, -(4.0 + divider), 4.0), 1.0, red_light, light);
+
+	//object *trilight = add_triangle(region, lightb, lighta, lightc, red_light, light);
+	
+	// Middle - Green
+	object *g_sphere = add_sphere(region, vec3_new(-6.0, 0.0, 2.0), 1.0, green_light, light);
+
+	// Right side - Blue
+	object *metalball = add_sphere(region, vec3_new(-6.0, 2.0 + divider, 2.0), 2.0, white, iron);
+	object *perlinball = add_sphere(region, vec3_new(-6.0, 2.0 + divider, 2.0), 2.0, marbled, lambertian);
+	object *lightball = add_sphere(region, vec3_new(-4.0, 4.0 + divider, 4.0), 1.0, blue_light, light);
+	float trifloat = 100.0;
+	vec3 floor_a = vec3_new(trifloat, 0.0, 0.0);
+	vec3 floor_b = vec3_new(-trifloat, -2.0*trifloat, 0.0);
+	vec3 floor_c = vec3_new(-trifloat, 2.0 * trifloat, 0.0);
+	object *floor = add_triangle(region, floor_a, floor_b, floor_c, noisetext, lambertian);
+
+	vec3 back_a = vec3_new(-trifloat, -trifloat, 0.0);
+	vec3 back_b = vec3_new(-trifloat, trifloat, 0.0);
+	vec3 back_c = vec3_new(-trifloat, 0.0, trifloat);
+	object *back = add_triangle(region, back_a, back_b, back_c, white_light, light);
+
+	obj_list[index++] = g_sphere;
+
+	//obj_list[index++] = sincosball;
+	obj_list[index++] = left_metalball;
+	obj_list[index++] = r_sphere;
+	//obj_list[index++] = perlinball;
+	obj_list[index++] = metalball;
+	obj_list[index++] = lightball;
+	obj_list[index++] = floor;
 
 	scene new_scene = {};
 	new_scene.objects = obj_list;
@@ -571,29 +657,40 @@ scene MiscTextureTest(memory_region *region) {
 	return s;
 }
 
-scene SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *t) {
+void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *t) {
 	switch(selection) {
 		case 1:
 			*s = BlackWhite(region);
+			return;
 		case 2:
 			*s =  RainbowCircle(region);
+			return;
 		case 3:
 			*s =  TestReflection(region);
+			return;
 		case 4:
 			*s =  TestGlass(region);
+			return;
 		case 5:
 			*s =  TestTextures(region);
+			return;
 		case 6:
 			*s =  TestGlassAndTextures(region);
+			return;
 		case 7:
 			*s =  BlackWhiteGlass(region);
+			return;
 		case 8:
 			*s =  SimpleGlass(region);
+			return;
 		case 9:
 			*s =  MiscTextureTest(region);
+			return;
+		case 10:
+			TestLight(region, s, o, t);
+			return;
 		default:
-			return Demo(region, s, o, t);
-
+			Demo(region, s, o, t);
 	}
 }
 

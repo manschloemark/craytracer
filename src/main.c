@@ -49,7 +49,10 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 	scattered_ray.dir = r.dir;
 	int scattered = Scatter(hitrec.mat, hitrec.hit_front, &hitrec.n, &scattered_ray);
 
-	if (scattered == 0) return TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt);
+ // NOTE : if the ray does not scatter the material is diffuse light
+ // if it hit the back of a light I don't want it to emit light, so return black instead
+	if (scattered == 0)
+		return (hitrec.hit_front) ? TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt) : COLOR_BLACK;
 
 	// NOTE : assign this to a variable for debugging purposes
 	fcolor recursive_result = TraceRay(scattered_ray, scene, bgcolor, calldepth - 1);
@@ -58,7 +61,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 }
 
 void Render(fcolor *pixels, int samples, int height, int width, int max_depth, camera *cam, scene *scene) {
-	fcolor bgcolor = fcolor_new(0.55, 0.8, 0.9);
+	fcolor bgcolor = fcolor_new(0.0, 0.0, 0.0);
 	int i, j;
 	for (j = height-1; j >= 0; --j) {
 		printf("\r%d lines remaining", j);
