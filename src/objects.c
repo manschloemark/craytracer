@@ -24,7 +24,7 @@ triangle triangle_new(point3 x, point3 y, point3 z, int double_sided) {
 	t.a = x;
 	t.b = y;
 	t.c = z;
-	t.double_sided = 1;
+	t.double_sided = double_sided;
 	return t;
 }
 
