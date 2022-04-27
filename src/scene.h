@@ -152,6 +152,148 @@ scene TestLight(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
 	return new_scene;
 }
 
+scene ScuffedCornellBox(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
+	int max_object_count = 64;
+	int index = 0;
+
+	*origin = vec3_new(6.0, 0.0, 8.0);
+	*target = vec3_new(0.0, 0.0, 8.0);
+
+	object **obj_list = (object **)malloc(sizeof(object *) * max_object_count);
+
+	material *lambertian = add_lambertian(region);
+	material *light = add_diffuse_light(region);
+	material *steel = add_metal(region, 0.15);
+	material *glass = add_glass(region, 1.52);
+
+	texture *white_light = add_color_texture(region, COLOR_VALUE(10.0));
+
+	texture *white = add_color_texture(region, COLOR_WHITE);
+	texture *gray = add_color_texture(region, COLOR_VALUE(0.5));
+	texture *black = add_color_texture(region, COLOR_VALUE(0.001));
+
+	texture *gold = add_color_texture(region, fcolor_new(0.6, 0.6, 0.2));
+
+	texture *noisetext = add_perlin_noise_texture(region, 4.0);
+	texture *trippy = add_perlin_sincos_texture(region, 2.0, gold, white);
+
+	texture *ivory = add_color_texture(region, fcolor_new(0.8, 0.8, 0.75));
+	texture *dullgreen = add_color_texture(region, fcolor_new(0.3, 0.66, 0.56));
+
+	texture *purple = add_color_texture(region, fcolor_new(0.7, 0.2, 0.65));
+	texture *red = add_color_texture(region, COLOR_RED);
+
+	texture *checkerboard = add_checker_texture(region, red, black, 2.0);
+	texture *chessboard = add_checker_texture(region, ivory, dullgreen, 2.0);
+
+	object *perlinball = add_sphere(region, vec3_new(-6.0, 3.0, 2.0), 2.0, trippy, lambertian);
+	object *goldball = add_sphere(region, vec3_new(-7.0, -2.0, 1.0), 1.0, gold, steel);
+	object *glassball = add_sphere(region, vec3_new(-7.0, -2.0, 2.5), 0.5, white, glass);
+
+	float z = 12.0;
+	vec3 pt_a = vec3_new(-8.0, -3.0,z);
+	vec3 pt_b = vec3_new(-5.0, -3.0, z);
+	vec3 pt_c = vec3_new(-8.0, 3.0, z);
+	vec3 pt_d = vec3_new(-5.0, 3.0, z);
+	object *light_tri = add_single_sided_triangle(region, pt_b, pt_a, pt_d, white_light, light);
+	object *light_tri2 = add_single_sided_triangle(region, pt_a, pt_c, pt_d, white_light, light);
+
+	float trifloat = 100.0;
+	vec3 floor_a = vec3_new(trifloat, 0.0, 0.0);
+	vec3 floor_b = vec3_new(-trifloat, -2.0*trifloat, 0.0);
+	vec3 floor_c = vec3_new(-trifloat, 2.0 * trifloat, 0.0);
+	object *floor = add_triangle(region, floor_a, floor_b, floor_c, gray, lambertian);
+
+	float x = -10.0;
+	vec3 back_a = vec3_new(x, -6.0, 0.0);
+	vec3 back_b = vec3_new(x, 6.0, 0.0);
+	vec3 back_c = vec3_new(x, -6.0, 20.0);
+	vec3 back_d = vec3_new(x, 6.0, 20.0);
+	object *back = add_triangle(region, back_a, back_b, back_c, gray, steel);
+	object *back2 = add_triangle(region, back_d, back_b, back_c, gray, steel);
+
+	float ly = -6.0;
+	vec3 left_a = vec3_new(x,ly,0.0);
+	vec3 left_b = vec3_new(x,ly,20.0);
+	vec3 left_c = vec3_new(0.0,ly,0.0);
+	vec3 left_d = vec3_new(0.0,ly,20.0);
+	object *left = add_triangle(region, left_d, left_b, left_c, gray, steel);
+	object *left2 = add_triangle(region, left_a, left_b, left_c, gray, steel);
+
+	float ry = 6.0;
+	vec3 right_a = vec3_new(x,ry,0.0);
+	vec3 right_b = vec3_new(x,ry,20.0);
+	vec3 right_c = vec3_new(0.0,ry,0.0);
+	vec3 right_d = vec3_new(0.0,ry,20.0);
+	object *right = add_triangle(region, right_d, right_b, right_c, chessboard, lambertian);
+	object *right2 = add_triangle(region, right_a, right_b, right_c, chessboard, lambertian);
+
+
+	obj_list[index++] = glassball;
+	obj_list[index++] = perlinball;
+	obj_list[index++] = goldball;
+	obj_list[index++] = light_tri;
+	obj_list[index++] = light_tri2;
+	obj_list[index++] = floor;
+	obj_list[index++] = back;
+	obj_list[index++] = back2;
+	obj_list[index++] = left;
+	obj_list[index++] = left2;
+	obj_list[index++] = right;
+	obj_list[index++] = right2;
+
+	scene new_scene = {};
+	new_scene.objects = obj_list;
+	new_scene.object_count = index;
+	*s = new_scene;
+	return new_scene;
+
+}
+
+scene TestTriangleLight(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
+	int max_object_count = 64;
+	int index = 0;
+
+	*origin = vec3_new(5.0, 4.0, 1.0);
+	*target = vec3_new(-2.0, 0.0, 0.0);
+
+	object **obj_list = (object **)malloc(sizeof(object *) * max_object_count);
+
+	material *lambertian = add_lambertian(region);
+	material *light = add_diffuse_light(region);
+
+	texture *white_light = add_color_texture(region, COLOR_VALUE(7.0));
+
+	texture *white = add_color_texture(region, COLOR_WHITE);
+	texture *black = add_color_texture(region, COLOR_VALUE(0.001));
+
+	texture *noisetext = add_perlin_noise_texture(region, 4.0);
+	texture *trippy = add_perlin_sincos_texture(region, 2.0, black, white);
+
+	object *perlinball = add_sphere(region, vec3_new(-6.0, 0.0, 2.0), 2.0, trippy, lambertian);
+
+	vec3 pt_a = vec3_new(-6.0, 3.0, 4.5);
+	vec3 pt_b = vec3_new(-5.0, 3.0, 0.5);
+	vec3 pt_c = vec3_new(-7.0, 3.0, 0.5);
+	object *light_tri = add_single_sided_triangle(region, pt_b, pt_a, pt_c, white_light, light);
+
+	float trifloat = 100.0;
+	vec3 floor_a = vec3_new(trifloat, 0.0, 0.0);
+	vec3 floor_b = vec3_new(-trifloat, -2.0*trifloat, 0.0);
+	vec3 floor_c = vec3_new(-trifloat, 2.0 * trifloat, 0.0);
+	object *floor = add_triangle(region, floor_a, floor_b, floor_c, noisetext, lambertian);
+
+	obj_list[index++] = perlinball;
+	obj_list[index++] = light_tri;
+	obj_list[index++] = floor;
+
+	scene new_scene = {};
+	new_scene.objects = obj_list;
+	new_scene.object_count = index;
+	*s = new_scene;
+	return new_scene;
+}
+
 /*
 scene RandomTestScene(memory_region *region) {
 	int object_count = 10;
@@ -691,6 +833,12 @@ void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *
 			return;
 		case 10:
 			TestLight(region, s, o, t);
+			return;
+		case 11:
+			TestTriangleLight(region, s, o, t);
+			return;
+		case 12:
+			ScuffedCornellBox(region, s, o, t);
 			return;
 		default:
 			Demo(region, s, o, t);
