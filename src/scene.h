@@ -104,7 +104,7 @@ scene TestLight(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
 	texture *trippy = add_perlin_sincos_texture(region, 2.0, black, white);
 	texture *trippy_light = add_perlin_sincos_texture(region, 2.0, green_light, black);
 
-	//object *glassball = add_sphere(region, vec3_new(-2.0, 0.0, 1.0), 1.0, white, glass);
+	object *glassball = add_sphere(region, vec3_new(-2.0, 0.0, 0.5), 0.5, white, glass);
 	// Left side - Red
 	float divider = 2.0;
 	object *left_metalball = add_sphere(region, vec3_new(-6.0, -(2.0 + divider), 2.0), 2.0, white, iron);
@@ -134,13 +134,14 @@ scene TestLight(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
 	vec3 back_c = vec3_new(-trifloat, 0.0, trifloat);
 	object *back = add_triangle(region, back_a, back_b, back_c, white_light, light);
 
+	obj_list[index++] = glassball;
 	obj_list[index++] = g_sphere;
 
-	//obj_list[index++] = sincosball;
-	obj_list[index++] = left_metalball;
+	obj_list[index++] = sincosball;
 	obj_list[index++] = r_sphere;
-	//obj_list[index++] = perlinball;
-	obj_list[index++] = metalball;
+	obj_list[index++] = perlinball;
+	//obj_list[index++] = left_metalball;
+	//obj_list[index++] = metalball;
 	obj_list[index++] = lightball;
 	obj_list[index++] = floor;
 
