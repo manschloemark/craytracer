@@ -28,7 +28,7 @@
 
 #include "timer.h"
 
-fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
+fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldepth) {
 	if (calldepth <= 0) return fcolor_new(0.0, 0.0, 0.0);
 
 	hit_record hitrec = {};
@@ -51,11 +51,22 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int calldepth) {
 
  // NOTE : if the ray does not scatter the material is diffuse light
  // if it hit the back of a light I don't want it to emit light, so return black instead
-	if (scattered == 0)
-		return (hitrec.hit_front) ? TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt) : COLOR_BLACK;
+	if (scattered == 0) {
+		// NOTE : since lights tend to have really large color values (greater than 1)
+		//        I think that is making anti-aliasing less effective on them.
+		//        Normalize light colors when it is the first thing an object hits
+		//        that way the light colors won't dominate the colors around them
+		if (hitrec.hit_front) {
+			if (calldepth == maxdepth) {
+				return color_normalize(TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt));
+			}
+				return TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt);
+		}
+		return COLOR_BLACK;
+	}
 
 	// NOTE : assign this to a variable for debugging purposes
-	fcolor recursive_result = TraceRay(scattered_ray, scene, bgcolor, calldepth - 1);
+	fcolor recursive_result = TraceRay(scattered_ray, scene, bgcolor, maxdepth, calldepth - 1);
 	COLOR_MUL(recursive_result, TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt));
 	return recursive_result;
 }
@@ -72,7 +83,7 @@ void Render(fcolor *pixels, int samples, int height, int width, int max_depth, c
 				float v = ((float)j + random_float()) / (float)(height-1);
 
 				ray r = camera_cast_ray(cam, u, v);
-				fcolor sample = TraceRay(r, scene, &bgcolor, max_depth);
+				fcolor sample = TraceRay(r, scene, &bgcolor, max_depth, max_depth);
 				COLOR_ADD(*pixels, sample); 
 			}
 			++pixels;
