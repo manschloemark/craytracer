@@ -152,6 +152,7 @@ scene TestLight(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
 	return new_scene;
 }
 
+/*
 scene RandomTestScene(memory_region *region) {
 	int object_count = 10;
 	object **object_list = (object **)malloc(sizeof(object *) * object_count);
@@ -186,6 +187,7 @@ scene RandomTestScene(memory_region *region) {
 	scene.object_count = object_count;
 	return scene;
 }
+*/
 
 scene BlackWhite(memory_region *region) {
 	int obj_ct = 0;

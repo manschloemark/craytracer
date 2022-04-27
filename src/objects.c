@@ -1,6 +1,9 @@
 #include "objects.h"
 
 // Ensure the normal is pointing in the opposite direction of the incident ray
+// Return 0 if you had to negate the normal vector - that means the intersection was 'inside' the object
+// Return 1 otherwise
+// NOTE : this function serves two purposes and that is not very clear, but it kills two birds with one stone
 int outward_normal(vec3 incident, vec3 *normal) {
 	if(vec3_dot(incident, *normal) > 0.0) {
 		*normal = vec3_neg(*normal);
@@ -16,11 +19,12 @@ sphere sphere_new(vec3 center, float radius) {
 	return s;
 }
 
-triangle triangle_new(point3 x, point3 y, point3 z) {
+triangle triangle_new(point3 x, point3 y, point3 z, int double_sided) {
 	triangle t = {};
 	t.a = x;
 	t.b = y;
 	t.c = z;
+	t.double_sided = 1;
 	return t;
 }
 
@@ -91,7 +95,9 @@ int IntersectTriangle(object *obj, ray *r, hit_record *hitrec){
 	hitrec->t = t;
 	hitrec->pt = pt_on_ray(r, t);
 	vec3 n = vec3_cross(BA, CA);
-	hitrec->hit_front = outward_normal(r->dir, &n);
+	// NOTE : when the triangle is double sided I want hit front to always be true
+	// However I still need to call outward_normal because it sets the normal vector to the appropriate side
+	hitrec->hit_front = outward_normal(r->dir, &n) || tri->double_sided;
 	hitrec->n = vec3_unit(n);
 	hitrec->mat = obj->mat;
 	hitrec->text = obj->text;
@@ -113,10 +119,10 @@ object make_sphere(point3 center, float r, texture *text, material *mat) {
 	return o;
 }
 
-object make_triangle(point3 a, point3 b, point3 c, texture *text, material *mat) {
+object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *text, material *mat) {
 	object o;
 	o.id = Triangle;
-	o.shape.triangle = triangle_new(a, b, c);
+	o.shape.triangle = triangle_new(a, b, c, double_sided);
 	o.text = text;
 	o.mat = mat;
 	return o;
@@ -127,8 +133,14 @@ object *add_sphere(memory_region *region, point3 center, float r, texture *text,
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }
 
+// Default - a double sided triangle
 object *add_triangle(memory_region *region, point3 a, point3 b, point3 c, texture *text, material *mat) {
-	object o = make_triangle(a, b, c, text, mat);
+	object o = make_triangle(a, b, c, 1, text, mat);
+	return (object *)memory_region_add(region, &o, sizeof(object));
+}
+
+object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, point3 c, texture *text, material *mat) {
+	object o = make_triangle(a, b, c, 0, text, mat);
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }
 
