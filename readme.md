@@ -8,6 +8,7 @@ This project will help me practice C, architecture, graphics programming princip
 ![A demo scene](./examples/ex.jpg)
 ![A scene showcasing reflections](./examples/reflection.jpg)
 ![A scene demonstrating checker_texture and perlin_sincos_texture](./examples/textures.jpg)
+![A scene demonstrating diffuse lights](./examples/lights.jpg)
 
 Usage
 ---
