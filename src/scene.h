@@ -156,8 +156,8 @@ scene ScuffedCornellBox(memory_region *region, scene *s, vec3 *origin, vec3 *tar
 	int max_object_count = 64;
 	int index = 0;
 
-	*origin = vec3_new(6.0, 0.0, 8.0);
-	*target = vec3_new(0.0, 0.0, 8.0);
+	*origin = vec3_new(5.5, 0.0, 6.0);
+	*target = vec3_new(0.0, 0.0, 6.0);
 
 	object **obj_list = (object **)malloc(sizeof(object *) * max_object_count);
 
@@ -175,7 +175,6 @@ scene ScuffedCornellBox(memory_region *region, scene *s, vec3 *origin, vec3 *tar
 	texture *gold = add_color_texture(region, fcolor_new(0.6, 0.6, 0.2));
 
 	texture *noisetext = add_perlin_noise_texture(region, 4.0);
-	texture *trippy = add_perlin_sincos_texture(region, 2.0, gold, white);
 
 	texture *ivory = add_color_texture(region, fcolor_new(0.8, 0.8, 0.75));
 	texture *dullgreen = add_color_texture(region, fcolor_new(0.3, 0.66, 0.56));
@@ -186,9 +185,11 @@ scene ScuffedCornellBox(memory_region *region, scene *s, vec3 *origin, vec3 *tar
 	texture *checkerboard = add_checker_texture(region, red, black, 2.0);
 	texture *chessboard = add_checker_texture(region, ivory, dullgreen, 2.0);
 
-	object *perlinball = add_sphere(region, vec3_new(-6.0, 3.0, 2.0), 2.0, trippy, lambertian);
-	object *goldball = add_sphere(region, vec3_new(-7.0, -2.0, 1.0), 1.0, gold, steel);
-	object *glassball = add_sphere(region, vec3_new(-7.0, -2.0, 2.5), 0.5, white, glass);
+	texture *trippy = add_perlin_sincos_texture(region, 2.0, gold, dullgreen);
+
+	object *perlinball = add_sphere(region, vec3_new(-7.0, 3.0, 1.5), 1.5, ivory, lambertian);
+	object *goldball = add_sphere(region, vec3_new(-6.0, -3.0, 1.0), 1.0, gold, steel);
+	object *glassball = add_sphere(region, vec3_new(-4.0, 0.0, 1.0), 1.0, white, glass);
 
 	float z = 12.0;
 	vec3 pt_a = vec3_new(-8.0, -3.0,z);
@@ -225,8 +226,8 @@ scene ScuffedCornellBox(memory_region *region, scene *s, vec3 *origin, vec3 *tar
 	vec3 right_b = vec3_new(x,ry,20.0);
 	vec3 right_c = vec3_new(0.0,ry,0.0);
 	vec3 right_d = vec3_new(0.0,ry,20.0);
-	object *right = add_triangle(region, right_d, right_b, right_c, chessboard, lambertian);
-	object *right2 = add_triangle(region, right_a, right_b, right_c, chessboard, lambertian);
+	object *right = add_triangle(region, right_d, right_b, right_c, trippy, lambertian);
+	object *right2 = add_triangle(region, right_a, right_b, right_c, trippy, lambertian);
 
 
 	obj_list[index++] = glassball;
