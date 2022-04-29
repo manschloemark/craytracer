@@ -5,10 +5,12 @@ This is largely inspired by Peter Shirley's _Ray Tracing in One Weekend_, but it
 
 This project will help me practice C, architecture, graphics programming principles, and math.  
 
-![A demo scene](./examples/ex.jpg)
-![A scene showcasing reflections](./examples/reflection.jpg)
-![A scene demonstrating checker_texture and perlin_sincos_texture](./examples/textures.jpg)
+
+![A box with a few spheres](./examples/box.jpg)
 ![A scene demonstrating diffuse lights](./examples/lights.jpg)
+![A scene demonstrating checker_texture and perlin_sincos_texture](./examples/textures.jpg)
+![A scene showcasing reflections](./examples/reflection.jpg)
+![A demo scene](./examples/ex.jpg)
 
 Usage
 ---
