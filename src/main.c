@@ -54,7 +54,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 	if (scattered == 0) {
 		// NOTE : since lights tend to have really large color values (greater than 1)
 		//        I think that is making anti-aliasing less effective on them.
-		//        Normalize light colors when it is the first thing an object hits
+		//        Normalize light colors when it is the first thing a ray hits
 		//        that way the light colors won't dominate the colors around them
 		if (hitrec.hit_front) {
 			if (calldepth == maxdepth) {
@@ -65,7 +65,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 		return COLOR_BLACK;
 	}
 
-	// NOTE : assign this to a variable for debugging purposes
+	// NOTE : I only assign this to a variable for debugging purposes
 	fcolor recursive_result = TraceRay(scattered_ray, scene, bgcolor, maxdepth, calldepth - 1);
 	COLOR_MUL(recursive_result, TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt));
 	return recursive_result;
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
 	if (args.seed != 0) {
 		srand(args.seed);
 	} else {
-		srand(time(NULL)); // Default seed is 1 so this ensures the seed changes each run
+		srand(time(NULL)); // seed is always 1 by default. I use current time for variety.
 	}
 
 	float aspect_ratio;
@@ -135,11 +135,10 @@ int main(int argc, char **argv) {
 
 	int bytes_per_channel = sizeof(uint8_t);
 
+	memory_region mem_region = make_memory_region(MEGABYTES(1));
 
 	point3 origin = vec3_new(0.0, 0.0, 10.0);
 	point3 target = vec3_new(0.0, 0.0, 0.0);
-
-	memory_region mem_region = make_memory_region(MEGABYTES(1));
 	scene s = {};
 	SceneSelect(&mem_region, args.scene, &s, &origin, &target);
 
