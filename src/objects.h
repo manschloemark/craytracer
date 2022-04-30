@@ -35,13 +35,22 @@ typedef struct {
 
 triangle triangle_new(point3 x, point3 y, point3 z, int double_sided);
 
+typedef struct {
+	perlin *perlin;
+	void *obj;
+	float hurst;
+	int octaves;
+} fbm_shape;
+
+fbm_shape fbm_shape_new(memory_region *region, float hurst, int octaves, void *obj);
 enum ShapeID {
-	Sphere, Triangle
+	Sphere, Triangle, FBMShape
 };
 
 union shape {
 	sphere sphere;
 	triangle triangle;
+	fbm_shape fbm_shape;
 };
 
 typedef struct {
@@ -60,10 +69,14 @@ object make_sphere(point3 center, float r, texture *text, material *mat);
 
 object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *text, material *mat);
 
+object make_fbm_shape(memory_region *region, float hurst, int octabes, object *obj);
+
 object *add_sphere(memory_region *region, point3 center, float r, texture *text, material *mat);
 
 object *add_triangle(memory_region *region, point3 a, point3 b, point3 c, texture *text, material *mat);
 object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, point3 c, texture *text, material *mat);
+
+object *add_fbm_shape(memory_region *region, float hurst, int octaves, object *obj);
 
 int Intersect(object *obj, ray *r, hit_record *hitrec);
 

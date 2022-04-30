@@ -72,7 +72,15 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 }
 
 void Render(fcolor *pixels, int samples, int height, int width, int max_depth, camera *cam, scene *scene) {
-	fcolor bgcolor = fcolor_new(0.0, 0.0, 0.0);
+	// By default, set bgcolor to something light. Then check the scene to see if it has any light objects
+	// If there are lights in the scene, set the background color to black so the lights are the only source of light.
+	fcolor bgcolor = COLOR_VALUE(0.5);
+	for (int obj_index = 0; obj_index < scene->object_count; ++obj_index) {
+		if (scene->objects[obj_index]->mat->id == DiffuseLight) {
+			bgcolor = COLOR_BLACK;
+			break;
+		}
+	}
 	int i, j;
 	for (j = height-1; j >= 0; --j) {
 		printf("\r%d lines remaining", j);

@@ -125,3 +125,18 @@ float perlin_turbulence(perlin *perl, point3 *pt, int depth) {
 	}
 	return fabs(accumulation);
 }
+
+float fbm(perlin *perl, vec3 v, float h, int octaves) {
+	float g = exp2(-h);
+	float f = 1.0;
+	float a = 1.0;
+	float t = 0.0;
+
+	for (int i = 0; i < octaves; ++i) {
+		vec3 vp = vec3_mul(v, f);
+		t += a * perlin_noise(perl, &vp);
+		f *= 2.0;
+		a *= g;
+	}
+	return t;
+}

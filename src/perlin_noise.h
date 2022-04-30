@@ -21,4 +21,7 @@ float perlin_interpolate(vec3 c[2][2][2], float u, float v, float w);
 float perlin_noise(perlin *perl, point3 *pt);
 float perlin_turbulence(perlin *perl, point3 *pt, int depth);
 
+
+float fbm(perlin *perl, vec3 v, float h, int octaves);
+
 #endif

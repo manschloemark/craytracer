@@ -218,6 +218,30 @@ texture *add_perlin_sincos_texture(memory_region *region, float scale, texture *
 	return mptr;
 }
 
+
+// FBM Modifier -- take some other texture and return the value when you mess with the point
+fbm_modifier fbm_modifier_new(memory_region *region, float hurst, int octaves, void *text) {
+	fbm_modifier fbm_mod = {};
+	fbm_mod.hurst = hurst;
+	fbm_mod.octaves = octaves;
+	fbm_mod.text = text;
+	fbm_mod.perlin = add_perlin(region, 256);
+	return fbm_mod;
+}
+
+texture make_fbm_modifier(memory_region *region, float hurst, int octaves, texture *text) {
+	texture txt = {};
+	fbm_modifier fbm_mod = fbm_modifier_new(region, hurst, octaves, text);
+	txt.type.fbm_mod = fbm_mod;
+	txt.id = FBM;
+	return txt;
+}
+texture *add_fbm_modifier(memory_region *region, float hurst, int octaves, texture *text) {
+	texture fbmtxt = make_fbm_modifier(region, hurst, octaves, text);
+	texture *fbmptr = (texture *)memory_region_add(region, &fbmtxt, sizeof(texture));
+	return fbmptr;
+}
+
 fcolor ImageTextureColor(image_texture *imgtxt, float u, float v) {
 	if (!imgtxt->pixels) return COLOR_UNDEFPURP;
 	int x = clamp(u, 0.0, 1.0) * (float)imgtxt->width;
@@ -293,6 +317,11 @@ fcolor PerlinSinCosTextureColor(multicolor_perlin_texture *perl, float u, float 
 	}
 }
 
+fcolor FMBModifierTextureColor(fbm_modifier *fbm_mod, float u, float v, vec3 pt) {
+	vec3 warped = vec3_mul(pt, fbm(fbm_mod->perlin, pt, fbm_mod->hurst, fbm_mod->octaves));
+	return TextureColor(fbm_mod->text, u, v, warped);
+}
+
 fcolor TextureColor(texture *text, float u, float v, point3 pt) {
 	switch(text->id) {
 		case Image:
@@ -313,6 +342,8 @@ fcolor TextureColor(texture *text, float u, float v, point3 pt) {
 			return PerlinMarbledTextureColor(&text->type.perlin, u, v, pt);
 		case PerlinSinCos:
 			return PerlinSinCosTextureColor(&text->type.multicolor_perlin, u, v, pt);
+		case FBM:
+			return FMBModifierTextureColor(&text->type.fbm_mod, u, v, pt);
 		default:
 			return COLOR_UNDEFPURP;
 	}

@@ -764,43 +764,83 @@ scene TestGlassAndTextures(memory_region *region) {
 	return s;
 }
 
-scene MiscTextureTest(memory_region *region) {
-	int max_obj = 10;
-	int obj_ct = 0;
-	object **objects = (object **)malloc(max_obj * sizeof(object));
+scene MiscTextureTest(memory_region *region, scene *s, vec3 *o, vec3 *t) {
+	int max_objects = 16;
+	int obj_index = 0;
+	object **objects = (object **)malloc(sizeof(object *) * max_objects);
 
 	material *lamb = add_lambertian(region);
-	material *clearmetal = add_metal(region, 0.0);
+	material *light = add_diffuse_light(region);
+	material *glass = add_glass(region, 1.52);
 
-	texture *white = add_color_texture(region, COLOR_WHITE);
-	texture *yellow = add_color_texture(region, fcolor_new(1.0, 0.8, 0.3));
-	texture *black = add_color_texture(region, COLOR_BLACK);
-	texture *gray = add_color_texture(region, COLOR_VALUE(0.68));
-	texture *purple = add_color_texture(region, COLOR_UNDEFPURP);
-	texture *earth = add_image_texture(region, "../resource/earth.jpg", 3);
-	texture *checker = add_checker_texture(region, black, white, 1.0);
-	texture *uvchecker = add_uv_checker_texture(region, white, gray, 100.0);
-	texture *perlin = add_marbled_noise_texture(region, 2.0, earth);
-	texture *perlin2 = add_perlin_sincos_texture(region, 5.0, yellow, purple);
+	texture *white_light = add_color_texture(region, COLOR_VALUE(7.0));
 
-	object *ls = add_sphere(region, vec3_new(0.0, -1.0, 1.0), 1.0, perlin, lamb);
-	object *rs = add_sphere(region, vec3_new(0.0, 1.0, 1.0), 1.0, perlin2, lamb);
-	objects[obj_ct++] = ls;
-	objects[obj_ct++] = rs;
-	vec3 a = vec3_new(20.0, 0.0, 0.0);
-	vec3 b = vec3_new(-20.0, 0.0, 0.0);
-	vec3 c = vec3_new(0.0, -20.0, 0.0);
-	vec3 d = vec3_new(0.0, 20.0, 0.0);
-	object *abd = add_triangle(region, a, b, d, perlin, lamb);
-	object *abc = add_triangle(region, a, b, c, perlin2, lamb);
-	objects[obj_ct++] = abc;
-	objects[obj_ct++] = abd;
+	texture *white = add_color_texture(region, COLOR_VALUE(1.0));
+	texture *pink = add_color_texture(region, fcolor_new(0.8, 0.5, 0.42));
+	texture *teal = add_color_texture(region, fcolor_new(0.25, 0.65, 0.68));
+	texture *green = add_color_texture(region, fcolor_new(0.3, 1.0, 0.5));
 
-	scene s = {};
+	texture *wavy = add_perlin_sincos_texture(region, 2.0, pink, teal);
+	texture *noise = add_colored_perlin_noise_texture(region, 2.0, green);
+	texture *marble = add_marbled_noise_texture(region, 1.0, white);
+	texture *checker = add_checker_texture(region, white, green, 2.0);
 
-	s.objects = objects;
-	s.object_count = obj_ct;
-	return s;
+	texture *fbm_wavy = add_fbm_modifier(region, 0.5, 24, wavy);
+	texture *fbm_wavy2 = add_fbm_modifier(region, 1.0, 24, wavy);
+
+	texture *fbm_noise = add_fbm_modifier(region, 0.5, 24, noise);
+	texture *fbm_marble = add_fbm_modifier(region, 0.5, 24, marble);
+
+	object *lightball = add_sphere(region, vec3_new(-8.0, 0.0, 0.0), 2.5, white_light, light);
+
+	float l = 3.0;
+
+	vec3 a = vec3_new(0.0, 0.0, 0.0);
+	vec3 b = vec3_new(0.0, 0.0, l);
+	vec3 c = vec3_new(0.0, l, 0.0);
+	vec3 d = vec3_new(0.0, l, l);
+	vec3 e = vec3_new(0.0, -l, l);
+
+	// Top right square
+	object *tr_1 = add_triangle(region, a, b, c, wavy, lamb);
+	object *tr_2 = add_triangle(region, d, b, c, fbm_wavy, lamb);
+
+	// Top left
+	object *tl_1 = add_triangle(region, a, vec3_neg(c), b, wavy, lamb);
+	object *tl_2 = add_triangle(region, e, b, vec3_neg(c), fbm_wavy2, lamb);
+
+	// Bottom right
+	object *br_1 = add_triangle(region, a, vec3_neg(b), c, noise, lamb);
+	object *br_2 = add_triangle(region, c, vec3_neg(e), vec3_neg(b), fbm_noise, lamb);
+
+	// Bottom left
+	object *bl_1 = add_triangle(region, a, vec3_neg(b), vec3_neg(c), marble, lamb);
+	object *bl_2 = add_triangle(region, vec3_neg(d), vec3_neg(c), vec3_neg(b), fbm_marble, lamb);
+
+	object *ball = add_sphere(region, vec3_new(-1.0, 0.0, 0.0), 0.1, checker, lamb);
+	object *warped_ball = add_fbm_shape(region, 1.0, 24, ball);
+
+	object *bigball = add_sphere(region, vec3_new(0.0, -l - 1.0, 0.0), 1.0, checker, lamb);
+	object *warped_bigball = add_fbm_shape(region, 0.5, 24, bigball);
+	
+	//objects[obj_index++] = lightball;
+	objects[obj_index++] = tr_1;
+	objects[obj_index++] = tr_2;
+	objects[obj_index++] = tl_1;
+	objects[obj_index++] = tl_2;
+	objects[obj_index++] = br_1;
+	objects[obj_index++] = br_2;
+	objects[obj_index++] = bl_1;
+	objects[obj_index++] = bl_2;
+	objects[obj_index++] = warped_ball;
+	//objects[obj_index++] = warped_bigball;
+
+	s->objects = objects;
+	s->object_count = obj_index;
+
+	*o = vec3_new(-4.0, 0.0, 0.0);
+	*t = vec3_new(0.0, 0.0, 0.0);
+	return *s;
 }
 
 void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *t) {
@@ -830,7 +870,7 @@ void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *
 			*s =  SimpleGlass(region);
 			return;
 		case 9:
-			*s =  MiscTextureTest(region);
+			MiscTextureTest(region, s, o, t);
 			return;
 		case 10:
 			TestLight(region, s, o, t);

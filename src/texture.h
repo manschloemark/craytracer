@@ -48,6 +48,15 @@ perlin_texture perlin_texture_new(memory_region *region, float scale, int pointc
 
 multicolor_perlin_texture multicolor_perlin_texture_new(memory_region *region, float scale, int pointcount, void *colA, void *colB);
 
+typedef struct {
+	perlin *perlin;
+	void *text;
+	float hurst;
+	int octaves;
+} fbm_modifier;
+
+fbm_modifier fbm_modifier_new(memory_region *region, float hurst, int octaves, void *text);
+
 enum TextureID {
 	Undefined,
 	Color,
@@ -59,6 +68,7 @@ enum TextureID {
 	PerlinTurbulence,
 	PerlinMarbled,
 	PerlinSinCos,
+	FBM,
 };
 
 union texture_type {
@@ -68,6 +78,7 @@ union texture_type {
 	checker_texture checker;
 	perlin_texture perlin;
 	multicolor_perlin_texture multicolor_perlin;
+	fbm_modifier fbm_mod;
 };
 
 typedef struct {
@@ -111,7 +122,10 @@ texture *add_marbled_noise_texture(memory_region *region, float scale, texture *
 
 texture make_multicolor_perlin_texture(memory_region *region, float scale, int pointcount, texture *colA, texture *colB);
 
-texture *add_perlin_sincos_texture(memory_region *regoin, float scale, texture *colA, texture *colB);
+texture *add_perlin_sincos_texture(memory_region *region, float scale, texture *colA, texture *colB);
+
+texture make_fbm_modifier(memory_region *region, float hurst, int octaves, texture *text);
+texture *add_fbm_modifier(memory_region *region, float hurst, int octaves, texture *text);
 
 fcolor TextureColor(texture *text, float u, float v, point3 pt);
 

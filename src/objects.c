@@ -110,6 +110,21 @@ int IntersectTriangle(object *obj, ray *r, hit_record *hitrec){
 	// NOTE : u and v are the uv coordinates. I don't need them yet but that'll be useful.
 }
 
+fbm_shape fbm_shape_new(memory_region *region, float hurst, int octaves, void *obj) {
+	fbm_shape fs;
+	fs.perlin = add_perlin(region, 32);
+	fs.obj = obj;
+	fs.hurst = hurst;
+	fs.octaves = octaves;
+	return fs;
+}
+
+int IntersectFBMShape(object *obj, ray *r, hit_record *hitrec) {
+	fbm_shape *fbm_obj = &obj->shape.fbm_shape;
+	ray warped_ray = ray_new(vec3_mul(r->pt, fbm(fbm_obj->perlin, r->pt, fbm_obj->hurst, fbm_obj->octaves)), r->dir);
+	return Intersect(fbm_obj->obj, &warped_ray, hitrec);
+}
+
 object make_sphere(point3 center, float r, texture *text, material *mat) {
 	object o;
 	o.id = Sphere;
@@ -125,6 +140,13 @@ object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *te
 	o.shape.triangle = triangle_new(a, b, c, double_sided);
 	o.text = text;
 	o.mat = mat;
+	return o;
+}
+
+object make_fbm_shape(memory_region *region, float hurst, int octaves, object *obj) {
+	object o;
+	o.id = FBMShape;
+	o.shape.fbm_shape = fbm_shape_new(region, hurst, octaves, obj);
 	return o;
 }
 
@@ -144,12 +166,19 @@ object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, poi
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }
 
+object *add_fbm_shape(memory_region *region, float hurst, int octaves, object *obj) {
+	object o = make_fbm_shape(region, hurst, octaves, obj);
+	return (object *)memory_region_add(region, &o, sizeof(object));
+}
+
 int Intersect(object *obj, ray *r, hit_record *hitrec) {
 	switch (obj->id) {
 		case Sphere:
 			return IntersectSphere(obj, r, hitrec);
 		case Triangle:
 			return IntersectTriangle(obj, r, hitrec);
+		case FBMShape:
+			return IntersectFBMShape(obj, r, hitrec);
 		default:
 			return 0;
 	}
