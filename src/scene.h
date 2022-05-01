@@ -765,7 +765,7 @@ scene TestGlassAndTextures(memory_region *region) {
 }
 
 scene MiscTextureTest(memory_region *region, scene *s, vec3 *o, vec3 *t) {
-	int max_objects = 16;
+	int max_objects = 256;
 	int obj_index = 0;
 	object **objects = (object **)malloc(sizeof(object *) * max_objects);
 
@@ -780,65 +780,75 @@ scene MiscTextureTest(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	texture *teal = add_color_texture(region, fcolor_new(0.25, 0.65, 0.68));
 	texture *green = add_color_texture(region, fcolor_new(0.3, 1.0, 0.5));
 
-	texture *wavy = add_perlin_sincos_texture(region, 2.0, pink, teal);
-	texture *noise = add_colored_perlin_noise_texture(region, 2.0, green);
-	texture *marble = add_marbled_noise_texture(region, 1.0, white);
-	texture *checker = add_checker_texture(region, white, green, 2.0);
+	texture *texturelist[32]; // size 32 just in case
+	int txt_i = 0;
+	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, 1.0, green);
+	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, 2.0, green);
+	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, 4.0, green);
+	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, 8.0, green);
+	texturelist[txt_i++] = add_marbled_noise_texture(region, 1.0, white);
+	texturelist[txt_i++] = add_marbled_noise_texture(region, 2.0, white);
+	texturelist[txt_i++] = add_marbled_noise_texture(region, 4.0, white);
+	texturelist[txt_i++] = add_marbled_noise_texture(region, 8.0, white);
+	texturelist[txt_i++] = add_perlin_sincos_texture(region, 1.0, pink, teal);
+	texturelist[txt_i++] = add_perlin_sincos_texture(region, 2.0, pink, teal);
+	texturelist[txt_i++] = add_perlin_sincos_texture(region, 4.0, pink, teal);
+	texturelist[txt_i++] = add_perlin_sincos_texture(region, 8.0, pink, teal);
+	texturelist[txt_i++] = add_checker_texture(region, pink, green, 1.0);
+	texturelist[txt_i++] = add_checker_texture(region, pink, green, 2.0);
+	texturelist[txt_i++] = add_checker_texture(region, pink, green, 4.0);
+	texturelist[txt_i++] = add_checker_texture(region, pink, green, 8.0);
 
-	texture *fbm_wavy = add_fbm_modifier(region, 0.5, 24, wavy);
-	texture *fbm_wavy2 = add_fbm_modifier(region, 1.0, 24, wavy);
 
-	texture *fbm_noise = add_fbm_modifier(region, 0.5, 24, noise);
-	texture *fbm_marble = add_fbm_modifier(region, 0.5, 24, marble);
+	int cols = txt_i;
+	int rows = 5;
+	float margin = 0.1;
+	float rad = 1.0;
+	float sep = 2.0*rad + margin;
+	float start_y = -(((((float)cols) * 0.5) - 0.5) * (margin + 2.0*rad));
+	float start_z = (((((float)rows) * 0.5) - 0.5) * (margin + 2.0*rad));
 
-	object *lightball = add_sphere(region, vec3_new(-8.0, 0.0, 0.0), 2.5, white_light, light);
+	float p_x = -10.0;
+	float p_y = start_y;
+	float p_z = start_z;
+	// Loop over texturelist and make additional fbm textures for each texture
+	point3 pos = vec3_new(p_x, p_y, p_z);
+	float d_y = sep;
+	float d_z = -sep;
 
-	float l = 3.0;
+	// Use one perlin 'object' for all fbm modifiers to cut down on memory use
+	perlin *shared_perlin = add_perlin(region, 256);
 
-	vec3 a = vec3_new(0.0, 0.0, 0.0);
-	vec3 b = vec3_new(0.0, 0.0, l);
-	vec3 c = vec3_new(0.0, l, 0.0);
-	vec3 d = vec3_new(0.0, l, l);
-	vec3 e = vec3_new(0.0, -l, l);
+	int i;
+	for(i = 0; i < txt_i; ++i) {
+		texture *fbm_mod_h05_o12 = add_fbm_modifier_noise(region, shared_perlin, 0.5, 12, texturelist[i]);
+		texture *fbm_mod_h1_o12 = add_fbm_modifier_noise(region, shared_perlin, 1.0, 12, texturelist[i]);
+		texture *fbm_mod_h05_o24 = add_fbm_modifier_noise(region, shared_perlin, 0.5, 24, texturelist[i]);
+		texture *fbm_mod_h1_o24 = add_fbm_modifier_noise(region, shared_perlin, 1.0, 24, texturelist[i]);
 
-	// Top right square
-	object *tr_1 = add_triangle(region, a, b, c, wavy, lamb);
-	object *tr_2 = add_triangle(region, d, b, c, fbm_wavy, lamb);
+		object *control_sphere = add_sphere(region, pos, rad, texturelist[i], lamb);
+		pos.z += d_z;
+		object *fbm_sphere_1 = add_sphere(region, pos, rad, fbm_mod_h05_o12, lamb);
+		pos.z += d_z;
+		object *fbm_sphere_2 = add_sphere(region, pos, rad, fbm_mod_h1_o12, lamb);
+		pos.z += d_z;
+		object *fbm_sphere_3 = add_sphere(region, pos, rad, fbm_mod_h05_o24, lamb);
+		pos.z += d_z;
+		object *fbm_sphere_4 = add_sphere(region, pos, rad, fbm_mod_h1_o24, lamb);
+		pos.z = start_z;
+		pos.y += d_y;
 
-	// Top left
-	object *tl_1 = add_triangle(region, a, vec3_neg(c), b, wavy, lamb);
-	object *tl_2 = add_triangle(region, e, b, vec3_neg(c), fbm_wavy2, lamb);
-
-	// Bottom right
-	object *br_1 = add_triangle(region, a, vec3_neg(b), c, noise, lamb);
-	object *br_2 = add_triangle(region, c, vec3_neg(e), vec3_neg(b), fbm_noise, lamb);
-
-	// Bottom left
-	object *bl_1 = add_triangle(region, a, vec3_neg(b), vec3_neg(c), marble, lamb);
-	object *bl_2 = add_triangle(region, vec3_neg(d), vec3_neg(c), vec3_neg(b), fbm_marble, lamb);
-
-	object *ball = add_sphere(region, vec3_new(-1.0, 0.0, 0.0), 0.1, checker, lamb);
-	object *warped_ball = add_fbm_shape(region, 1.0, 24, ball);
-
-	object *bigball = add_sphere(region, vec3_new(0.0, -l - 1.0, 0.0), 1.0, checker, lamb);
-	object *warped_bigball = add_fbm_shape(region, 0.5, 24, bigball);
-	
-	//objects[obj_index++] = lightball;
-	objects[obj_index++] = tr_1;
-	objects[obj_index++] = tr_2;
-	objects[obj_index++] = tl_1;
-	objects[obj_index++] = tl_2;
-	objects[obj_index++] = br_1;
-	objects[obj_index++] = br_2;
-	objects[obj_index++] = bl_1;
-	objects[obj_index++] = bl_2;
-	objects[obj_index++] = warped_ball;
-	//objects[obj_index++] = warped_bigball;
+		objects[obj_index++] = control_sphere;
+		objects[obj_index++] = fbm_sphere_1;
+		objects[obj_index++] = fbm_sphere_2;
+		objects[obj_index++] = fbm_sphere_3;
+		objects[obj_index++] = fbm_sphere_4;
+	}
 
 	s->objects = objects;
 	s->object_count = obj_index;
 
-	*o = vec3_new(-4.0, 0.0, 0.0);
+	*o = vec3_new(10.0, 0.0, 0.0);
 	*t = vec3_new(0.0, 0.0, 0.0);
 	return *s;
 }

@@ -55,7 +55,7 @@ typedef struct {
 	int octaves;
 } fbm_modifier;
 
-fbm_modifier fbm_modifier_new(memory_region *region, float hurst, int octaves, void *text);
+fbm_modifier fbm_modifier_new(memory_region *region, perlin *perl, float hurst, int octaves, void *text);
 
 enum TextureID {
 	Undefined,
@@ -124,8 +124,9 @@ texture make_multicolor_perlin_texture(memory_region *region, float scale, int p
 
 texture *add_perlin_sincos_texture(memory_region *region, float scale, texture *colA, texture *colB);
 
-texture make_fbm_modifier(memory_region *region, float hurst, int octaves, texture *text);
+texture make_fbm_modifier(memory_region *region, perlin *perl, float hurst, int octaves, texture *text);
 texture *add_fbm_modifier(memory_region *region, float hurst, int octaves, texture *text);
+texture *add_fbm_modifier_noise(memory_region *region, perlin *perl, float hurst, int octaves, texture *text);
 
 fcolor TextureColor(texture *text, float u, float v, point3 pt);
 

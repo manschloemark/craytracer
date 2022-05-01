@@ -220,24 +220,34 @@ texture *add_perlin_sincos_texture(memory_region *region, float scale, texture *
 
 
 // FBM Modifier -- take some other texture and return the value when you mess with the point
-fbm_modifier fbm_modifier_new(memory_region *region, float hurst, int octaves, void *text) {
+fbm_modifier fbm_modifier_new(memory_region *region, perlin *perl, float hurst, int octaves, void *text) {
 	fbm_modifier fbm_mod = {};
 	fbm_mod.hurst = hurst;
 	fbm_mod.octaves = octaves;
 	fbm_mod.text = text;
-	fbm_mod.perlin = add_perlin(region, 256);
+	if (perl) {
+		fbm_mod.perlin = perl;
+	} else {
+		fbm_mod.perlin = add_perlin(region, 256);
+	}
 	return fbm_mod;
 }
 
-texture make_fbm_modifier(memory_region *region, float hurst, int octaves, texture *text) {
+texture make_fbm_modifier(memory_region *region, perlin *perl, float hurst, int octaves, texture *text) {
 	texture txt = {};
-	fbm_modifier fbm_mod = fbm_modifier_new(region, hurst, octaves, text);
+	fbm_modifier fbm_mod = fbm_modifier_new(region, perl, hurst, octaves, text);
 	txt.type.fbm_mod = fbm_mod;
 	txt.id = FBM;
 	return txt;
 }
 texture *add_fbm_modifier(memory_region *region, float hurst, int octaves, texture *text) {
-	texture fbmtxt = make_fbm_modifier(region, hurst, octaves, text);
+	texture fbmtxt = make_fbm_modifier(region, NULL, hurst, octaves, text);
+	texture *fbmptr = (texture *)memory_region_add(region, &fbmtxt, sizeof(texture));
+	return fbmptr;
+}
+
+texture *add_fbm_modifier_noise(memory_region *region, perlin *perl, float hurst, int octaves, texture *text) {
+	texture fbmtxt = make_fbm_modifier(region, perl, hurst, octaves, text);
 	texture *fbmptr = (texture *)memory_region_add(region, &fbmtxt, sizeof(texture));
 	return fbmptr;
 }
