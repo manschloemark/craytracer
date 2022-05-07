@@ -121,7 +121,7 @@ fbm_shape fbm_shape_new(memory_region *region, float hurst, int octaves, void *o
 
 int IntersectFBMShape(object *obj, ray *r, hit_record *hitrec) {
 	fbm_shape *fbm_obj = &obj->shape.fbm_shape;
-	ray warped_ray = ray_new(vec3_mul(r->pt, fbm(fbm_obj->perlin, r->pt, fbm_obj->hurst, fbm_obj->octaves)), r->dir);
+	ray warped_ray = ray_new(r->pt, vec3_addf(r->dir, 0.2 * fbm(fbm_obj->perlin, r->dir, fbm_obj->hurst, fbm_obj->octaves)));
 	return Intersect(fbm_obj->obj, &warped_ray, hitrec);
 }
 
@@ -146,6 +146,8 @@ object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *te
 object make_fbm_shape(memory_region *region, float hurst, int octaves, object *obj) {
 	object o;
 	o.id = FBMShape;
+	o.mat = obj->mat;
+	o.text = obj->text;
 	o.shape.fbm_shape = fbm_shape_new(region, hurst, octaves, obj);
 	return o;
 }
