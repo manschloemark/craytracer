@@ -14,6 +14,11 @@ vec3 vec3_add(vec3 a, vec3 b) {
 	return v;
 }
 
+vec3 vec3_addf(vec3 a, float f) {
+	vec3 v = {a.x+f, a.y+f, a.z+f};
+	return v;
+}
+
 float vec3_len(vec3 a) {
 	return sqrtf(vec3_lensq(a));
 }

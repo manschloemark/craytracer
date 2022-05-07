@@ -14,6 +14,7 @@ vec3 vec3_new(float x, float y, float z);
 
 // Vector/Vector operations
 vec3 vec3_add(vec3 a, vec3 b);
+vec3 vec3_addf(vec3 a, float f);
 
 static inline vec3 vec3_sub(vec3 a, vec3 b) {
 	vec3 v = {a.x-b.x, a.y-b.y, a.z-b.z};
