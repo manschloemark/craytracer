@@ -38,7 +38,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 	int hit = 0;
 	int c = 0;
 	while(c < scene->object_count) {
-		hit |= Intersect(scene->objects[c], &r, &hitrec);
+		hit |= scene->objects[c]->Intersect(scene->objects[c], &r, &hitrec);
 		++c;
 	}
 

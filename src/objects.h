@@ -43,6 +43,7 @@ typedef struct {
 } fbm_shape;
 
 fbm_shape fbm_shape_new(memory_region *region, float hurst, int octaves, void *obj);
+
 enum ShapeID {
 	Sphere, Triangle, FBMShape
 };
@@ -54,16 +55,12 @@ union shape {
 };
 
 typedef struct {
+	int (*Intersect)(void *self, ray *r, hit_record *hitrec);
 	union shape shape;
 	material *mat;
 	texture *text;
 	enum ShapeID id;
 } object;
-
-// TODO : I only make s a pointer here because I don't feel like fixing all the ->, fix it later (also in IntersectTriangle)
-int IntersectSphere(object *obj, ray *r, hit_record *hitrec);
-
-int IntersectTriangle(object *obj, ray *r, hit_record *hitrec);
 
 object make_sphere(point3 center, float r, texture *text, material *mat);
 
@@ -78,6 +75,12 @@ object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, poi
 
 object *add_fbm_shape(memory_region *region, float hurst, int octaves, object *obj);
 
-int Intersect(object *obj, ray *r, hit_record *hitrec);
+
+// TODO : I only make s a pointer here because I don't feel like fixing all the ->, fix it later (also in IntersectTriangle)
+int IntersectSphere(void *self, ray *r, hit_record *hitrec);
+
+int IntersectTriangle(void *self, ray *r, hit_record *hitrec);
+
+int Intersect(void *self, ray *r, hit_record *hitrec);
 
 #endif

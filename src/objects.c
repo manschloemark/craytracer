@@ -29,8 +29,9 @@ triangle triangle_new(point3 x, point3 y, point3 z, int double_sided) {
 }
 
 // TODO : I only make s a pointer here because I don't feel like fixing all the ->, fix it later (also in IntersectTriangle)
-int IntersectSphere(object *obj, ray *r, hit_record *hitrec) {
-	sphere *s = &obj->shape.sphere;
+int IntersectSphere(void *self, ray *r, hit_record *hitrec) {
+	object *obj = self;
+	sphere *s = &((object *)self)->shape.sphere;
 
 	vec3 T = vec3_sub(r->pt, s->center);
 	float a = vec3_lensq(r->dir);
@@ -64,7 +65,8 @@ int IntersectSphere(object *obj, ray *r, hit_record *hitrec) {
 	return 1;
 }
 
-int IntersectTriangle(object *obj, ray *r, hit_record *hitrec){
+int IntersectTriangle(void *self, ray *r, hit_record *hitrec){
+	object *obj = self;
 	triangle *tri = &obj->shape.triangle;
 	vec3 BA = vec3_sub(tri->b, tri->a);
 	vec3 CA = vec3_sub(tri->c, tri->a);
@@ -119,14 +121,16 @@ fbm_shape fbm_shape_new(memory_region *region, float hurst, int octaves, void *o
 	return fs;
 }
 
-int IntersectFBMShape(object *obj, ray *r, hit_record *hitrec) {
+int IntersectFBMShape(void *self, ray *r, hit_record *hitrec) {
+	object *obj = self;
 	fbm_shape *fbm_obj = &obj->shape.fbm_shape;
 	ray warped_ray = ray_new(r->pt, vec3_addf(r->dir, 0.2 * fbm(fbm_obj->perlin, r->dir, fbm_obj->hurst, fbm_obj->octaves)));
-	return Intersect(fbm_obj->obj, &warped_ray, hitrec);
+	return ((object *)fbm_obj->obj)->Intersect(fbm_obj->obj, &warped_ray, hitrec);
 }
 
 object make_sphere(point3 center, float r, texture *text, material *mat) {
 	object o;
+	o.Intersect = (*IntersectSphere);
 	o.id = Sphere;
 	o.shape.sphere = sphere_new(center, r);
 	o.text = text;
@@ -136,6 +140,7 @@ object make_sphere(point3 center, float r, texture *text, material *mat) {
 
 object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *text, material *mat) {
 	object o;
+	o.Intersect = (*IntersectTriangle);
 	o.id = Triangle;
 	o.shape.triangle = triangle_new(a, b, c, double_sided);
 	o.text = text;
@@ -145,6 +150,7 @@ object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *te
 
 object make_fbm_shape(memory_region *region, float hurst, int octaves, object *obj) {
 	object o;
+	o.Intersect = (*IntersectFBMShape);
 	o.id = FBMShape;
 	o.mat = obj->mat;
 	o.text = obj->text;
@@ -171,17 +177,4 @@ object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, poi
 object *add_fbm_shape(memory_region *region, float hurst, int octaves, object *obj) {
 	object o = make_fbm_shape(region, hurst, octaves, obj);
 	return (object *)memory_region_add(region, &o, sizeof(object));
-}
-
-int Intersect(object *obj, ray *r, hit_record *hitrec) {
-	switch (obj->id) {
-		case Sphere:
-			return IntersectSphere(obj, r, hitrec);
-		case Triangle:
-			return IntersectTriangle(obj, r, hitrec);
-		case FBMShape:
-			return IntersectFBMShape(obj, r, hitrec);
-		default:
-			return 0;
-	}
 }
