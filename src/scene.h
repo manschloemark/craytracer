@@ -819,37 +819,121 @@ scene MiscTextureTest(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	// Use one perlin 'object' for all fbm modifiers to cut down on memory use
 	perlin *shared_perlin = add_perlin(region, 256);
 
-	int i;
-	for(i = 0; i < txt_i; ++i) {
-		texture *fbm_mod_h05_o12 = add_fbm_modifier_noise(region, shared_perlin, 0.5, 12, texturelist[i]);
-		texture *fbm_mod_h1_o12 = add_fbm_modifier_noise(region, shared_perlin, 1.0, 12, texturelist[i]);
-		texture *fbm_mod_h05_o24 = add_fbm_modifier_noise(region, shared_perlin, 0.5, 24, texturelist[i]);
-		texture *fbm_mod_h1_o24 = add_fbm_modifier_noise(region, shared_perlin, 1.0, 24, texturelist[i]);
-
-		object *control_sphere = add_sphere(region, pos, rad, texturelist[i], lamb);
-		pos.z += d_z;
-		object *fbm_sphere_1 = add_sphere(region, pos, rad, fbm_mod_h05_o12, lamb);
-		pos.z += d_z;
-		object *fbm_sphere_2 = add_sphere(region, pos, rad, fbm_mod_h1_o12, lamb);
-		pos.z += d_z;
-		object *fbm_sphere_3 = add_sphere(region, pos, rad, fbm_mod_h05_o24, lamb);
-		pos.z += d_z;
-		object *fbm_sphere_4 = add_sphere(region, pos, rad, fbm_mod_h1_o24, lamb);
-		pos.z = start_z;
-		pos.y += d_y;
-
-		objects[obj_index++] = control_sphere;
-		objects[obj_index++] = fbm_sphere_1;
-		objects[obj_index++] = fbm_sphere_2;
-		objects[obj_index++] = fbm_sphere_3;
-		objects[obj_index++] = fbm_sphere_4;
-	}
-
 	s->objects = objects;
 	s->object_count = obj_index;
 
 	*o = vec3_new(10.0, 0.0, 0.0);
 	*t = vec3_new(0.0, 0.0, 0.0);
+	return *s;
+}
+
+scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
+	int max_objects = 16;
+	int obj_index = 0;
+	object **objects = (object **)malloc(sizeof(object *) * max_objects);
+
+	material *lamb = add_lambertian(region);
+	material *lambertian = lamb;
+	material *light = add_diffuse_light(region);
+	material *glass = add_glass(region, 1.52);
+	material *mirror = add_metal(region, 0.02);
+
+	texture *white_light = add_color_texture(region, COLOR_VALUE(7.0));
+
+	texture *white = add_color_texture(region, COLOR_VALUE(1.0));
+	texture *gray = add_color_texture(region, COLOR_VALUE(0.54));
+	texture *pink = add_color_texture(region, fcolor_new(0.8, 0.5, 0.42));
+	texture *yellow = add_color_texture(region, fcolor_new(0.8, 0.8, 0.32));
+	texture *orange = add_color_texture(region, fcolor_new(0.8, 0.6, 0.32));
+	texture *purple = add_color_texture(region, fcolor_new(0.8, 0.5, 0.82));
+	texture *teal = add_color_texture(region, fcolor_new(0.25, 0.65, 0.68));
+	texture *green = add_color_texture(region, fcolor_new(0.3, 1.0, 0.5));
+
+	texture *tile = add_uv_checker_texture(region, orange, teal, 16.0);
+	texture *earth = add_image_texture(region, "../resource/earth.jpg", 3);
+	texture *perlin = add_perlin_sincos_texture(region, 4.0, pink, yellow);
+
+	// TODO : add a triangle with fbm stuff
+	// TODO : for fbm_shapes add a scale parameter
+	// NOTE : 1.0 is way better than 0.5 for messing with objects
+	//
+	object *greenball = add_sphere(region, vec3_new(-7.0, 3.0, 1.5), 1.5, green, lambertian);
+	object *tileball= add_sphere(region, vec3_new(-6.0, -3.0, 1.0), 1.0, tile, lamb);
+	object *glassball = add_sphere(region, vec3_new(-4.0, 0.0, 1.0), 1.0, white, glass);
+	object *perlinball = add_sphere(region, vec3_new(-4.0, 0.0, 1.0), 1.0, perlin, lamb);
+	//object *pinkmirror = add_sphere(region, vec3_new(0.0, 1.0, 1.0), 0.5, pink, mirror)
+
+	object *regular_sphere = greenball;
+	object *fbm_sphere2 = add_fbm_shape(region, 1.0, 8, greenball);
+	object *fbm_sphere3 = add_fbm_shape(region, 1.0, 12, greenball);
+	object *fbm_sphere4 = add_fbm_shape(region, 1.0, 24, tileball);
+	object *fbm_sphere5 = add_fbm_shape(region, 1.0, 24, perlinball);
+
+	float z = 12.0;
+	vec3 pt_a = vec3_new(-8.0, -3.0,z);
+	vec3 pt_b = vec3_new(-5.0, -3.0, z);
+	vec3 pt_c = vec3_new(-8.0, 3.0, z);
+	vec3 pt_d = vec3_new(-5.0, 3.0, z);
+	object *light_tri = add_single_sided_triangle(region, pt_b, pt_a, pt_d, white_light, light);
+	object *light_tri2 = add_single_sided_triangle(region, pt_a, pt_c, pt_d, white_light, light);
+
+
+	float trifloat = 100.0;
+	vec3 floor_a = vec3_new(trifloat, 0.0, 0.0);
+	vec3 floor_b = vec3_new(-trifloat, -2.0*trifloat, 0.0);
+	vec3 floor_c = vec3_new(-trifloat, 2.0 * trifloat, 0.0);
+	object *floor = add_triangle(region, floor_a, floor_b, floor_c, gray, lambertian);
+
+	float x = -10.0;
+	vec3 back_a = vec3_new(x, -6.0, 0.0);
+	vec3 back_b = vec3_new(x, 6.0, 0.0);
+	vec3 back_c = vec3_new(x, -6.0, 20.0);
+	vec3 back_d = vec3_new(x, 6.0, 20.0);
+	object *back = add_triangle(region, back_a, back_b, back_c, gray, mirror);
+	object *back2 = add_triangle(region, back_d, back_b, back_c, gray, mirror);
+	object *fbm_back = add_fbm_shape(region, 1.0, 24, back);
+	object *fbm_back2 = add_fbm_shape(region, 1.0, 24, back2);
+
+	float ly = -6.0;
+	vec3 left_a = vec3_new(x,ly,0.0);
+	vec3 left_b = vec3_new(x,ly,20.0);
+	vec3 left_c = vec3_new(0.0,ly,0.0);
+	vec3 left_d = vec3_new(0.0,ly,20.0);
+	object *left = add_triangle(region, left_d, left_b, left_c, gray, mirror);
+	object *left2 = add_triangle(region, left_a, left_b, left_c, gray, mirror);
+
+	float ry = 6.0;
+	vec3 right_a = vec3_new(x,ry,0.0);
+	vec3 right_b = vec3_new(x,ry,20.0);
+	vec3 right_c = vec3_new(0.0,ry,0.0);
+	vec3 right_d = vec3_new(0.0,ry,20.0);
+	object *right = add_triangle(region, right_d, right_b, right_c, tile, lambertian);
+	object *right2 = add_triangle(region, right_a, right_b, right_c, tile, lambertian);
+	object *fbm_tri_right = add_fbm_shape(region, 1.0, 24, right);
+	object *fbm_tri_right2 = add_fbm_shape(region, 1.0, 24, right2);
+
+	objects[obj_index++] = regular_sphere;
+	//objects[obj_index++] = fbm_sphere;
+	objects[obj_index++] = fbm_sphere2;
+	objects[obj_index++] = fbm_sphere3;
+	objects[obj_index++] = fbm_sphere4;
+	objects[obj_index++] = fbm_sphere5;
+	//objects[obj_index++] = light_tri;
+	//objects[obj_index++] = light_tri2;
+
+	objects[obj_index++] = fbm_back;
+	objects[obj_index++] = fbm_back2;
+	objects[obj_index++] = left;
+	objects[obj_index++] = left2;
+	objects[obj_index++] = fbm_tri_right;
+	objects[obj_index++] = fbm_tri_right2;
+	objects[obj_index++] = floor;
+
+	s->objects = objects;
+	s->object_count = obj_index;
+
+	*o = vec3_new(8.0, 0.0, 6.0);
+	*t = vec3_new(-5.0, 0.0, 6.0);
 	return *s;
 }
 
@@ -891,8 +975,12 @@ void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *
 		case 12:
 			ScuffedCornellBox(region, s, o, t);
 			return;
+		case 13:
+			FBM_Test(region, s, o, t);
+			return;
 		default:
 			Demo(region, s, o, t);
+			return;
 	}
 }
 
