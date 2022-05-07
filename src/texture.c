@@ -20,6 +20,7 @@ color_texture color_texture_new(fcolor color) {
 
 texture make_color_texture(fcolor color) {
 	texture coltxt = {};
+	coltxt.TextureColor = (*ColorTextureColor);
 	coltxt.type.color = color_texture_new(color);
 	coltxt.id = Color;
 	return coltxt;
@@ -51,6 +52,7 @@ image_texture image_texture_new(const char *filename, int bytes_per_pixel) {
 
 texture make_image_texture(const char *filename, int bytes_per_pixel) {
 	texture imgtxt = {};
+	imgtxt.TextureColor = (*ImageTextureColor);
 	imgtxt.id = Image;
 	imgtxt.type.image = image_texture_new(filename, bytes_per_pixel);
 	return imgtxt;
@@ -62,9 +64,11 @@ texture *add_image_texture(memory_region *region, const char *filename, int byte
 	return txtptr;
 }
 
+// TODO : Implement these
 // UV-Coordinate Texture
 texture make_uv_texture() {
 	texture uvtxt = {};
+	uvtxt.TextureColor = (*UNDEFINED_TextureColor);
 	uvtxt.id = UV;
 	uv_texture uv = {};
 	uvtxt.type.uv = uv;
@@ -88,6 +92,7 @@ checker_texture checker_texture_new(void *odd, void *even, float freq) {
 
 texture make_checker_texture(texture *odd, texture *even, float freq) {
 	texture txt = {};
+	txt.TextureColor = (*CheckerTextureColor);
 	checker_texture checkertxt = checker_texture_new(odd, even, freq);
 	txt.id = Checker;
 	txt.type.checker = checkertxt;
@@ -106,6 +111,7 @@ texture *add_checker_texture(memory_region *region, texture *odd, texture *even,
 
 texture make_uv_checker_texture(texture *odd, texture *even, float freq) {
 	texture txt = {};
+	txt.TextureColor = (*UVCheckerTextureColor);
 	checker_texture checkertxt = checker_texture_new(odd, even, freq);
 	txt.id = UVChecker;
 	txt.type.checker = checkertxt;
@@ -129,6 +135,7 @@ perlin_texture perlin_texture_new(memory_region *region, float scale, int pointc
 
 texture make_perlin_noise_texture(memory_region *region, float scale, int pointcount, texture *text) {
 	texture txt = {};
+	txt.TextureColor = (*PerlinNoiseTextureColor);
 	perlin_texture perl = perlin_texture_new(region, scale, pointcount, text);
 	txt.id = PerlinNoise;
 	txt.type.perlin = perl;
@@ -173,6 +180,7 @@ texture *add_colored_perlin_noise_texture_sized(memory_region *region, float sca
 // Perlin Turbulence -- same as perlin_noise_texture but calls perlin_turbulence instead of perlin_noise
 texture *add_perlin_turbulence_texture(memory_region *region, float scale) {
 	texture perltext = make_perlin_noise_texture(region, scale, 256, NULL);
+	perltext.TextureColor = (*PerlinTurbulenceTextureColor);
 	perltext.id = PerlinTurbulence;
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
@@ -180,6 +188,7 @@ texture *add_perlin_turbulence_texture(memory_region *region, float scale) {
 
 texture *add_colored_perlin_turbulence_texture(memory_region *region, float scale, texture *text) {
 	texture perltext = make_perlin_noise_texture(region, scale, 256, text);
+	perltext.TextureColor = (*PerlinTurbulenceTextureColor);
 	perltext.id = PerlinTurbulence;
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
@@ -187,6 +196,7 @@ texture *add_colored_perlin_turbulence_texture(memory_region *region, float scal
 
 texture *add_marbled_noise_texture(memory_region *region, float scale, texture *text) {
 	texture perltext = make_perlin_noise_texture(region, scale, 256, text);
+	perltext.TextureColor = (*PerlinMarbledTextureColor);
 	perltext.id = PerlinMarbled;
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
@@ -204,6 +214,7 @@ multicolor_perlin_texture multicolor_perlin_texture_new(memory_region *region, f
 
 texture make_multicolor_perlin_texture(memory_region *region, float scale, int pointcount, texture *colA, texture *colB) {
 	texture txt = {};
+	txt.TextureColor = (*UNDEFINED_TextureColor);
 	multicolor_perlin_texture perl = multicolor_perlin_texture_new(region, scale, pointcount, colA, colB);
 	txt.id = Undefined;
 	txt.type.multicolor_perlin = perl;
@@ -213,6 +224,7 @@ texture make_multicolor_perlin_texture(memory_region *region, float scale, int p
 texture *add_perlin_sincos_texture(memory_region *region, float scale, texture *colA, texture *colB) {
 	int pointcount = 256;
 	texture mp = make_multicolor_perlin_texture(region, scale, pointcount, colA, colB);
+	mp.TextureColor = (*PerlinSinCosTextureColor);
 	mp.id = PerlinSinCos;
 	texture *mptr = (texture *)memory_region_add(region, &mp, sizeof(texture));
 	return mptr;
@@ -235,6 +247,7 @@ fbm_modifier fbm_modifier_new(memory_region *region, perlin *perl, float hurst, 
 
 texture make_fbm_modifier(memory_region *region, perlin *perl, float hurst, int octaves, texture *text) {
 	texture txt = {};
+	txt.TextureColor = (*FBMModifierTextureColor);
 	fbm_modifier fbm_mod = fbm_modifier_new(region, perl, hurst, octaves, text);
 	txt.type.fbm_mod = fbm_mod;
 	txt.id = FBM;
@@ -252,7 +265,13 @@ texture *add_fbm_modifier_noise(memory_region *region, perlin *perl, float hurst
 	return fbmptr;
 }
 
-fcolor ImageTextureColor(image_texture *imgtxt, float u, float v) {
+fcolor ColorTextureColor(void *self, float u, float v, vec3 pt) {
+	color_texture *txt = &((texture *)self)->type.color; 
+	return txt->rgb;
+}
+
+fcolor ImageTextureColor(void *self, float u, float v, point3 pt) {
+	image_texture *imgtxt = &((texture *)self)->type.image;
 	if (!imgtxt->pixels) return COLOR_UNDEFPURP;
 	int x = clamp(u, 0.0, 1.0) * (float)imgtxt->width;
 	int y = imgtxt->height - clamp(v, 0.0, 1.0) * (float)imgtxt->height;
@@ -264,24 +283,27 @@ fcolor ImageTextureColor(image_texture *imgtxt, float u, float v) {
 	return result;
 }
 
-fcolor CheckerTextureColor(checker_texture *chtxt, float u, float v, vec3 pt) {
+fcolor CheckerTextureColor(void *self, float u, float v, vec3 pt) {
+	checker_texture *chtxt = &((texture *)self)->type.checker;
 	float sines = sinf(chtxt->freq * pt.x) * sinf(chtxt->freq * pt.y) * sinf(chtxt->freq * pt.z);
 	if (sines < 0.0)
-		return TextureColor((texture *)chtxt->odd, u, v, pt);
-	return TextureColor((texture *)chtxt->even, u, v, pt);
+		return ((texture *)chtxt->odd)->TextureColor(chtxt->odd, u, v, pt);
+	return ((texture *)chtxt->even)->TextureColor(chtxt->even, u, v, pt);
 }
 
-fcolor UVCheckerTextureColor(checker_texture *chtxt, float u, float v, vec3 pt) {
+fcolor UVCheckerTextureColor(void *self, float u, float v, vec3 pt) {
+	checker_texture *chtxt = &((texture *)self)->type.checker;
 	float sines = sinf(chtxt->freq * u) * sinf(chtxt->freq * v);
 	if (sines < 0.0)
-		return TextureColor((texture *)chtxt->odd, u, v, pt);
-	return TextureColor((texture *)chtxt->even, u, v, pt);
+		return ((texture *)chtxt->odd)->TextureColor(chtxt->odd, u, v, pt);
+	return ((texture *)chtxt->even)->TextureColor(chtxt->even, u, v, pt);
 }
 
-fcolor PerlinNoiseTextureColor(perlin_texture *perl, float u, float v, vec3 pt) {
+fcolor PerlinNoiseTextureColor(void *self, float u, float v, vec3 pt) {
+	perlin_texture *perl = &((texture *)self)->type.perlin;
 	fcolor col;
 	if (perl->texture != NULL) {
-		col = TextureColor(perl->texture, u, v, pt);
+		col = ((texture *)perl->texture)->TextureColor(perl->texture, u, v, pt);
 	} else {
 		col = fcolor_new(1.0, 1.0, 1.0);
 	}
@@ -290,11 +312,12 @@ fcolor PerlinNoiseTextureColor(perlin_texture *perl, float u, float v, vec3 pt) 
 	return color_mul(col, noise);
 }
 
-fcolor PerlinTurbulenceTextureColor(perlin_texture *perl, float u, float v, vec3 pt) {
+fcolor PerlinTurbulenceTextureColor(void *self, float u, float v, vec3 pt) {
+	perlin_texture *perl = &((texture *)self)->type.perlin;
 	int depth = 7;
 	fcolor col;
 	if (perl->texture != NULL) {
-		col = TextureColor(perl->texture, u, v, pt);
+		col = ((texture *)perl->texture)->TextureColor(perl->texture, u, v, pt);
 	} else {
 		col = fcolor_new(1.0, 1.0, 1.0);
 	}
@@ -303,11 +326,12 @@ fcolor PerlinTurbulenceTextureColor(perlin_texture *perl, float u, float v, vec3
 	return color_mul(col, perlin_turbulence(perl->perlin, &pt, depth));
 }
 
-fcolor PerlinMarbledTextureColor(perlin_texture *perl, float u, float v, vec3 pt) {
+fcolor PerlinMarbledTextureColor(void *self, float u, float v, vec3 pt) {
+	perlin_texture *perl = &((texture *)self)->type.perlin;
 	int depth = 7;
 	fcolor col;
 	if (perl->texture != NULL) {
-		col = TextureColor(perl->texture, u, v, pt);
+		col = ((texture *)perl->texture)->TextureColor(perl->texture, u, v, pt);
 	} else {
 		col = fcolor_new(1.0, 1.0, 1.0);
 	}
@@ -315,46 +339,25 @@ fcolor PerlinMarbledTextureColor(perlin_texture *perl, float u, float v, vec3 pt
 	return color_mul(col, noise);
 }
 
-fcolor PerlinSinCosTextureColor(multicolor_perlin_texture *perl, float u, float v, vec3 pt) {
+fcolor PerlinSinCosTextureColor(void *self, float u, float v, vec3 pt) {
+	multicolor_perlin_texture *perl = &((texture *)self)->type.multicolor_perlin;
 	int depth = 7;
 	vec3 swizzled = vec3_new(pt.z, pt.x, pt.y);
 	float turb = sinf(perl->scale * 10.0 * perlin_turbulence(perl->perlin, &pt, depth));
 	turb *= cosf(perl->scale * perlin_turbulence(perl->perlin, &swizzled, depth));
 	if (turb > 0.0) {
-		return color_mul(TextureColor(perl->colA, u, v, pt), turb);
+		return color_mul(((texture *)perl->colA)->TextureColor(perl->colA, u, v, pt), turb);
 	} else {
-		return color_mul(TextureColor(perl->colB, u, v, pt), fabs(turb));
+		return color_mul(((texture *)perl->colB)->TextureColor(perl->colB, u, v, pt), fabs(turb));
 	}
 }
 
-fcolor FMBModifierTextureColor(fbm_modifier *fbm_mod, float u, float v, vec3 pt) {
+fcolor FBMModifierTextureColor(void *self, float u, float v, vec3 pt) {
+	fbm_modifier *fbm_mod = &((texture *)self)->type.fbm_mod;
 	vec3 warped = vec3_mul(pt, fbm(fbm_mod->perlin, pt, fbm_mod->hurst, fbm_mod->octaves));
-	return TextureColor(fbm_mod->text, u, v, warped);
+	return ((texture *)fbm_mod->text)->TextureColor(fbm_mod->text, u, v, warped);
 }
 
-fcolor TextureColor(texture *text, float u, float v, point3 pt) {
-	switch(text->id) {
-		case Image:
-			return ImageTextureColor(&text->type.image, u, v);
-		case Color:
-			return text->type.color.rgb;
-		case UV:
-			return fcolor_new(u, (u + v) / 2.0, v); // NOTE : This is not very useful tbh
-		case Checker:
-			return CheckerTextureColor(&text->type.checker, u, v, pt);
-		case UVChecker:
-			return UVCheckerTextureColor(&text->type.checker, u, v, pt);
-		case PerlinNoise:
-			return PerlinNoiseTextureColor(&text->type.perlin, u, v, pt);
-		case PerlinTurbulence:
-			return PerlinTurbulenceTextureColor(&text->type.perlin, u, v, pt);
-		case PerlinMarbled:
-			return PerlinMarbledTextureColor(&text->type.perlin, u, v, pt);
-		case PerlinSinCos:
-			return PerlinSinCosTextureColor(&text->type.multicolor_perlin, u, v, pt);
-		case FBM:
-			return FMBModifierTextureColor(&text->type.fbm_mod, u, v, pt);
-		default:
-			return COLOR_UNDEFPURP;
-	}
+fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt) {
+	return COLOR_UNDEFPURP;
 }

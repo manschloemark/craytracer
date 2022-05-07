@@ -82,6 +82,7 @@ union texture_type {
 };
 
 typedef struct {
+	fcolor (*TextureColor) (void *self, float u, float v, point3 pt);
 	union texture_type type;
 	enum TextureID id;
 } texture;
@@ -128,6 +129,15 @@ texture make_fbm_modifier(memory_region *region, perlin *perl, float hurst, int 
 texture *add_fbm_modifier(memory_region *region, float hurst, int octaves, texture *text);
 texture *add_fbm_modifier_noise(memory_region *region, perlin *perl, float hurst, int octaves, texture *text);
 
-fcolor TextureColor(texture *text, float u, float v, point3 pt);
+fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt);
+fcolor ColorTextureColor(void *self, float u, float v, point3 pt);
+fcolor ImageTextureColor(void *self, float u, float v, point3 pt);
+fcolor CheckerTextureColor(void *self, float u, float v, point3 pt);
+fcolor UVCheckerTextureColor(void *self, float u, float v, point3 pt);
+fcolor PerlinNoiseTextureColor(void *self, float u, float v, point3 pt);
+fcolor PerlinTurbulenceTextureColor(void *self, float u, float v, point3 pt);
+fcolor PerlinMarbledTextureColor(void *self, float u, float v, point3 pt);
+fcolor PerlinSinCosTextureColor(void *self, float u, float v, point3 pt);
+fcolor FBMModifierTextureColor(void *self, float u, float v, point3 pt);
 
 #endif

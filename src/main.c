@@ -58,16 +58,16 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 		//        that way the light colors won't dominate the colors around them
 		if (hitrec.hit_front) {
 			if (calldepth == maxdepth) {
-				return color_normalize(TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt));
+				return color_normalize(hitrec.text->TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt));
 			}
-				return TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt);
+				return hitrec.text->TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt);
 		}
 		return COLOR_BLACK;
 	}
 
 	// NOTE : I only assign this to a variable for debugging purposes
 	fcolor recursive_result = TraceRay(scattered_ray, scene, bgcolor, maxdepth, calldepth - 1);
-	COLOR_MUL(recursive_result, TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt));
+	COLOR_MUL(recursive_result, hitrec.text->TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt));
 	return recursive_result;
 }
 
