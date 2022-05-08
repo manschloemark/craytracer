@@ -851,26 +851,20 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 
 	texture *tile = add_uv_checker_texture(region, orange, teal, 16.0);
 	texture *earth = add_image_texture(region, "../resource/earth.jpg", 3);
-	texture *perlin = add_perlin_sincos_texture(region, 4.0, pink, yellow);
+	texture *perlin = add_perlin_sincos_texture(region, 16.0, pink, yellow);
 
 	// TODO : add a triangle with fbm stuff
 	// TODO : for fbm_shapes add a scale parameter
 	// NOTE : 1.0 is way better than 0.5 for messing with objects
 	//
-	object *greenball = add_sphere(region, vec3_new(-7.0, 3.0, 1.5), 1.5, green, lambertian);
-	object *tileball= add_sphere(region, vec3_new(-6.0, -3.0, 1.0), 1.0, tile, lamb);
-	object *glassball = add_sphere(region, vec3_new(-4.0, 0.0, 1.0), 1.0, white, glass);
-	object *perlinball = add_sphere(region, vec3_new(-4.0, 0.0, 1.0), 1.0, perlin, lamb);
-	//object *pinkmirror = add_sphere(region, vec3_new(0.0, 1.0, 1.0), 0.5, pink, mirror)
+	object *perlin_sphere = add_sphere(region, vec3_new(-10.0, 0.0, -101.0), 100.0, perlin, lamb);
+	object *planet = add_fbm_sphere(region, 1.0, 24, perlin_sphere);
 
-	object *regular_sphere = greenball;
-	object *fbm_sphere2 = add_fbm_shape(region, 1.0, 8, greenball);
-	object *fbm_sphere3 = add_fbm_shape(region, 1.0, 12, greenball);
-	object *fbm_sphere4 = add_fbm_shape(region, 1.0, 24, tileball);
-	object *fbm_sphere5 = add_fbm_shape(region, 1.0, 24, perlinball);
+	object *tileball= add_sphere(region, vec3_new(-6.0, 0.0, 2.0), 1.0, tile, lamb);
+	object *fbm_sphere4 = add_fbm_sphere(region, 1.0, 24, tileball);
 
 	float z = 12.0;
-	vec3 pt_a = vec3_new(-8.0, -3.0,z);
+	vec3 pt_a = vec3_new(-8.0, -3.0, z);
 	vec3 pt_b = vec3_new(-5.0, -3.0, z);
 	vec3 pt_c = vec3_new(-8.0, 3.0, z);
 	vec3 pt_d = vec3_new(-5.0, 3.0, z);
@@ -878,62 +872,35 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	object *light_tri2 = add_single_sided_triangle(region, pt_a, pt_c, pt_d, white_light, light);
 
 
-	float trifloat = 100.0;
-	vec3 floor_a = vec3_new(trifloat, 0.0, 0.0);
-	vec3 floor_b = vec3_new(-trifloat, -2.0*trifloat, 0.0);
-	vec3 floor_c = vec3_new(-trifloat, 2.0 * trifloat, 0.0);
-	object *floor = add_triangle(region, floor_a, floor_b, floor_c, gray, lambertian);
+	float trifloat = 3.0;
+	vec3 floor_a = vec3_new(0.0, -trifloat, 0.0);
+	vec3 floor_b = vec3_new(0.0, trifloat, 0.0);
+	vec3 floor_c = vec3_new(-trifloat, -trifloat, 0.0);
+	vec3 floor_d = vec3_new(-trifloat, trifloat, 0.0);
+	object *floor = add_triangle(region, floor_a, floor_d, floor_c, tile, lambertian);
+	object *floor2 = add_triangle(region, floor_a, floor_b, floor_d, tile, lambertian);
+	object *fbm_floor = add_fbm_shape(region, 0.5, 24, floor2);
 
-	float x = -10.0;
-	vec3 back_a = vec3_new(x, -6.0, 0.0);
-	vec3 back_b = vec3_new(x, 6.0, 0.0);
-	vec3 back_c = vec3_new(x, -6.0, 20.0);
-	vec3 back_d = vec3_new(x, 6.0, 20.0);
-	object *back = add_triangle(region, back_a, back_b, back_c, gray, mirror);
-	object *back2 = add_triangle(region, back_d, back_b, back_c, gray, mirror);
-	object *fbm_back = add_fbm_shape(region, 1.0, 24, back);
-	object *fbm_back2 = add_fbm_shape(region, 1.0, 24, back2);
+	object *angled_tri = add_triangle(region, floor_a, floor_c, vec3_new(trifloat*0.5, -(trifloat*2.0), trifloat), tile, lamb);
+	object *angled_tri2 = add_triangle(region, floor_b, floor_d, vec3_new(trifloat*0.5, trifloat*2.0, trifloat), tile, lamb);
+	object *fbm_angled_tri = add_fbm_shape(region, 0.5, 24, angled_tri2);
 
-	float ly = -6.0;
-	vec3 left_a = vec3_new(x,ly,0.0);
-	vec3 left_b = vec3_new(x,ly,20.0);
-	vec3 left_c = vec3_new(0.0,ly,0.0);
-	vec3 left_d = vec3_new(0.0,ly,20.0);
-	object *left = add_triangle(region, left_d, left_b, left_c, gray, mirror);
-	object *left2 = add_triangle(region, left_a, left_b, left_c, gray, mirror);
 
-	float ry = 6.0;
-	vec3 right_a = vec3_new(x,ry,0.0);
-	vec3 right_b = vec3_new(x,ry,20.0);
-	vec3 right_c = vec3_new(0.0,ry,0.0);
-	vec3 right_d = vec3_new(0.0,ry,20.0);
-	object *right = add_triangle(region, right_d, right_b, right_c, tile, lambertian);
-	object *right2 = add_triangle(region, right_a, right_b, right_c, tile, lambertian);
-	object *fbm_tri_right = add_fbm_shape(region, 1.0, 24, right);
-	object *fbm_tri_right2 = add_fbm_shape(region, 1.0, 24, right2);
-
-	objects[obj_index++] = regular_sphere;
-	//objects[obj_index++] = fbm_sphere;
-	objects[obj_index++] = fbm_sphere2;
-	objects[obj_index++] = fbm_sphere3;
-	objects[obj_index++] = fbm_sphere4;
-	objects[obj_index++] = fbm_sphere5;
 	//objects[obj_index++] = light_tri;
 	//objects[obj_index++] = light_tri2;
 
-	objects[obj_index++] = fbm_back;
-	objects[obj_index++] = fbm_back2;
-	objects[obj_index++] = left;
-	objects[obj_index++] = left2;
-	objects[obj_index++] = fbm_tri_right;
-	objects[obj_index++] = fbm_tri_right2;
+	objects[obj_index++] = fbm_sphere4;
 	objects[obj_index++] = floor;
+	objects[obj_index++] = fbm_floor;
+	objects[obj_index++] = planet;
+	objects[obj_index++] = angled_tri;
+	objects[obj_index++] = fbm_angled_tri;
 
 	s->objects = objects;
 	s->object_count = obj_index;
 
-	*o = vec3_new(8.0, 0.0, 6.0);
-	*t = vec3_new(-5.0, 0.0, 6.0);
+	*o = vec3_new(5.0, 0.0, 1.0);
+	*t = vec3_new(-5.0, 0.0, 1.0);
 	return *s;
 }
 

@@ -28,6 +28,10 @@ triangle triangle_new(point3 x, point3 y, point3 z, int double_sided) {
 	return t;
 }
 
+vec3 SphereNormal(void *self, vec3 relative) {
+	return vec3_unit(vec3_sub(relative, ((object *)self)->shape.sphere.center));
+}
+
 // TODO : I only make s a pointer here because I don't feel like fixing all the ->, fix it later (also in IntersectTriangle)
 int IntersectSphere(void *self, ray *r, hit_record *hitrec) {
 	object *obj = self;
@@ -63,6 +67,14 @@ int IntersectSphere(void *self, ray *r, hit_record *hitrec) {
 	hitrec->v = phi / pi;
 
 	return 1;
+}
+
+vec3 TriangleNormal(void *self, vec3 relative) {
+	triangle *tri = &((object *)self)->shape.triangle;
+
+	vec3 BA = vec3_sub(tri->b, tri->a);
+	vec3 CA = vec3_sub(tri->c, tri->a);
+	return vec3_unit(vec3_cross(BA, CA));
 }
 
 int IntersectTriangle(void *self, ray *r, hit_record *hitrec){
@@ -116,21 +128,40 @@ fbm_shape fbm_shape_new(memory_region *region, float hurst, int octaves, void *o
 	fbm_shape fs;
 	fs.perlin = add_perlin(region, 32);
 	fs.obj = obj;
+	fs.scale = 1.0; // TODO : make this a parameter
 	fs.hurst = hurst;
 	fs.octaves = octaves;
 	return fs;
 }
 
+// NOTE: this should never be called anyway
+vec3 FBMNormal(void *self, vec3 relative) {
+	return vec3_new(0.0, 0.0, 0.0);
+}
+
 int IntersectFBMShape(void *self, ray *r, hit_record *hitrec) {
 	object *obj = self;
 	fbm_shape *fbm_obj = &obj->shape.fbm_shape;
-	ray warped_ray = ray_new(r->pt, vec3_addf(r->dir, 0.2 * fbm(fbm_obj->perlin, r->dir, fbm_obj->hurst, fbm_obj->octaves)));
+	vec3 offset = vec3_mul(((object *)fbm_obj->obj)->Normal(fbm_obj->obj, r->dir), fbm_obj->scale * fbm(fbm_obj->perlin, r->dir, fbm_obj->hurst, fbm_obj->octaves));
+	ray warped_ray = ray_new(r->pt, vec3_add(r->dir, offset));
 	return ((object *)fbm_obj->obj)->Intersect(fbm_obj->obj, &warped_ray, hitrec);
+}
+
+int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec) {
+	object *obj = self;
+	fbm_shape *fbm_obj = &obj->shape.fbm_shape;
+	object *sph = ((object *)fbm_obj->obj);
+	float temp_r = sph->shape.sphere.radius;
+	sph->shape.sphere.radius += fbm_obj->scale * fbm(fbm_obj->perlin, r->dir, fbm_obj->hurst, fbm_obj->octaves);
+	int result = sph->Intersect(sph, r, hitrec);
+	sph->shape.sphere.radius = temp_r;
+	return result;
 }
 
 object make_sphere(point3 center, float r, texture *text, material *mat) {
 	object o;
 	o.Intersect = (*IntersectSphere);
+	o.Normal = (*SphereNormal);
 	o.id = Sphere;
 	o.shape.sphere = sphere_new(center, r);
 	o.text = text;
@@ -141,6 +172,7 @@ object make_sphere(point3 center, float r, texture *text, material *mat) {
 object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *text, material *mat) {
 	object o;
 	o.Intersect = (*IntersectTriangle);
+	o.Normal = (*TriangleNormal);
 	o.id = Triangle;
 	o.shape.triangle = triangle_new(a, b, c, double_sided);
 	o.text = text;
@@ -156,6 +188,12 @@ object make_fbm_shape(memory_region *region, float hurst, int octaves, object *o
 	o.text = obj->text;
 	o.shape.fbm_shape = fbm_shape_new(region, hurst, octaves, obj);
 	return o;
+}
+
+object make_fbm_sphere(memory_region *region, float hurst, int octaves, object *obj) {
+	object fbm_obj = make_fbm_shape(region, hurst, octaves, obj);
+	fbm_obj.Intersect = (*IntersectFBMSphere);
+	return fbm_obj;
 }
 
 object *add_sphere(memory_region *region, point3 center, float r, texture *text, material *mat) {
@@ -176,5 +214,10 @@ object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, poi
 
 object *add_fbm_shape(memory_region *region, float hurst, int octaves, object *obj) {
 	object o = make_fbm_shape(region, hurst, octaves, obj);
+	return (object *)memory_region_add(region, &o, sizeof(object));
+}
+
+object *add_fbm_sphere(memory_region *region, float hurst, int octaves, object *obj) {
+	object o = make_fbm_sphere(region, hurst, octaves, obj);
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }
