@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
 
 	//point3 origin = vec3_new(0.0, 0.0, 0.0);
 	vec3 vup = {0.0, 0.0, 1.0};
-	float vfov = 60.0;
+	float vfov = 10.0;
 	float focal_length = vec3_len(vec3_sub(target, origin));
 	camera cam = make_camera(origin, target, vup, vfov, aspect_ratio, focal_length);
 
