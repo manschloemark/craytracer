@@ -125,33 +125,33 @@ texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *ev
 }
 
 // Perlin Noise Texture
-perlin_texture perlin_texture_new(memory_region *region, float scale, int pointcount, void *texture) {
+perlin_texture perlin_texture_new(memory_region *region, perlin *perl, float scale, int pointcount, void *texture) {
 	perlin_texture p = {};
-	p.perlin = add_perlin(region, pointcount);
+	p.perlin = (perl == NULL) ? add_perlin(region, pointcount) : perl;
 	p.texture = texture;
 	p.scale = scale;
 	return p;
 }
 
-texture make_perlin_noise_texture(memory_region *region, float scale, int pointcount, texture *text) {
+texture make_perlin_noise_texture(memory_region *region, perlin *perl, float scale, int pointcount, texture *text) {
 	texture txt = {};
 	txt.TextureColor = (*PerlinNoiseTextureColor);
-	perlin_texture perl = perlin_texture_new(region, scale, pointcount, text);
+	perlin_texture perltxt = perlin_texture_new(region, perl, scale, pointcount, text);
 	txt.id = PerlinNoise;
-	txt.type.perlin = perl;
+	txt.type.perlin = perltxt;
 	return txt;
 }
 
-texture *add_perlin_noise_texture(memory_region *region, float scale) {
+texture *add_perlin_noise_texture(memory_region *region, perlin *perl, float scale) {
 	// NOTE : this is not good practice imo, but for convencience sake
-	texture perltext = make_perlin_noise_texture(region, scale, 256, NULL);
+	texture perltext = make_perlin_noise_texture(region, perl, scale, 256, NULL);
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
 }
 
-texture *add_colored_perlin_noise_texture(memory_region *region, float scale, texture *text) {
+texture *add_colored_perlin_noise_texture(memory_region *region, perlin *perl, float scale, texture *text) {
 	// NOTE : this is not good practice imo, but for convencience sake
-	texture perltext = make_perlin_noise_texture(region, scale, 256, text);
+	texture perltext = make_perlin_noise_texture(region, perl, scale, 256, text);
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
 }
@@ -164,7 +164,7 @@ texture *add_colored_perlin_noise_texture(memory_region *region, float scale, te
 texture *add_perlin_noise_texture_sized(memory_region *region, float scale, int bits) {
 	// NOTE : this is not good practice imo, but for convencience sake
 	int pointcount = (bits > 10 || bits <= 0) ? 256 : pow(2, bits);
-	texture perltext = make_perlin_noise_texture(region, scale, pointcount, NULL);
+	texture perltext = make_perlin_noise_texture(region, NULL, scale, pointcount, NULL);
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
 }
@@ -172,30 +172,30 @@ texture *add_perlin_noise_texture_sized(memory_region *region, float scale, int 
 texture *add_colored_perlin_noise_texture_sized(memory_region *region, float scale, int bits, texture *text) {
 	// NOTE : this is not good practice imo, but for convencience sake
 	int pointcount = (bits > 10 || bits <= 0) ? 256 : pow(2, bits);
-	texture perltext = make_perlin_noise_texture(region, scale, pointcount, text);
+	texture perltext = make_perlin_noise_texture(region, NULL, scale, pointcount, text);
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
 }
 
 // Perlin Turbulence -- same as perlin_noise_texture but calls perlin_turbulence instead of perlin_noise
-texture *add_perlin_turbulence_texture(memory_region *region, float scale) {
-	texture perltext = make_perlin_noise_texture(region, scale, 256, NULL);
+texture *add_perlin_turbulence_texture(memory_region *region, perlin *perl, float scale) {
+	texture perltext = make_perlin_noise_texture(region, perl, scale, 256, NULL);
 	perltext.TextureColor = (*PerlinTurbulenceTextureColor);
 	perltext.id = PerlinTurbulence;
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
 }
 
-texture *add_colored_perlin_turbulence_texture(memory_region *region, float scale, texture *text) {
-	texture perltext = make_perlin_noise_texture(region, scale, 256, text);
+texture *add_colored_perlin_turbulence_texture(memory_region *region, perlin *perl, float scale, texture *text) {
+	texture perltext = make_perlin_noise_texture(region, perl, scale, 256, text);
 	perltext.TextureColor = (*PerlinTurbulenceTextureColor);
 	perltext.id = PerlinTurbulence;
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
 	return perlptr;
 }
 
-texture *add_marbled_noise_texture(memory_region *region, float scale, texture *text) {
-	texture perltext = make_perlin_noise_texture(region, scale, 256, text);
+texture *add_marbled_noise_texture(memory_region *region, perlin *perl, float scale, texture *text) {
+	texture perltext = make_perlin_noise_texture(region, perl, scale, 256, text);
 	perltext.TextureColor = (*PerlinMarbledTextureColor);
 	perltext.id = PerlinMarbled;
 	texture *perlptr = (texture *)memory_region_add(region, &perltext, sizeof(texture));
@@ -203,27 +203,27 @@ texture *add_marbled_noise_texture(memory_region *region, float scale, texture *
 }
 
 // Multicolor Perlin Textures -- perlin textures that use two colors.
-multicolor_perlin_texture multicolor_perlin_texture_new(memory_region *region, float scale, int pointcount, void *colA, void *colB) {
+multicolor_perlin_texture multicolor_perlin_texture_new(memory_region *region, perlin *perl, float scale, int pointcount, void *colA, void *colB) {
 	multicolor_perlin_texture p = {};
-	p.perlin = add_perlin(region, pointcount);
+	p.perlin = (perl == NULL) ? add_perlin(region, pointcount) : perl;
 	p.colA = colA;
 	p.colB = colB;
 	p.scale = scale;
 	return p;
 }
 
-texture make_multicolor_perlin_texture(memory_region *region, float scale, int pointcount, texture *colA, texture *colB) {
+texture make_multicolor_perlin_texture(memory_region *region, perlin *perl, float scale, int pointcount, texture *colA, texture *colB) {
 	texture txt = {};
 	txt.TextureColor = (*UNDEFINED_TextureColor);
-	multicolor_perlin_texture perl = multicolor_perlin_texture_new(region, scale, pointcount, colA, colB);
+	multicolor_perlin_texture perltxt = multicolor_perlin_texture_new(region, perl, scale, pointcount, colA, colB);
 	txt.id = Undefined;
-	txt.type.multicolor_perlin = perl;
+	txt.type.multicolor_perlin = perltxt;
 	return txt;
 }
 
-texture *add_perlin_sincos_texture(memory_region *region, float scale, texture *colA, texture *colB) {
+texture *add_perlin_sincos_texture(memory_region *region, perlin *perl, float scale, texture *colA, texture *colB) {
 	int pointcount = 256;
-	texture mp = make_multicolor_perlin_texture(region, scale, pointcount, colA, colB);
+	texture mp = make_multicolor_perlin_texture(region, perl, scale, pointcount, colA, colB);
 	mp.TextureColor = (*PerlinSinCosTextureColor);
 	mp.id = PerlinSinCos;
 	texture *mptr = (texture *)memory_region_add(region, &mp, sizeof(texture));
@@ -253,13 +253,7 @@ texture make_fbm_modifier(memory_region *region, perlin *perl, float hurst, int 
 	txt.id = FBM;
 	return txt;
 }
-texture *add_fbm_modifier(memory_region *region, float hurst, int octaves, texture *text) {
-	texture fbmtxt = make_fbm_modifier(region, NULL, hurst, octaves, text);
-	texture *fbmptr = (texture *)memory_region_add(region, &fbmtxt, sizeof(texture));
-	return fbmptr;
-}
-
-texture *add_fbm_modifier_noise(memory_region *region, perlin *perl, float hurst, int octaves, texture *text) {
+texture *add_fbm_modifier(memory_region *region, perlin *perl, float hurst, int octaves, texture *text) {
 	texture fbmtxt = make_fbm_modifier(region, perl, hurst, octaves, text);
 	texture *fbmptr = (texture *)memory_region_add(region, &fbmtxt, sizeof(texture));
 	return fbmptr;

@@ -42,8 +42,8 @@ scene Demo(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
 	texture *purple = add_color_texture(region, fcolor_new(0.7, 0.2, 0.65));
 	texture *red = add_color_texture(region, COLOR_RED);
 
-	texture *marbled = add_marbled_noise_texture(region, 16.0, purple);
-	texture *trippy = add_perlin_sincos_texture(region, 2.0, purple, darkgray);
+	texture *marbled = add_marbled_noise_texture(region, NULL, 16.0, purple);
+	texture *trippy = add_perlin_sincos_texture(region, NULL, 2.0, purple, darkgray);
 
 	texture *checkerboard = add_checker_texture(region, darkgray, white, 2.0);
 	texture *chessboard = add_checker_texture(region, ivory, dullgreen, 0.5);
@@ -99,10 +99,10 @@ scene TestLight(memory_region *region, scene *s, vec3 *origin, vec3 *target) {
 	texture *purple = add_color_texture(region, fcolor_new(0.7, 0.2, 0.65));
 	texture *red = add_color_texture(region, COLOR_RED);
 
-	texture *noisetext = add_perlin_noise_texture(region, 4.0);
-	texture *marbled = add_marbled_noise_texture(region, 16.0, white);
-	texture *trippy = add_perlin_sincos_texture(region, 2.0, black, white);
-	texture *trippy_light = add_perlin_sincos_texture(region, 2.0, green_light, black);
+	texture *noisetext = add_perlin_noise_texture(region, NULL, 4.0);
+	texture *marbled = add_marbled_noise_texture(region, NULL, 16.0, white);
+	texture *trippy = add_perlin_sincos_texture(region, NULL, 2.0, black, white);
+	texture *trippy_light = add_perlin_sincos_texture(region, NULL, 2.0, green_light, black);
 
 	object *glassball = add_sphere(region, vec3_new(-2.0, 0.0, 0.5), 0.5, white, glass);
 	// Left side - Red
@@ -174,7 +174,7 @@ scene ScuffedCornellBox(memory_region *region, scene *s, vec3 *origin, vec3 *tar
 
 	texture *gold = add_color_texture(region, fcolor_new(0.6, 0.6, 0.2));
 
-	texture *noisetext = add_perlin_noise_texture(region, 4.0);
+	texture *noisetext = add_perlin_noise_texture(region, NULL, 4.0);
 
 	texture *ivory = add_color_texture(region, fcolor_new(0.8, 0.8, 0.75));
 	texture *dullgreen = add_color_texture(region, fcolor_new(0.3, 0.66, 0.56));
@@ -185,7 +185,7 @@ scene ScuffedCornellBox(memory_region *region, scene *s, vec3 *origin, vec3 *tar
 	texture *checkerboard = add_checker_texture(region, red, black, 2.0);
 	texture *chessboard = add_checker_texture(region, ivory, dullgreen, 2.0);
 
-	texture *trippy = add_perlin_sincos_texture(region, 2.0, gold, dullgreen);
+	texture *trippy = add_perlin_sincos_texture(region, NULL, 2.0, gold, dullgreen);
 
 	object *perlinball = add_sphere(region, vec3_new(-7.0, 3.0, 1.5), 1.5, ivory, lambertian);
 	object *goldball = add_sphere(region, vec3_new(-6.0, -3.0, 1.0), 1.0, gold, steel);
@@ -268,8 +268,8 @@ scene TestTriangleLight(memory_region *region, scene *s, vec3 *origin, vec3 *tar
 	texture *white = add_color_texture(region, COLOR_WHITE);
 	texture *black = add_color_texture(region, COLOR_VALUE(0.001));
 
-	texture *noisetext = add_perlin_noise_texture(region, 4.0);
-	texture *trippy = add_perlin_sincos_texture(region, 2.0, black, white);
+	texture *noisetext = add_perlin_noise_texture(region, NULL, 4.0);
+	texture *trippy = add_perlin_sincos_texture(region, NULL, 2.0, black, white);
 
 	object *perlinball = add_sphere(region, vec3_new(-6.0, 0.0, 2.0), 2.0, trippy, lambertian);
 
@@ -390,7 +390,7 @@ scene BlackWhiteGlass(memory_region *region) {
 	++obj_ct;
 
 	material *lamb = add_lambertian(region);
-	texture *noisetext = add_perlin_noise_texture(region, 1.0);
+	texture *noisetext = add_perlin_noise_texture(region, NULL, 1.0);
 	object *base = add_triangle(region, vec3_new(20.0, 0.0, -0.5), vec3_new(-20.0, -20.0, -0.5), vec3_new(-20.0, 20.0, -0.5), noisetext, lamb);
 	++obj_ct;
 
@@ -769,6 +769,8 @@ scene MiscTextureTest(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	int obj_index = 0;
 	object **objects = (object **)malloc(sizeof(object *) * max_objects);
 
+	perlin *shared_perlin = add_perlin(region, 256);
+
 	material *lamb = add_lambertian(region);
 	material *light = add_diffuse_light(region);
 	material *glass = add_glass(region, 1.52);
@@ -782,18 +784,18 @@ scene MiscTextureTest(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 
 	texture *texturelist[32]; // size 32 just in case
 	int txt_i = 0;
-	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, 1.0, green);
-	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, 2.0, green);
-	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, 4.0, green);
-	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, 8.0, green);
-	texturelist[txt_i++] = add_marbled_noise_texture(region, 1.0, white);
-	texturelist[txt_i++] = add_marbled_noise_texture(region, 2.0, white);
-	texturelist[txt_i++] = add_marbled_noise_texture(region, 4.0, white);
-	texturelist[txt_i++] = add_marbled_noise_texture(region, 8.0, white);
-	texturelist[txt_i++] = add_perlin_sincos_texture(region, 1.0, pink, teal);
-	texturelist[txt_i++] = add_perlin_sincos_texture(region, 2.0, pink, teal);
-	texturelist[txt_i++] = add_perlin_sincos_texture(region, 4.0, pink, teal);
-	texturelist[txt_i++] = add_perlin_sincos_texture(region, 8.0, pink, teal);
+	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, shared_perlin, 1.0, green);
+	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, shared_perlin, 2.0, green);
+	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, shared_perlin, 4.0, green);
+	texturelist[txt_i++] = add_colored_perlin_noise_texture(region, shared_perlin, 8.0, green);
+	texturelist[txt_i++] = add_marbled_noise_texture(region, shared_perlin, 1.0, white);
+	texturelist[txt_i++] = add_marbled_noise_texture(region, shared_perlin, 2.0, white);
+	texturelist[txt_i++] = add_marbled_noise_texture(region, shared_perlin, 4.0, white);
+	texturelist[txt_i++] = add_marbled_noise_texture(region, shared_perlin, 8.0, white);
+	texturelist[txt_i++] = add_perlin_sincos_texture(region, shared_perlin, 1.0, pink, teal);
+	texturelist[txt_i++] = add_perlin_sincos_texture(region, shared_perlin, 2.0, pink, teal);
+	texturelist[txt_i++] = add_perlin_sincos_texture(region, shared_perlin, 4.0, pink, teal);
+	texturelist[txt_i++] = add_perlin_sincos_texture(region, shared_perlin, 8.0, pink, teal);
 	texturelist[txt_i++] = add_checker_texture(region, pink, green, 1.0);
 	texturelist[txt_i++] = add_checker_texture(region, pink, green, 2.0);
 	texturelist[txt_i++] = add_checker_texture(region, pink, green, 4.0);
@@ -816,9 +818,6 @@ scene MiscTextureTest(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	float d_y = sep;
 	float d_z = -sep;
 
-	// Use one perlin 'object' for all fbm modifiers to cut down on memory use
-	perlin *shared_perlin = add_perlin(region, 256);
-
 	s->objects = objects;
 	s->object_count = obj_index;
 
@@ -831,6 +830,158 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	int max_objects = 16;
 	int obj_index = 0;
 	object **objects = (object **)malloc(sizeof(object *) * max_objects);
+
+	perlin *shared_perlin = add_perlin(region, 256);
+
+	material *lamb = add_lambertian(region);
+	material *light = add_diffuse_light(region);
+	material *mirror = add_metal(region, 0.02);
+	material *metal = add_metal(region, 0.88);
+	material *blurry_mirror = add_metal(region, 0.52);
+
+	texture *white_light = add_color_texture(region, COLOR_VALUE(7.0));
+
+	texture *white = add_color_texture(region, COLOR_VALUE(1.0));
+	texture *gray = add_color_texture(region, COLOR_VALUE(0.54));
+	texture *pink = add_color_texture(region, fcolor_new(0.8, 0.5, 0.42));
+	texture *yellow = add_color_texture(region, fcolor_new(0.8, 0.8, 0.32));
+	texture *orange = add_color_texture(region, fcolor_new(0.8, 0.6, 0.32));
+	texture *purple = add_color_texture(region, fcolor_new(0.8, 0.5, 0.82));
+	texture *teal = add_color_texture(region, fcolor_new(0.25, 0.65, 0.68));
+	texture *green = add_color_texture(region, fcolor_new(0.3, 1.0, 0.5));
+
+	texture *tile = add_uv_checker_texture(region, orange, teal, 16.0);
+	texture *tile2 = add_uv_checker_texture(region, green, gray, 128.0);
+	texture *earth = add_image_texture(region, "../resource/earth.jpg", 3);
+	texture *perlin = add_perlin_sincos_texture(region, shared_perlin, 16.0, pink, yellow);
+	texture *perlin2 = add_perlin_noise_texture(region, shared_perlin, 1.0);
+	texture *perlin3 = add_perlin_sincos_texture(region, shared_perlin, 1.0, pink, white);
+
+	// TODO : make loop to test many different scales quickly
+
+	object *ground = add_triangle(region, vec3_new(-1000.0, -1000.0, 0.0), vec3_new(-1000.0, 1000.0, 0.0), vec3_new(1000.0, 0.0, 0.0), tile, blurry_mirror);
+
+	float x_offset = 2.0; 
+	float y_offset = 2.0;
+	float z_offset = 1.0;
+	float radius = 1.0;
+	int index = 0;
+	vec3 points[16];
+	int num_cols = 4, num_rows = 4;
+	for (int i = 0; i < num_cols; ++i) {
+		for (int j = 0; j < num_rows; ++j) {
+			points[index++] = vec3_new((float)i * (x_offset + radius), (float)j * (y_offset + radius), z_offset);
+		}
+	}
+
+	index = 0;
+
+	// TODO : add another row of objects - non-uv tiles
+
+	object *perlin_noise_sphere_ctrl = add_sphere(region, points[index++], radius, perlin2, lamb);
+	object *perlin_noise_sphere_1_src = add_sphere(region, points[index++], radius, perlin2, lamb);
+	object *perlin_noise_sphere_1 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.1, perlin_noise_sphere_1_src);
+	object *perlin_noise_sphere_2_src = add_sphere(region, points[index++], radius, perlin2, lamb);
+	object *perlin_noise_sphere_2 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.4, perlin_noise_sphere_2_src);
+	object *perlin_noise_sphere_3_src = add_sphere(region, points[index++], radius, perlin2, lamb);
+	object *perlin_noise_sphere_3 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.6, perlin_noise_sphere_3_src);
+
+	object *perlin_sphere_ctrl = add_sphere(region, points[index++], radius, perlin, lamb);
+	object *perlin_sphere_1_src = add_sphere(region, points[index++], radius, perlin, lamb);
+	object *perlin_sphere_1 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.1, perlin_sphere_1_src);
+	object *perlin_sphere_2_src = add_sphere(region, points[index++], radius, perlin, lamb);
+	object *perlin_sphere_2 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.4, perlin_sphere_2_src);
+	object *perlin_sphere_3_src = add_sphere(region, points[index++], radius, perlin, lamb);
+	object *perlin_sphere_3 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.6, perlin_sphere_3_src);
+
+	object *tile_sphere_ctrl = add_sphere(region, points[index++], radius, tile, lamb);
+	object *tile_sphere_1_src = add_sphere(region, points[index++], radius, tile, lamb);
+	object *tile_sphere_1 = add_fbm_sphere(region, shared_perlin, radius, 24, 0.1, tile_sphere_1_src);
+	object *tile_sphere_2_src = add_sphere(region, points[index++], radius, tile, lamb);
+	object *tile_sphere_2 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.4, tile_sphere_2_src);
+	object *tile_sphere_3_src = add_sphere(region, points[index++], radius, tile, lamb);
+	object *tile_sphere_3 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.8, tile_sphere_3_src);
+
+
+	object *tile_metal_sphere_ctrl = add_sphere(region, points[index++], radius, tile, metal);
+	object *tile_metal_sphere_1_src = add_sphere(region, points[index++], radius, tile, metal);
+	object *tile_metal_sphere_1 = add_fbm_sphere(region, shared_perlin, radius, 24, 0.1, tile_metal_sphere_1_src);
+	object *tile_metal_sphere_2_src = add_sphere(region, points[index++], radius, tile, metal);
+	object *tile_metal_sphere_2 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.4, tile_metal_sphere_2_src);
+	object *tile_metal_sphere_3_src = add_sphere(region, points[index++], radius, tile, metal);
+	object *tile_metal_sphere_3 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.8, tile_metal_sphere_3_src);
+
+	float z = 12.0;
+	vec3 pt_a = vec3_new(-3.0 + x_offset, -3.0, z);
+	vec3 pt_b = vec3_new(3.0 + x_offset, -3.0, z);
+	vec3 pt_c = vec3_new(-3.0 + x_offset, 3.0, z);
+	vec3 pt_d = vec3_new(3.0 + x_offset, 3.0, z);
+	object *light_tri = add_single_sided_triangle(region, pt_b, pt_a, pt_d, white_light, light);
+	object *light_tri2 = add_single_sided_triangle(region, pt_a, pt_c, pt_d, white_light, light);
+
+
+	vec3 floor_a = vec3_new(x_offset - 3.0, -y_offset, -z_offset);
+	vec3 floor_b = vec3_new(x_offset - 3.0, -0.5*y_offset, -z_offset);
+	vec3 floor_c = vec3_new(x_offset + 3.0, -0.5*y_offset, -z_offset);
+	vec3 floor_d = vec3_new(x_offset + 3.0, -y_offset, -z_offset);
+	object *floor_left1 = add_triangle(region, floor_a, floor_d, floor_b, green, lamb);
+	object *floor_left2 = add_triangle(region, floor_d, floor_b, floor_c, yellow, lamb);
+	object *angled_tri_left = add_triangle(region, floor_d, floor_a, vec3_new(x_offset, -(1.5 * y_offset), -0.5 * z_offset), gray, lamb);
+
+	vec3 floor2_a = vec3_new(x_offset - 3.0, y_offset, -z_offset);
+	vec3 floor2_b = vec3_new(x_offset - 3.0, 0.5*y_offset, -z_offset);
+	vec3 floor2_c = vec3_new(x_offset + 3.0, 0.5*y_offset, -z_offset);
+	vec3 floor2_d = vec3_new(x_offset + 3.0, y_offset, -z_offset);
+	object *floor_right1_src = add_triangle(region, floor2_a, floor2_d, floor2_b, green, lamb);
+	object *floor_right2_src = add_triangle(region, floor2_c, floor2_b, floor2_d, yellow, lamb);
+	object *angled_tri_right_src = add_triangle(region, floor2_a, floor2_d, vec3_new(x_offset, 1.5 * y_offset, -0.5 * z_offset), gray, lamb);
+	object *floor_right1 = add_fbm_shape(region, shared_perlin, 0.5, 24, 0.1, floor_right1_src);
+	object *floor_right2 = add_fbm_shape(region, shared_perlin, 0.5, 24, 0.1, floor_right2_src);
+	object *angled_tri_right = add_fbm_shape(region, shared_perlin, 0.5, 24, 0.1, angled_tri_right_src);
+
+
+	//objects[obj_index++] = light_tri;
+	//objects[obj_index++] = light_tri2;
+
+	objects[obj_index++] = ground;
+
+	objects[obj_index++] = perlin_sphere_ctrl;
+	objects[obj_index++] = perlin_sphere_1;
+	objects[obj_index++] = perlin_sphere_2;
+	objects[obj_index++] = perlin_sphere_3;
+	objects[obj_index++] = tile_sphere_ctrl;
+	objects[obj_index++] = tile_sphere_1;
+	objects[obj_index++] = tile_sphere_2;
+	objects[obj_index++] = tile_sphere_3;
+	objects[obj_index++] = perlin_noise_sphere_ctrl;
+	objects[obj_index++] = perlin_noise_sphere_1;
+	objects[obj_index++] = perlin_noise_sphere_2;
+	objects[obj_index++] = perlin_noise_sphere_3;
+	objects[obj_index++] = tile_metal_sphere_ctrl;
+	objects[obj_index++] = tile_metal_sphere_1;
+	objects[obj_index++] = tile_metal_sphere_2;
+	objects[obj_index++] = tile_metal_sphere_3;
+	//objects[obj_index++] = floor_left1;
+	//objects[obj_index++] = floor_left2;
+	//objects[obj_index++] = angled_tri_left;
+	//objects[obj_index++] = floor_right1;
+	//objects[obj_index++] = floor_right2;
+	//objects[obj_index++] = angled_tri_right;
+
+	s->objects = objects;
+	s->object_count = obj_index;
+
+	*o = vec3_new(-(((float)num_rows) * (x_offset + radius)), ((float)num_cols) * (radius + y_offset), 10.0);
+	*t = vec3_new((x_offset + radius) * (float)(num_rows / 2), (radius + y_offset) * (float)(num_cols / 2), 0.0);
+	return *s;
+}
+
+scene FBM_Test2(memory_region *region, scene *s, vec3 *o, vec3 *t) {
+	int max_objects = 16;
+	int obj_index = 0;
+	object **objects = (object **)malloc(sizeof(object *) * max_objects);
+
+	perlin *shared_perlin = add_perlin(region, 256);
 
 	material *lamb = add_lambertian(region);
 	material *lambertian = lamb;
@@ -851,17 +1002,17 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 
 	texture *tile = add_uv_checker_texture(region, orange, teal, 16.0);
 	texture *earth = add_image_texture(region, "../resource/earth.jpg", 3);
-	texture *perlin = add_perlin_sincos_texture(region, 16.0, pink, yellow);
+	texture *perlin = add_perlin_sincos_texture(region, shared_perlin, 16.0, pink, yellow);
 
 	// TODO : add a triangle with fbm stuff
 	// TODO : for fbm_shapes add a scale parameter
 	// NOTE : 1.0 is way better than 0.5 for messing with objects
 	//
 	object *perlin_sphere = add_sphere(region, vec3_new(-10.0, 0.0, -101.0), 100.0, perlin, lamb);
-	object *planet = add_fbm_sphere(region, 1.0, 24, perlin_sphere);
+	object *planet = add_fbm_sphere(region, shared_perlin, 1.0, 24, 1.5, perlin_sphere);
 
 	object *tileball= add_sphere(region, vec3_new(-6.0, 0.0, 2.0), 1.0, tile, lamb);
-	object *fbm_sphere4 = add_fbm_sphere(region, 1.0, 24, tileball);
+	object *fbm_sphere4 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.1, tileball);
 
 	float z = 12.0;
 	vec3 pt_a = vec3_new(-8.0, -3.0, z);
@@ -879,11 +1030,11 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	vec3 floor_d = vec3_new(-trifloat, trifloat, 0.0);
 	object *floor = add_triangle(region, floor_a, floor_d, floor_c, tile, lambertian);
 	object *floor2 = add_triangle(region, floor_a, floor_b, floor_d, tile, lambertian);
-	object *fbm_floor = add_fbm_shape(region, 0.5, 24, floor2);
+	object *fbm_floor = add_fbm_shape(region, shared_perlin, 0.5, 24, 0.2, floor2);
 
 	object *angled_tri = add_triangle(region, floor_a, floor_c, vec3_new(trifloat*0.5, -(trifloat*2.0), trifloat), tile, lamb);
 	object *angled_tri2 = add_triangle(region, floor_b, floor_d, vec3_new(trifloat*0.5, trifloat*2.0, trifloat), tile, lamb);
-	object *fbm_angled_tri = add_fbm_shape(region, 0.5, 24, angled_tri2);
+	object *fbm_angled_tri = add_fbm_shape(region, shared_perlin, 0.5, 24, 0.1, angled_tri2);
 
 
 	//objects[obj_index++] = light_tri;
@@ -944,6 +1095,9 @@ void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *
 			return;
 		case 13:
 			FBM_Test(region, s, o, t);
+			return;
+		case 14:
+			FBM_Test2(region, s, o, t);
 			return;
 		default:
 			Demo(region, s, o, t);

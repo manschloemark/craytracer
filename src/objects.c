@@ -28,6 +28,17 @@ triangle triangle_new(point3 x, point3 y, point3 z, int double_sided) {
 	return t;
 }
 
+fbm_shape fbm_shape_new(memory_region *region, perlin *perl, float hurst, int octaves, float scale, void *obj) {
+	fbm_shape fs;
+	fs.perlin = (perl == NULL) ? add_perlin(region, 32) : perl;
+	fs.obj = obj;
+	fs.scale = scale; // TODO : make this a parameter
+	fs.hurst = hurst;
+	fs.octaves = octaves;
+	return fs;
+}
+
+
 vec3 SphereNormal(void *self, vec3 relative) {
 	return vec3_unit(vec3_sub(relative, ((object *)self)->shape.sphere.center));
 }
@@ -124,22 +135,13 @@ int IntersectTriangle(void *self, ray *r, hit_record *hitrec){
 	// NOTE : u and v are the uv coordinates. I don't need them yet but that'll be useful.
 }
 
-fbm_shape fbm_shape_new(memory_region *region, float hurst, int octaves, void *obj) {
-	fbm_shape fs;
-	fs.perlin = add_perlin(region, 32);
-	fs.obj = obj;
-	fs.scale = 1.0; // TODO : make this a parameter
-	fs.hurst = hurst;
-	fs.octaves = octaves;
-	return fs;
-}
-
 // NOTE: this should never be called anyway
 vec3 FBMNormal(void *self, vec3 relative) {
 	return vec3_new(0.0, 0.0, 0.0);
 }
 
 int IntersectFBMShape(void *self, ray *r, hit_record *hitrec) {
+	float scale = 0.2;
 	object *obj = self;
 	fbm_shape *fbm_obj = &obj->shape.fbm_shape;
 	vec3 offset = vec3_mul(((object *)fbm_obj->obj)->Normal(fbm_obj->obj, r->dir), fbm_obj->scale * fbm(fbm_obj->perlin, r->dir, fbm_obj->hurst, fbm_obj->octaves));
@@ -151,10 +153,17 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec) {
 	object *obj = self;
 	fbm_shape *fbm_obj = &obj->shape.fbm_shape;
 	object *sph = ((object *)fbm_obj->obj);
-	float temp_r = sph->shape.sphere.radius;
-	sph->shape.sphere.radius += fbm_obj->scale * fbm(fbm_obj->perlin, r->dir, fbm_obj->hurst, fbm_obj->octaves);
-	int result = sph->Intersect(sph, r, hitrec);
-	sph->shape.sphere.radius = temp_r;
+	hit_record temp_hitrec = *hitrec;
+	object temp_sphere = *sph;
+	temp_sphere.shape.sphere.radius += fbm_obj->scale;
+
+	// First check if the ray would hit the sphere in the 'worst' case (largest possible radius)
+	// this saves SO MUCH TIME just because of how expensive fbm is.
+	if(!sph->Intersect(&temp_sphere, r, &temp_hitrec)) {
+		return 0;
+	}
+	temp_sphere.shape.sphere.radius = sph->shape.sphere.radius + fbm_obj->scale * fbm(fbm_obj->perlin, r->dir, fbm_obj->hurst, fbm_obj->octaves);
+	int result = sph->Intersect(&temp_sphere, r, hitrec);
 	return result;
 }
 
@@ -180,18 +189,18 @@ object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *te
 	return o;
 }
 
-object make_fbm_shape(memory_region *region, float hurst, int octaves, object *obj) {
+object make_fbm_shape(memory_region *region, perlin *perl, float hurst, int octaves, float scale, object *obj) {
 	object o;
 	o.Intersect = (*IntersectFBMShape);
 	o.id = FBMShape;
 	o.mat = obj->mat;
 	o.text = obj->text;
-	o.shape.fbm_shape = fbm_shape_new(region, hurst, octaves, obj);
+	o.shape.fbm_shape = fbm_shape_new(region, perl, hurst, octaves, scale, obj);
 	return o;
 }
 
-object make_fbm_sphere(memory_region *region, float hurst, int octaves, object *obj) {
-	object fbm_obj = make_fbm_shape(region, hurst, octaves, obj);
+object make_fbm_sphere(memory_region *region, perlin *perl, float hurst, int octaves, float scale, object *obj) {
+	object fbm_obj = make_fbm_shape(region, perl, hurst, octaves, scale, obj);
 	fbm_obj.Intersect = (*IntersectFBMSphere);
 	return fbm_obj;
 }
@@ -212,12 +221,12 @@ object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, poi
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }
 
-object *add_fbm_shape(memory_region *region, float hurst, int octaves, object *obj) {
-	object o = make_fbm_shape(region, hurst, octaves, obj);
+object *add_fbm_shape(memory_region *region, perlin *perl, float hurst, int octaves, float scale, object *obj) {
+	object o = make_fbm_shape(region, perl, hurst, octaves, scale, obj);
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }
 
-object *add_fbm_sphere(memory_region *region, float hurst, int octaves, object *obj) {
-	object o = make_fbm_sphere(region, hurst, octaves, obj);
+object *add_fbm_sphere(memory_region *region, perlin *perl, float hurst, int octaves, float scale, object *obj) {
+	object o = make_fbm_sphere(region, perl, hurst, octaves, scale, obj);
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }

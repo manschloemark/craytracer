@@ -2,6 +2,13 @@
 
 #include "stdio.h"
 
+float Floor(float n) {
+	return (n > 0.0) ? (float)(int)n : (float)((int) n - 1.0);
+}
+int FloorInt(float n) {
+	return (n > 0.0) ? (int)n : (int)n - 1;
+}
+
 void perlin_gen_perm(int *perm, int pointcount) {
 	int i;
 	// Fill array with 0 through POINTCOUNT
@@ -91,9 +98,9 @@ float perlin_noise(perlin *perl, point3 *pt) {
 	float u = pt->x - floorf(pt->x);
 	float v = pt->y - floorf(pt->y);
 	float w = pt->z - floorf(pt->z);
-	int i = (int)floorf(pt->x);
-	int j = (int)floorf(pt->y);
-	int k = (int)floorf(pt->z);
+	int i = (int)FloorInt(pt->x);
+	int j = (int)FloorInt(pt->y);
+	int k = (int)FloorInt(pt->z);
 
 	vec3 c[2][2][2];
 
@@ -126,7 +133,7 @@ float perlin_turbulence(perlin *perl, point3 *pt, int depth) {
 	return fabs(accumulation);
 }
 
-float fbm(perlin *perl, vec3 v, float h, int octaves) {
+float fbm(perlin *perlin, vec3 v, float h, int octaves) {
 	float g = exp2(-h);
 	float f = 1.0;
 	float a = 1.0;
@@ -134,7 +141,7 @@ float fbm(perlin *perl, vec3 v, float h, int octaves) {
 
 	for (int i = 0; i < octaves; ++i) {
 		vec3 vp = vec3_mul(v, f);
-		t += a * perlin_noise(perl, &vp);
+		t += a * perlin_noise(perlin, &vp);
 		f *= 2.0;
 		a *= g;
 	}

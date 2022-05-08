@@ -44,9 +44,9 @@ typedef struct {
 	float scale;
 } multicolor_perlin_texture;
 
-perlin_texture perlin_texture_new(memory_region *region, float scale, int pointcount, void *texture);
+perlin_texture perlin_texture_new(memory_region *region, perlin *perlin, float scale, int pointcount, void *texture);
 
-multicolor_perlin_texture multicolor_perlin_texture_new(memory_region *region, float scale, int pointcount, void *colA, void *colB);
+multicolor_perlin_texture multicolor_perlin_texture_new(memory_region *region, perlin *perl, float scale, int pointcount, void *colA, void *colB);
 
 typedef struct {
 	perlin *perlin;
@@ -105,29 +105,28 @@ texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *ev
 // This type of texture is unique in that make_perline_noise_texture and perlin_noise_texture_new both require the memory region passed as well.
 // I'm not happy with this because it makes everything else inconsistent.
 // But I need to somehow get the actual perlin struct into memory safely.
-texture make_perlin_noise_texture(memory_region *region, float scale, int pointcount, texture *text);
-texture *add_perlin_noise_texture(memory_region *region, float scale);
+texture make_perlin_noise_texture(memory_region *region, perlin *perlin, float scale, int pointcount, texture *text);
+texture *add_perlin_noise_texture(memory_region *region, perlin *perlin, float scale);
 texture *add_perlin_noise_texture_sized(memory_region *region, float scale, int bits);
 
-texture make_perlin_turbulence_texture(memory_region *region, float scale, int pointcount, texture *text);
-texture *add_perlin_turbulence_texture(memory_region *region, float scale);
-texture *add_perlin_turbulence_texture_sized(memory_region *region, float scale, int bits);
+texture make_perlin_turbulence_texture(memory_region *region, perlin *perlin, float scale, int pointcount, texture *text);
+texture *add_perlin_turbulence_texture(memory_region *region, perlin *perlin, float scale);
+texture *add_perlin_turbulence_texture_sized(memory_region *region, perlin *perlin, float scale, int bits);
 
-texture *add_colored_perlin_noise_texture(memory_region *region, float scale, texture *text);
+texture *add_colored_perlin_noise_texture(memory_region *region, perlin *perlin, float scale, texture *text);
 texture *add_colored_perlin_noise_texture_sized(memory_region *region, float scale, int bits, texture *text);
 
-texture *add_colored_perlin_turbulence_texture(memory_region *region, float scale, texture *text);
+texture *add_colored_perlin_turbulence_texture(memory_region *region, perlin *perlin, float scale, texture *text);
 texture *add_colored_perlin_turbulence_texture_sized(memory_region *region, float scale, int bits, texture *text);
 
-texture *add_marbled_noise_texture(memory_region *region, float scale, texture *text);
+texture *add_marbled_noise_texture(memory_region *region, perlin *perlin, float scale, texture *text);
 
-texture make_multicolor_perlin_texture(memory_region *region, float scale, int pointcount, texture *colA, texture *colB);
+texture make_multicolor_perlin_texture(memory_region *region, perlin *perlin, float scale, int pointcount, texture *colA, texture *colB);
 
-texture *add_perlin_sincos_texture(memory_region *region, float scale, texture *colA, texture *colB);
+texture *add_perlin_sincos_texture(memory_region *region, perlin *perlin, float scale, texture *colA, texture *colB);
 
 texture make_fbm_modifier(memory_region *region, perlin *perl, float hurst, int octaves, texture *text);
-texture *add_fbm_modifier(memory_region *region, float hurst, int octaves, texture *text);
-texture *add_fbm_modifier_noise(memory_region *region, perlin *perl, float hurst, int octaves, texture *text);
+texture *add_fbm_modifier(memory_region *region, perlin *perlin, float hurst, int octaves, texture *text);
 
 fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt);
 fcolor ColorTextureColor(void *self, float u, float v, point3 pt);

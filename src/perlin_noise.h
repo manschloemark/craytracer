@@ -22,6 +22,22 @@ float perlin_noise(perlin *perl, point3 *pt);
 float perlin_turbulence(perlin *perl, point3 *pt, int depth);
 
 
-float fbm(perlin *perl, vec3 v, float h, int octaves);
+
+// TODO : implement simplex noise
+typedef struct {
+} simplex;
+
+union noise_process {
+	perlin perlin;
+	simplex simplex;
+};
+
+
+typedef struct {
+	float (*Noise) (void *noise, point3 *pt);
+	union noise_process source;
+} noise;
+
+float fbm(perlin *perlin, vec3 v, float h, int octaves);
 
 #endif
