@@ -827,7 +827,7 @@ scene MiscTextureTest(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 }
 
 scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
-	int max_objects = 16;
+	int max_objects = 32;
 	int obj_index = 0;
 	object **objects = (object **)malloc(sizeof(object *) * max_objects);
 
@@ -856,6 +856,7 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	texture *perlin = add_perlin_sincos_texture(region, shared_perlin, 16.0, pink, yellow);
 	texture *perlin2 = add_perlin_noise_texture(region, shared_perlin, 1.0);
 	texture *perlin3 = add_perlin_sincos_texture(region, shared_perlin, 1.0, pink, white);
+	texture *normal = add_normal_texture(region);
 
 	// TODO : make loop to test many different scales quickly
 
@@ -866,8 +867,8 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	float z_offset = 1.0;
 	float radius = 1.0;
 	int index = 0;
-	vec3 points[16];
-	int num_cols = 4, num_rows = 4;
+	vec3 points[20];
+	int num_cols = 5, num_rows = 4;
 	for (int i = 0; i < num_cols; ++i) {
 		for (int j = 0; j < num_rows; ++j) {
 			points[index++] = vec3_new((float)i * (x_offset + radius), (float)j * (y_offset + radius), z_offset);
@@ -885,6 +886,14 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	object *perlin_noise_sphere_2 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.4, perlin_noise_sphere_2_src);
 	object *perlin_noise_sphere_3_src = add_sphere(region, points[index++], radius, perlin2, lamb);
 	object *perlin_noise_sphere_3 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.6, perlin_noise_sphere_3_src);
+
+	object *normal_sphere_ctrl = add_sphere(region, points[index++], radius, normal, lamb);
+	object *normal_sphere_1_src = add_sphere(region, points[index++], radius, normal, lamb);
+	object *normal_sphere_1 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.1, normal_sphere_1_src);
+	object *normal_sphere_2_src = add_sphere(region, points[index++], radius, normal, lamb);
+	object *normal_sphere_2 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.4, normal_sphere_2_src);
+	object *normal_sphere_3_src = add_sphere(region, points[index++], radius, normal, lamb);
+	object *normal_sphere_3 = add_fbm_sphere(region, shared_perlin, 1.0, 24, 0.6, normal_sphere_3_src);
 
 	object *perlin_sphere_ctrl = add_sphere(region, points[index++], radius, perlin, lamb);
 	object *perlin_sphere_1_src = add_sphere(region, points[index++], radius, perlin, lamb);
@@ -949,6 +958,10 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	objects[obj_index++] = perlin_sphere_1;
 	objects[obj_index++] = perlin_sphere_2;
 	objects[obj_index++] = perlin_sphere_3;
+	objects[obj_index++] = normal_sphere_ctrl;
+	objects[obj_index++] = normal_sphere_1;
+	objects[obj_index++] = normal_sphere_2;
+	objects[obj_index++] = normal_sphere_3;
 	objects[obj_index++] = tile_sphere_ctrl;
 	objects[obj_index++] = tile_sphere_1;
 	objects[obj_index++] = tile_sphere_2;
@@ -972,7 +985,8 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	s->object_count = obj_index;
 
 	*o = vec3_new(-(((float)num_rows) * (x_offset + radius)), ((float)num_cols) * (radius + y_offset), 10.0);
-	*t = vec3_new((x_offset + radius) * (float)(num_rows / 2), (radius + y_offset) * (float)(num_cols / 2), 0.0);
+	vec3 center_of_objects = vec3_new((x_offset + radius) * (float)(num_rows / 2), (radius + y_offset) * (float)(num_cols / 2), 0.0);
+	*t = center_of_objects;
 	return *s;
 }
 

@@ -59,6 +59,7 @@ fbm_modifier fbm_modifier_new(memory_region *region, perlin *perl, float hurst, 
 
 enum TextureID {
 	Undefined,
+	Normal,
 	Color,
 	Image,
 	UV,
@@ -82,10 +83,13 @@ union texture_type {
 };
 
 typedef struct {
-	fcolor (*TextureColor) (void *self, float u, float v, point3 pt);
+	fcolor (*TextureColor) (void *self, float u, float v, point3 pt, vec3 *normal);
 	union texture_type type;
 	enum TextureID id;
 } texture;
+
+texture make_normal_texture();
+texture *add_normal_texture(memory_region *region);
 
 texture make_color_texture(fcolor color);
 texture *add_color_texture(memory_region *region, fcolor color);
@@ -128,15 +132,16 @@ texture *add_perlin_sincos_texture(memory_region *region, perlin *perlin, float 
 texture make_fbm_modifier(memory_region *region, perlin *perl, float hurst, int octaves, texture *text);
 texture *add_fbm_modifier(memory_region *region, perlin *perlin, float hurst, int octaves, texture *text);
 
-fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt);
-fcolor ColorTextureColor(void *self, float u, float v, point3 pt);
-fcolor ImageTextureColor(void *self, float u, float v, point3 pt);
-fcolor CheckerTextureColor(void *self, float u, float v, point3 pt);
-fcolor UVCheckerTextureColor(void *self, float u, float v, point3 pt);
-fcolor PerlinNoiseTextureColor(void *self, float u, float v, point3 pt);
-fcolor PerlinTurbulenceTextureColor(void *self, float u, float v, point3 pt);
-fcolor PerlinMarbledTextureColor(void *self, float u, float v, point3 pt);
-fcolor PerlinSinCosTextureColor(void *self, float u, float v, point3 pt);
-fcolor FBMModifierTextureColor(void *self, float u, float v, point3 pt);
+fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor NormalTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor ColorTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor ImageTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor CheckerTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor UVCheckerTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor PerlinNoiseTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor PerlinTurbulenceTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor PerlinMarbledTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor PerlinSinCosTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor FBMModifierTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 
 #endif

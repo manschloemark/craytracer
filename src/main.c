@@ -58,16 +58,16 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 		//        that way the light colors won't dominate the colors around them
 		if (hitrec.hit_front) {
 			if (calldepth == maxdepth) {
-				return color_normalize(hitrec.text->TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt));
+				return color_normalize(hitrec.text->TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt, &hitrec.n));
 			}
-				return hitrec.text->TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt);
+				return hitrec.text->TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt, &hitrec.n);
 		}
 		return COLOR_BLACK;
 	}
 
 	// NOTE : I only assign this to a variable for debugging purposes
 	fcolor recursive_result = TraceRay(scattered_ray, scene, bgcolor, maxdepth, calldepth - 1);
-	COLOR_MUL(recursive_result, hitrec.text->TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt));
+	COLOR_MUL(recursive_result, hitrec.text->TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt, &hitrec.n));
 	return recursive_result;
 }
 
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
 
 	//point3 origin = vec3_new(0.0, 0.0, 0.0);
 	vec3 vup = {0.0, 0.0, 1.0};
-	float vfov = 10.0;
+	float vfov = 60.0;
 	float focal_length = vec3_len(vec3_sub(target, origin));
 	camera cam = make_camera(origin, target, vup, vfov, aspect_ratio, focal_length);
 
