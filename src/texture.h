@@ -57,6 +57,16 @@ typedef struct {
 
 fbm_modifier fbm_modifier_new(memory_region *region, perlin *perl, float hurst, int octaves, void *text);
 
+typedef struct {
+	vec3 intervals, widths;
+	void *targetColor, *defaultColor;
+} level_curve_texture;
+
+static inline level_curve_texture level_curve_texture_new(vec3 intervals, vec3 widths, void *targetColor, void *defaultColor) {
+	level_curve_texture lc = {intervals, widths, targetColor, defaultColor};
+	return lc;
+}
+
 enum TextureID {
 	Undefined,
 	Normal,
@@ -70,6 +80,7 @@ enum TextureID {
 	PerlinMarbled,
 	PerlinSinCos,
 	FBM,
+	LevelCurves,
 };
 
 union texture_type {
@@ -80,6 +91,7 @@ union texture_type {
 	perlin_texture perlin;
 	multicolor_perlin_texture multicolor_perlin;
 	fbm_modifier fbm_mod;
+	level_curve_texture level_curve;
 };
 
 typedef struct {
@@ -132,6 +144,9 @@ texture *add_perlin_sincos_texture(memory_region *region, perlin *perlin, float 
 texture make_fbm_modifier(memory_region *region, perlin *perl, float hurst, int octaves, texture *text);
 texture *add_fbm_modifier(memory_region *region, perlin *perlin, float hurst, int octaves, texture *text);
 
+texture make_level_curve_texture(vec3 intervals, vec3 widths, texture *targetColor, texture *defaltColor);
+texture *add_level_curve_texture(memory_region *region, vec3 intervals, vec3 widths, texture *targetColor, texture *defaltColor);
+
 fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor NormalTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor ColorTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
@@ -143,5 +158,6 @@ fcolor PerlinTurbulenceTextureColor(void *self, float u, float v, point3 pt, vec
 fcolor PerlinMarbledTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor PerlinSinCosTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor FBMModifierTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor LevelCurveTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal);
 
 #endif

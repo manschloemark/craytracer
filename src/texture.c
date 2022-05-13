@@ -274,6 +274,20 @@ texture *add_fbm_modifier(memory_region *region, perlin *perl, float hurst, int 
 	return fbmptr;
 }
 
+// Level Curves
+texture make_level_curve_texture(vec3 intervals, vec3 widths, texture *targetColor, texture *defaultColor) {
+	texture lctxt = {};
+	lctxt.TextureColor = (*LevelCurveTextureColor);
+	lctxt.type.level_curve = level_curve_texture_new(intervals, widths, targetColor, defaultColor);
+	lctxt.id = LevelCurves;
+	return lctxt;
+}
+
+texture *add_level_curve_texture(memory_region *region, vec3 intervals, vec3 widths, texture *targetColor, texture *defaultColor) {
+	texture lct = make_level_curve_texture(intervals, widths, targetColor, defaultColor);
+	return (texture *)memory_region_add(region, &lct, sizeof(texture));
+}
+
 // Assume all normals are unit vectors already. Pretty sure they are.
 fcolor NormalTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
 	fcolor norm_color = fcolor_new((1.0 + normal->x) / 2.0, (1.0 + normal->y) / 2.0, (1.0 + normal->z));
@@ -375,5 +389,28 @@ fcolor FBMModifierTextureColor(void *self, float u, float v, vec3 pt, vec3 *norm
 
 fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt, vec3 *normal) {
 	return COLOR_UNDEFPURP;
+}
+
+// NOTE: I think depending on NAN is bad practice but it seems like it works here
+vec3 vec3_fmodf(vec3 *a, vec3 *m) {
+	vec3 r = {};
+	/*
+	r.x = (m->x == 0.0) ? NAN : fmodf(a->x, m->x);
+	r.y = (m->y == 0.0) ? NAN : fmodf(a->y, m->y);
+	r.z = (m->z == 0.0) ? NAN : fmodf(a->z, m->z);
+	*/
+
+	r.x = fmodf(a->x, m->x);
+	r.y = fmodf(a->y, m->y);
+	r.z = fmodf(a->z, m->z);
+	return r;
+}
+
+fcolor LevelCurveTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
+	level_curve_texture lc_txt = ((texture *)self)->type.level_curve;
+	vec3 abs_pt = vec3_abs(pt);
+	vec3 r = vec3_fmodf(&abs_pt, &lc_txt.intervals);
+	if (r.x < lc_txt.widths.x || r.y < lc_txt.widths.y || r.z < lc_txt.widths.z) return ((texture *)lc_txt.targetColor)->TextureColor(((texture *)lc_txt.targetColor), u, v, pt, normal);
+	return ((texture *)lc_txt.defaultColor)->TextureColor(((texture *)lc_txt.defaultColor), u, v, pt, normal);
 }
 
