@@ -29,7 +29,9 @@ vec3 vec3_abs(vec3 a) {
 }
 
 vec3 vec3_unit(vec3 a) {
-	return vec3_div(a, vec3_len(a));
+	float len = vec3_len(a);
+	if (len) return vec3_div(a, vec3_len(a));
+	return a;
 }
 
 vec3 vec3_random() {
