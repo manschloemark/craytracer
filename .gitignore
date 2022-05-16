@@ -2,7 +2,4 @@ build/
 todo
 resource/
 *.exe
-src/test/h*o*
-test/*.txt
-test/build_*.sh
-test/simp*
+test/
