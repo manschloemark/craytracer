@@ -4,7 +4,7 @@
 #include "common.h"
 #include "color.h"
 #include "memory.h"
-#include "perlin_noise.h"
+#include "noise.h"
 
 typedef struct {
 	fcolor rgb;
@@ -49,13 +49,13 @@ perlin_texture perlin_texture_new(memory_region *region, perlin *perlin, float s
 multicolor_perlin_texture multicolor_perlin_texture_new(memory_region *region, perlin *perl, float scale, int pointcount, void *colA, void *colB);
 
 typedef struct {
-	perlin *perlin;
+	noise *noise;
 	void *text;
 	float hurst;
 	int octaves;
 } fbm_modifier;
 
-fbm_modifier fbm_modifier_new(memory_region *region, perlin *perl, float hurst, int octaves, void *text);
+fbm_modifier fbm_modifier_new(memory_region *region, noise *noise, float hurst, int octaves, void *text);
 
 typedef struct {
 	vec3 intervals, widths;
@@ -66,6 +66,14 @@ static inline level_curve_texture level_curve_texture_new(vec3 intervals, vec3 w
 	level_curve_texture lc = {intervals, widths, targetColor, defaultColor};
 	return lc;
 }
+
+typedef struct {
+	simplex *simplex;
+	void *texture;
+	float scale;
+} simplex_texture;
+
+simplex_texture simplex_texture_new(memory_region *region, simplex *simpl, float scale, int pointcount, void *texture);
 
 enum TextureID {
 	Undefined,
@@ -81,6 +89,7 @@ enum TextureID {
 	PerlinSinCos,
 	FBM,
 	LevelCurves,
+	SimplexNoise,
 };
 
 union texture_type {
@@ -92,6 +101,7 @@ union texture_type {
 	multicolor_perlin_texture multicolor_perlin;
 	fbm_modifier fbm_mod;
 	level_curve_texture level_curve;
+	simplex_texture simplex;
 };
 
 typedef struct {
@@ -141,11 +151,15 @@ texture make_multicolor_perlin_texture(memory_region *region, perlin *perlin, fl
 
 texture *add_perlin_sincos_texture(memory_region *region, perlin *perlin, float scale, texture *colA, texture *colB);
 
-texture make_fbm_modifier(memory_region *region, perlin *perl, float hurst, int octaves, texture *text);
-texture *add_fbm_modifier(memory_region *region, perlin *perlin, float hurst, int octaves, texture *text);
+texture make_fbm_modifier(memory_region *region, noise *noise, float hurst, int octaves, texture *text);
+texture *add_fbm_modifier(memory_region *region, noise *noise, float hurst, int octaves, texture *text);
 
 texture make_level_curve_texture(vec3 intervals, vec3 widths, texture *targetColor, texture *defaltColor);
 texture *add_level_curve_texture(memory_region *region, vec3 intervals, vec3 widths, texture *targetColor, texture *defaltColor);
+
+texture make_simplex_noise_texture(memory_region *region, simplex *simp, float scale, int pointcount, texture *text);
+texture *add_simplex_noise_texture(memory_region *region, simplex *simp, float scale, texture *text);
+texture *add_simplex_noise_texture_scaled(memory_region *region, float scale, int pointcount, texture *text);
 
 fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor NormalTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
@@ -159,5 +173,6 @@ fcolor PerlinMarbledTextureColor(void *self, float u, float v, point3 pt, vec3 *
 fcolor PerlinSinCosTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor FBMModifierTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor LevelCurveTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal);
+fcolor SimplexNoiseTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 
 #endif

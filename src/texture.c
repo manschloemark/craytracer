@@ -139,6 +139,35 @@ texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *ev
 	return checkerptr;
 }
 
+// Simplex Noise Texture
+simplex_texture simplex_texture_new(memory_region *region, simplex *simp, float scale, int pointcount, void *texture) {
+	simplex_texture s = {};
+	s.simplex = (simp == NULL) ? add_simplex(region, pointcount) : simp;
+	s.scale = scale;
+	s.texture = texture;
+	return s;
+}
+
+texture make_simplex_noise_texture(memory_region *region, simplex *simp, float scale, int pointcount, texture *text) {
+	texture simptxt = {};
+	simptxt.TextureColor = (*SimplexNoiseTextureColor);
+	simptxt.id = SimplexNoise;
+	simplex_texture s = simplex_texture_new(region, simp, scale, pointcount, text);
+	simptxt.type.simplex = s;
+	return simptxt;
+
+}
+
+texture *add_simplex_noise_texture(memory_region *region, simplex *simp, float scale, texture *text) {
+	texture simptxt = make_simplex_noise_texture(region, simp, scale, 0, text);
+	return (texture *)memory_region_add(region, &simptxt, sizeof(texture));
+}
+
+texture *add_simplex_noise_texture_scaled(memory_region *region, float scale, int pointcount, texture *text) {
+	texture simptxt = make_simplex_noise_texture(region, NULL, scale, pointcount, text);
+	return (texture *)memory_region_add(region, &simptxt, sizeof(texture));
+}
+
 // Perlin Noise Texture
 perlin_texture perlin_texture_new(memory_region *region, perlin *perl, float scale, int pointcount, void *texture) {
 	perlin_texture p = {};
@@ -247,29 +276,29 @@ texture *add_perlin_sincos_texture(memory_region *region, perlin *perl, float sc
 
 
 // FBM Modifier -- take some other texture and return the value when you mess with the point
-fbm_modifier fbm_modifier_new(memory_region *region, perlin *perl, float hurst, int octaves, void *text) {
+fbm_modifier fbm_modifier_new(memory_region *region, noise *noise, float hurst, int octaves, void *text) {
 	fbm_modifier fbm_mod = {};
 	fbm_mod.hurst = hurst;
 	fbm_mod.octaves = octaves;
 	fbm_mod.text = text;
-	if (perl) {
-		fbm_mod.perlin = perl;
+	if (noise) {
+		fbm_mod.noise = noise;
 	} else {
-		fbm_mod.perlin = add_perlin(region, 256);
+		fbm_mod.noise = add_perlin_noise(region, 256);
 	}
 	return fbm_mod;
 }
 
-texture make_fbm_modifier(memory_region *region, perlin *perl, float hurst, int octaves, texture *text) {
+texture make_fbm_modifier(memory_region *region, noise *noise, float hurst, int octaves, texture *text) {
 	texture txt = {};
 	txt.TextureColor = (*FBMModifierTextureColor);
-	fbm_modifier fbm_mod = fbm_modifier_new(region, perl, hurst, octaves, text);
+	fbm_modifier fbm_mod = fbm_modifier_new(region, noise, hurst, octaves, text);
 	txt.type.fbm_mod = fbm_mod;
 	txt.id = FBM;
 	return txt;
 }
-texture *add_fbm_modifier(memory_region *region, perlin *perl, float hurst, int octaves, texture *text) {
-	texture fbmtxt = make_fbm_modifier(region, perl, hurst, octaves, text);
+texture *add_fbm_modifier(memory_region *region, noise *noise, float hurst, int octaves, texture *text) {
+	texture fbmtxt = make_fbm_modifier(region, noise, hurst, octaves, text);
 	texture *fbmptr = (texture *)memory_region_add(region, &fbmtxt, sizeof(texture));
 	return fbmptr;
 }
@@ -290,7 +319,7 @@ texture *add_level_curve_texture(memory_region *region, vec3 intervals, vec3 wid
 
 // Assume all normals are unit vectors already. Pretty sure they are.
 fcolor NormalTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
-	fcolor norm_color = fcolor_new((1.0 + normal->x) / 2.0, (1.0 + normal->y) / 2.0, (1.0 + normal->z));
+	fcolor norm_color = fcolor_new(fabs(normal->x), fabs(normal->y), fabs(normal->z));
 	return norm_color;
 }
 
@@ -383,8 +412,21 @@ fcolor PerlinSinCosTextureColor(void *self, float u, float v, vec3 pt, vec3 *nor
 
 fcolor FBMModifierTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
 	fbm_modifier *fbm_mod = &((texture *)self)->type.fbm_mod;
-	vec3 warped = vec3_mul(pt, fbm(fbm_mod->perlin, pt, fbm_mod->hurst, fbm_mod->octaves));
+	vec3 warped = vec3_mul(pt, fbm(fbm_mod->noise, pt, fbm_mod->hurst, fbm_mod->octaves));
 	return ((texture *)fbm_mod->text)->TextureColor(fbm_mod->text, u, v, warped, normal);
+}
+
+fcolor SimplexNoiseTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
+	simplex_texture *simptxt = &((texture *)self)->type.simplex;
+
+	vec3 scaled_pt = vec3_mul(pt, simptxt->scale);
+	float n = (1.0 + simplex_noise(simptxt->simplex, &scaled_pt)) * 0.5;
+
+	if (simptxt->texture == NULL)
+		return fcolor_new(n, n, n);
+	
+	fcolor col = ((texture *)simptxt->texture)->TextureColor(simptxt->texture, u, v, pt, normal);
+	return color_mul(col, n);
 }
 
 fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt, vec3 *normal) {
