@@ -33,20 +33,20 @@ typedef struct {
 checker_texture checker_texture_new(void *odd, void *even, float freq);
 
 typedef struct {
-	perlin *perlin;
+	noise *noise;
 	void *texture;
 	float scale;
-} perlin_texture;
+} noise_texture;
 
 typedef struct {
-	perlin *perlin;
+	noise *noise;
 	void *colA, *colB;
 	float scale;
-} multicolor_perlin_texture;
+} gradient_noise_texture;
 
-perlin_texture perlin_texture_new(memory_region *region, perlin *perlin, float scale, int pointcount, void *texture);
+noise_texture noise_texture_new(memory_region *region, noise *noise, float scale, int pointcount, void *texture);
 
-multicolor_perlin_texture multicolor_perlin_texture_new(memory_region *region, perlin *perl, float scale, int pointcount, void *colA, void *colB);
+gradient_noise_texture gradient_noise_texture_new(memory_region *region, noise *perl, float scale, int pointcount, void *colA, void *colB);
 
 typedef struct {
 	noise *noise;
@@ -67,14 +67,6 @@ static inline level_curve_texture level_curve_texture_new(vec3 intervals, vec3 w
 	return lc;
 }
 
-typedef struct {
-	simplex *simplex;
-	void *texture;
-	float scale;
-} simplex_texture;
-
-simplex_texture simplex_texture_new(memory_region *region, simplex *simpl, float scale, int pointcount, void *texture);
-
 enum TextureID {
 	Undefined,
 	Normal,
@@ -83,13 +75,12 @@ enum TextureID {
 	UV,
 	Checker,
 	UVChecker,
-	PerlinNoise,
-	PerlinTurbulence,
-	PerlinMarbled,
-	PerlinSinCos,
+	Noise,
 	FBM,
+	MarbledNoise,
+	NoiseSinCos,
+	FBMMod,
 	LevelCurves,
-	SimplexNoise,
 };
 
 union texture_type {
@@ -97,11 +88,10 @@ union texture_type {
 	image_texture image;
 	uv_texture uv;
 	checker_texture checker;
-	perlin_texture perlin;
-	multicolor_perlin_texture multicolor_perlin;
+	noise_texture noise;
+	gradient_noise_texture gradient_noise;
 	fbm_modifier fbm_mod;
 	level_curve_texture level_curve;
-	simplex_texture simplex;
 };
 
 typedef struct {
@@ -128,28 +118,28 @@ texture *add_checker_texture(memory_region *region, texture *odd, texture *even,
 texture make_uv_checker_texture(texture *odd, texture *even, float freq);
 texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *even, float freq);
 
-// This type of texture is unique in that make_perline_noise_texture and perlin_noise_texture_new both require the memory region passed as well.
+// This type of texture is unique in that make_noisee_noise_texture and noise_texture_new both require the memory region passed as well.
 // I'm not happy with this because it makes everything else inconsistent.
-// But I need to somehow get the actual perlin struct into memory safely.
-texture make_perlin_noise_texture(memory_region *region, perlin *perlin, float scale, int pointcount, texture *text);
-texture *add_perlin_noise_texture(memory_region *region, perlin *perlin, float scale);
-texture *add_perlin_noise_texture_sized(memory_region *region, float scale, int bits);
+// But I need to somehow get the actual noise struct into memory safely.
+texture make_noise_texture(memory_region *region, noise *noise, float scale, int pointcount, texture *text);
+texture *add_noise_texture(memory_region *region, noise *noise, float scale);
+texture *add_noise_texture_sized(memory_region *region, float scale, int bits);
 
-texture make_perlin_turbulence_texture(memory_region *region, perlin *perlin, float scale, int pointcount, texture *text);
-texture *add_perlin_turbulence_texture(memory_region *region, perlin *perlin, float scale);
-texture *add_perlin_turbulence_texture_sized(memory_region *region, perlin *perlin, float scale, int bits);
+texture make_noise_turbulence_texture(memory_region *region, noise *noise, float scale, int pointcount, texture *text);
+texture *add_noise_turbulence_texture(memory_region *region, noise *noise, float scale);
+texture *add_noise_turbulence_texture_sized(memory_region *region, noise *noise, float scale, int bits);
 
-texture *add_colored_perlin_noise_texture(memory_region *region, perlin *perlin, float scale, texture *text);
-texture *add_colored_perlin_noise_texture_sized(memory_region *region, float scale, int bits, texture *text);
+texture *add_colored_noise_texture(memory_region *region, noise *noise, float scale, texture *text);
+texture *add_colored_noise_texture_sized(memory_region *region, float scale, int bits, texture *text);
 
-texture *add_colored_perlin_turbulence_texture(memory_region *region, perlin *perlin, float scale, texture *text);
-texture *add_colored_perlin_turbulence_texture_sized(memory_region *region, float scale, int bits, texture *text);
+texture *add_colored_noise_turbulence_texture(memory_region *region, noise *noise, float scale, texture *text);
+texture *add_colored_noise_turbulence_texture_sized(memory_region *region, float scale, int bits, texture *text);
 
-texture *add_marbled_noise_texture(memory_region *region, perlin *perlin, float scale, texture *text);
+texture *add_marbled_noise_texture(memory_region *region, noise *noise, float scale, texture *text);
 
-texture make_multicolor_perlin_texture(memory_region *region, perlin *perlin, float scale, int pointcount, texture *colA, texture *colB);
+texture make_gradient_noise_texture(memory_region *region, noise *noise, float scale, int pointcount, texture *colA, texture *colB);
 
-texture *add_perlin_sincos_texture(memory_region *region, perlin *perlin, float scale, texture *colA, texture *colB);
+texture *add_noise_sincos_texture(memory_region *region, noise *noise, float scale, texture *colA, texture *colB);
 
 texture make_fbm_modifier(memory_region *region, noise *noise, float hurst, int octaves, texture *text);
 texture *add_fbm_modifier(memory_region *region, noise *noise, float hurst, int octaves, texture *text);
@@ -157,22 +147,17 @@ texture *add_fbm_modifier(memory_region *region, noise *noise, float hurst, int 
 texture make_level_curve_texture(vec3 intervals, vec3 widths, texture *targetColor, texture *defaltColor);
 texture *add_level_curve_texture(memory_region *region, vec3 intervals, vec3 widths, texture *targetColor, texture *defaltColor);
 
-texture make_simplex_noise_texture(memory_region *region, simplex *simp, float scale, int pointcount, texture *text);
-texture *add_simplex_noise_texture(memory_region *region, simplex *simp, float scale, texture *text);
-texture *add_simplex_noise_texture_scaled(memory_region *region, float scale, int pointcount, texture *text);
-
 fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor NormalTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor ColorTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor ImageTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor CheckerTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor UVCheckerTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor PerlinNoiseTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor PerlinTurbulenceTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor PerlinMarbledTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor PerlinSinCosTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor NoiseTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor FBMTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor MarbledNoiseTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor NoiseSinCosTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor FBMModifierTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor LevelCurveTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal);
-fcolor SimplexNoiseTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 
 #endif
