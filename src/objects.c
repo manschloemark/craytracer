@@ -143,7 +143,6 @@ vec3 FBMNormal(void *self, vec3 relative) {
 
 /* Add offset to warper_ray.pt */
 int IntersectFBMShape(void *self, ray *r, hit_record *hitrec) {
-	float scale = 0.2;
 	object *obj = self;
 	fbm_shape *fbm_obj = &obj->shape.fbm_shape;
 	vec3 d = vec3_new(0.0, 0.0, 0.0);
@@ -158,7 +157,10 @@ int IntersectFBMShape(void *self, ray *r, hit_record *hitrec) {
 
 	//d = vec3_unit(d);
 	vec3 pt = pt_on_ray(r, hitrec->t);
-	vec3 n =  vec3_unit(d);
+	d = vec3_div(d, fbm_value);
+	vec3 h = vec3_sub(d, vec3_mul(hitrec->n, vec3_dot(d, hitrec->n)));
+	vec3 n = vec3_sub(n, h);
+	n = vec3_unit(n);
 	//hitrec->n = vec3_unit(vec3_new(d.x * pt.x, d.y * pt.y, d.z * pt.z));
 	//outward_normal(pt, &n);
 	outward_normal(warped_ray.dir, &n);
@@ -182,9 +184,8 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec) {
 	}
 
 	vec3 d = vec3_new(0.0, 0.0, 0.0);
-	vec3 spt = vec3_mul(temp_hitrec.pt, fbm_obj->scale);
+	vec3 spt = vec3_mul(temp_hitrec.pt, fbm_obj->scale / fbm_obj->offset_scale);
 	float fbm_value = fbm_obj->offset_scale * fbm_with_derivative(fbm_obj->noise, spt, fbm_obj->hurst, fbm_obj->octaves, &d);
-	//float fbm_value = fbm_obj->offset_scale * fbm_obj->noise->NoiseD(fbm_obj->noise->source, &spt, &d);
 	float offset = sph->shape.sphere.radius + fbm_value;
 	temp_sphere.shape.sphere.radius = offset;
 	int hit = sph->Intersect(&temp_sphere, r, hitrec);
@@ -198,7 +199,7 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec) {
 	vec3 n = vec3_sub(p, vec3_mul(h, fbm_obj->offset_scale));
 
 	n = vec3_unit(n);
-	//outward_normal(r->dir, &n);
+	outward_normal(r->dir, &n);
 	hitrec->n = n;
 	return hit;
 }
