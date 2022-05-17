@@ -678,5 +678,8 @@ float fbm_with_derivative(noise *noise, vec3 v, float h, int octaves, vec3 *d) {
 		a *= g;
 	}
 	//*d = derivative;
+	d->x /= scale;
+	d->y /= scale;
+	d->z /= scale;
 	return t / scale;
 }
