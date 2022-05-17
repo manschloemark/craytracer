@@ -115,6 +115,7 @@ int main(int argc, char **argv) {
 	args.scene = -1;
 	args.seed = 0;
 	args.jpeg_quality = 100;
+	args.vfov = 60.0;
 
 	if (argp_parse(&argp, argc, argv, 0, 0, &args)) {
 		puts("Error parsing arguments. Use -? for help.");
@@ -152,9 +153,8 @@ int main(int argc, char **argv) {
 
 	//point3 origin = vec3_new(0.0, 0.0, 0.0);
 	vec3 vup = {0.0, 0.0, 1.0};
-	float vfov = 20.0;
 	float focal_length = vec3_len(vec3_sub(target, origin));
-	camera cam = make_camera(origin, target, vup, vfov, aspect_ratio, focal_length);
+	camera cam = make_camera(origin, target, vup, args.vfov, aspect_ratio, focal_length);
 
 
 	// NOTE : undo the || eventually
