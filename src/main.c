@@ -131,7 +131,9 @@ int main(int argc, char **argv) {
 	if (args.seed != 0) {
 		srand(args.seed);
 	} else {
-		srand(time(NULL)); // seed is always 1 by default. I use current time for variety.
+		int seed = time(NULL);
+		srand(seed); // seed is always 1 by default. I use current time for variety.
+		printf("Random seed: %d\n", seed);
 	}
 
 	float aspect_ratio;
