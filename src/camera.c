@@ -15,7 +15,7 @@ camera make_camera(point3 origin, point3 target, vec3 vup, float vfov, float asp
 	//        Since vup is hard-coded to be (0, 0, 1) This is only an issue when the camera is looking straight down.
 	//        In that case I'll assume (-1, 0, 0) is a suitable vup.
 	if (vec3_near_zero(vec3_cross(vup, cam.w))) {
-		vup = vec3_new(-1.0, 0.0, 0.0);
+		vup = vec3_new(0.0, 1.0, 0.0);
 	}
 	cam.u = vec3_unit(vec3_cross(vup, cam.w));
 	cam.v = vec3_cross(cam.w, cam.u);
