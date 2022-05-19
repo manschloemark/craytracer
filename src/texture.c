@@ -25,6 +25,12 @@ texture *add_normal_texture(memory_region *region) {
 	return (texture *)memory_region_add(region, &normtxt, sizeof(texture));
 }
 
+texture *add_signed_normal_texture(memory_region *region) {
+	texture normtxt = make_normal_texture();
+	normtxt.TextureColor = (*SignedNormalTextureColor);
+	return (texture *)memory_region_add(region, &normtxt, sizeof(texture));
+}
+
 // Color Texture - a solid color
 //
 color_texture color_texture_new(fcolor color) {
@@ -288,9 +294,29 @@ texture *add_level_curve_texture(memory_region *region, vec3 intervals, vec3 wid
 	return (texture *)memory_region_add(region, &lct, sizeof(texture));
 }
 
+texture make_distance_texture(point3 point, float cutoff, texture *textA, texture *textB) {
+	texture dtxt = {};
+	dtxt.TextureColor = (*DistanceTextureColor);
+	dtxt.type.distance = distance_texture_new(point, fabs(cutoff), textA, textB);
+	dtxt.id = Distance;
+	return dtxt;
+}
+
+texture *add_distance_texture(memory_region *region, point3 point, float cutoff, texture *textA, texture *textB) {
+	texture dtxt = make_distance_texture(point, cutoff, textA, textB);
+	return (texture *)memory_region_add(region, &dtxt, sizeof(texture));
+}
+
+/* TextureColor 'Methods' */
+
 // Assume all normals are unit vectors already. Pretty sure they are.
 fcolor NormalTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
 	fcolor norm_color = fcolor_new(fabs(normal->x), fabs(normal->y), fabs(normal->z));
+	return norm_color;
+}
+
+fcolor SignedNormalTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
+	fcolor norm_color = fcolor_new((normal->x *0.5) + 0.5, (0.5 * normal->y) + 0.5, (0.5 * normal->z) + 0.5);
 	return norm_color;
 }
 
@@ -364,7 +390,7 @@ fcolor MarbledNoiseTextureColor(void *self, float u, float v, vec3 pt, vec3 *nor
 	} else {
 		col = fcolor_new(1.0, 1.0, 1.0);
 	}
-	float n = 0.5 * (1.0 + sinf(pt.y + 10.0 * fbm(noise->noise, pt, 0.5, depth)));
+	float n = 0.5 * (1.0 + sinf(pt.y + 10.0 * fabsf(fbm(noise->noise, pt, 0.5, depth))));
 	return color_mul(col, n);
 }
 
@@ -372,8 +398,8 @@ fcolor NoiseSinCosTextureColor(void *self, float u, float v, vec3 pt, vec3 *norm
 	gradient_noise_texture *noise = &((texture *)self)->type.gradient_noise;
 	int depth = 7;
 	vec3 swizzled = vec3_new(pt.z, pt.x, pt.y);
-	float turb = sinf(noise->scale * 10.0 * fbm(noise->noise, pt, 0.5, depth));
-	turb *= cosf(noise->scale * fbm(noise->noise, swizzled, 0.5, depth));
+	float turb = sinf(noise->scale * 10.0 * fabsf(fbm(noise->noise, pt, 0.5, depth)));
+	turb *= cosf(noise->scale * fabsf(fbm(noise->noise, swizzled, 0.5, depth)));
 	if (turb > 0.0) {
 		return color_mul(((texture *)noise->colA)->TextureColor(noise->colA, u, v, pt, normal), turb);
 	} else {
@@ -391,14 +417,8 @@ fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt, vec3 *nor
 	return COLOR_UNDEFPURP;
 }
 
-// NOTE: I think depending on NAN is bad practice but it seems like it works here
 vec3 vec3_fmodf(vec3 *a, vec3 *m) {
 	vec3 r = {};
-	/*
-	r.x = (m->x == 0.0) ? NAN : fmodf(a->x, m->x);
-	r.y = (m->y == 0.0) ? NAN : fmodf(a->y, m->y);
-	r.z = (m->z == 0.0) ? NAN : fmodf(a->z, m->z);
-	*/
 
 	r.x = fmodf(a->x, m->x);
 	r.y = fmodf(a->y, m->y);
@@ -414,3 +434,12 @@ fcolor LevelCurveTextureColor(void *self, float u, float v, vec3 pt, vec3 *norma
 	return ((texture *)lc_txt.defaultColor)->TextureColor(((texture *)lc_txt.defaultColor), u, v, pt, normal);
 }
 
+fcolor DistanceTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
+	distance_texture dtxt = ((texture *)self)->type.distance;
+	fcolor colA = (dtxt.textA) ? ((texture *)dtxt.textA)->TextureColor(dtxt.textA, u, v, pt, normal) : COLOR_WHITE;
+	float dist = vec3_len(vec3_sub(pt, dtxt.pt));
+	if (dist >= dtxt.cutoff) return colA;
+	fcolor colB = (dtxt.textB) ? ((texture *)dtxt.textB)->TextureColor(dtxt.textB, u, v, pt, normal) : COLOR_BLACK;
+
+	return color_mix(colB, colA, dist/dtxt.cutoff);
+}

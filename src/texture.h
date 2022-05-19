@@ -67,6 +67,20 @@ static inline level_curve_texture level_curve_texture_new(vec3 intervals, vec3 w
 	return lc;
 }
 
+// Making this texture to help debug fbm offset shapes
+// Specify a point and a cutoff distance. The color will be a gradient scaled by the distance to the point.
+// Distance greater than the cutoff is white
+typedef struct {
+	point3 pt;
+	float cutoff;
+	void *textA, *textB;
+} distance_texture;
+
+static inline distance_texture distance_texture_new(vec3 point, float cutoff, void *textA, void *textB) {
+	distance_texture dt = {point, cutoff, textA, textB};
+	return dt;
+}
+
 enum TextureID {
 	Undefined,
 	Normal,
@@ -81,6 +95,7 @@ enum TextureID {
 	NoiseSinCos,
 	FBMMod,
 	LevelCurves,
+	Distance,
 };
 
 union texture_type {
@@ -92,6 +107,7 @@ union texture_type {
 	gradient_noise_texture gradient_noise;
 	fbm_modifier fbm_mod;
 	level_curve_texture level_curve;
+	distance_texture distance;
 };
 
 typedef struct {
@@ -102,6 +118,7 @@ typedef struct {
 
 texture make_normal_texture();
 texture *add_normal_texture(memory_region *region);
+texture *add_signed_normal_texture(memory_region *region);
 
 texture make_color_texture(fcolor color);
 texture *add_color_texture(memory_region *region, fcolor color);
@@ -147,8 +164,12 @@ texture *add_fbm_modifier(memory_region *region, noise *noise, float hurst, int 
 texture make_level_curve_texture(vec3 intervals, vec3 widths, texture *targetColor, texture *defaltColor);
 texture *add_level_curve_texture(memory_region *region, vec3 intervals, vec3 widths, texture *targetColor, texture *defaltColor);
 
+texture make_distance_texture(point3 point, float cutoff, texture *textA, texture *textB);
+texture *add_distance_texture(memory_region *region, point3 point, float cutoff, texture *textA, texture *textB);
+
 fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor NormalTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
+fcolor SignedNormalTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor ColorTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor ImageTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor CheckerTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
@@ -159,5 +180,6 @@ fcolor MarbledNoiseTextureColor(void *self, float u, float v, point3 pt, vec3 *n
 fcolor NoiseSinCosTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor FBMModifierTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
 fcolor LevelCurveTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal);
+fcolor DistanceTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal);
 
 #endif
