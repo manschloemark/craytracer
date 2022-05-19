@@ -473,7 +473,7 @@ float simplex_noise(void *src, vec3 *pt) {
 	float n0, n1, n2, n3;
 	float dot0, dot1, dot2, dot3;
 	float cont = 0.6;
-	float scale = 32.0;
+	float scale = 42.0;
 
 	float t0 = cont - x0*x0 - y0*y0 - z0*z0;
 	if (t0 < 0.0)
@@ -579,7 +579,7 @@ float simplex_noise_with_derivative(void *src, vec3 *pt, vec3 *d) {
 	float dot0, dot1, dot2, dot3;
 	vec3 d0 = vec3_new(0.0, 0.0, 0.0), d1 = vec3_new(0.0, 0.0, 0.0), d2 = vec3_new(0.0, 0.0, 0.0), d3 = vec3_new(0.0, 0.0, 0.0);
 	float cont = 0.6;
-	float scale = 32.0;
+	float scale = 42.0;
 
 	float t0 = cont - x0*x0 - y0*y0 - z0*z0;
 	if (t0 < 0.0)
