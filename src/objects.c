@@ -5,7 +5,7 @@
 // 1. uses the sphere's normal to a given point as input the fbm_with_derivative. This ensures the offset looks the same from all p.o.vs
 // 2. attemps to implement a ray marching algorithm because you can't do a simple intersection equation
 // 3. It's really slow and has a lot of holes. It looks really neat though.
-#define USE_RAYMARCH_FBM
+#define USE_RAYMARCH_FBM 1
 
 // Ensure the normal is pointing in the opposite direction of the incident ray
 // Return 0 if you had to negate the normal vector - that means the intersection was 'inside' the object
@@ -176,7 +176,7 @@ int IntersectFBMShape(void *self, ray *r, hit_record *hitrec) {
 	return hit;
 }
 
-#ifdef USE_RAYMARCH_FBM
+#if USE_RAYMARCH_FBM
 int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec) {
 	object *obj = self;
 	fbm_shape *fbm_obj = &obj->shape.fbm_shape;
