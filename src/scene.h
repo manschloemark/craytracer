@@ -1212,37 +1212,45 @@ scene FBM_NormalTest(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	material *lamb = add_lambertian(region);
 	material *mirror = add_metal(region, 0.01);
 
-	texture *white = add_color_texture(region, COLOR_VALUE(1.0));
+	texture *white = add_color_texture(region, COLOR_VALUE(0.7));
+	texture *gold = add_color_texture(region, fcolor_new(0.8, 0.78, 0.3));
+	texture *bronze = add_color_texture(region, fcolor_new(0.9, 0.7, 0.5));
 	texture *grn = add_color_texture(region, COLOR_GREEN);
 	texture *red = add_color_texture(region, COLOR_RED);
-	texture *gold = add_color_texture(region, fcolor_new(0.6, 0.66, 0.4));
+	texture *blue = add_color_texture(region, COLOR_BLUE);
 	texture *normal = add_normal_texture(region);
 	texture *snormal = add_signed_normal_texture(region);
 	texture *earth = add_image_texture(region, "../resource/earth.jpg", 3);
 	texture *tile = add_uv_checker_texture(region, red, grn, 64.0);
-	texture *tile2 = add_uv_checker_texture(region, normal, gold, 16.0);
+	texture *tile2 = add_uv_checker_texture(region, normal, white, 16.0);
 	texture *dist = add_distance_texture(region, vec3_new(0.0, 0.0, 0.0), 2.0, NULL, NULL);
 	//texture *levelcurve = add_level_curve_texture(region, vec3_new(0.0, 0.0, 0.05), vec3_new(0.0, 0.0, 0.01), white, normal);
 
 	object *sph;
 	object *sph2;
 	object *sph3;
-	sph  = add_sphere(region, vec3_new(0.0, 0.0, 0.0), 1.0, normal, lamb);
-	sph2 = add_sphere(region, vec3_new(0.0, -3.0, 1.0), 1.0, normal, lamb);
-	sph3 = add_sphere(region, vec3_new(0, 3.0, -2.0), 1.0, normal, lamb);
-	//sph = add_sphere(region, vec3_new(0.0, 0.0, 0.0), 1.0, snormal, lamb);
-	//sph = add_sphere(region, vec3_new(0.0, 0.0, 0.0), 1.0, white, mirror);
-	object *fbm_sph = add_fbm_sphere(region, shared_noise,  2.0, 1.0, 1.0, 5, sph);
-	object *fbm_sph2 = add_fbm_sphere(region, shared_noise,  1.0, 0.2, 1.0, 5, sph2);
+	if(0) {
+	texture *normtxt = normal;
+	sph  = add_sphere(region, vec3_new(0.0, 0.0, 0.0), 1.0, normtxt, lamb);
+	sph2 = add_sphere(region, vec3_new(-2.0, -3.0, -2.0), 3.0, normtxt, lamb);
+	sph3 = add_sphere(region, vec3_new(0, 3.0, -1.5), 0.5, normtxt, lamb);
+	} else {
+	sph  = add_sphere(region, vec3_new(0.0, 0.0, 0.0), 1.0, gold, mirror);
+	sph2 = add_sphere(region, vec3_new(-2.0, -3.0, -2.0), 3.0, white, mirror);
+	sph3 = add_sphere(region, vec3_new(0, 3.0, -1.5), 0.5, white, mirror);
+	}
+	object *fbm_sph = add_fbm_sphere(region, shared_noise,  2.0, 0.5, 1.0, 5, sph);
+	object *fbm_sph2 = add_fbm_sphere(region, shared_noise,  0.2, 0.2, 1.0, 5, sph2);
 	object *fbm_sph3 = add_fbm_sphere(region, shared_noise,  0.2, 0.2, 0.5, 5, sph3);
-	object *bg = add_sphere(region, vec3_new(107.0, 10.0, 0.0), 100.0, tile, lamb);
+
+	object *bg = add_sphere(region, vec3_new(110.0, 0.0, 0.0), 100.0, tile, lamb);
 	object *floor = add_triangle(region, vec3_new(10.0, 0.0, -1.5), vec3_new(-10.0, -10.0, -1.5), vec3_new(-10.0, 10.0, -1.5), tile2, lamb);
 
 	//objects[obj_index++] = sph;
 	objects[obj_index++] = fbm_sph;
 	objects[obj_index++] = fbm_sph2;
 	objects[obj_index++] = fbm_sph3;
-	//objects[obj_index++] = bg;
+	objects[obj_index++] = bg;
 	//objects[obj_index++] = floor;
 
 	s->objects = objects;
@@ -1376,24 +1384,29 @@ scene Planet(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	texture *land_src = add_noise_sincos_texture(region, shared_noise, 8.0, blue, pine);
 	texture *land = add_fbm_modifier(region, shared_noise, 0.5, 4, land_src);
 	texture *normal = add_normal_texture(region);
+	texture *snormal = add_signed_normal_texture(region);
 	
 	vec3 center = vec3_new(0.0, 0.0, -100.0);
 	texture *snowcaps = add_distance_texture(region, center, 200.0, white, land);
 
 	object *sph;
-	sph = add_sphere(region, center, 100.0, normal, lamb);
+	sph = add_sphere(region, center, 100.0, snormal, lamb);
 	object *fbm_sph = add_fbm_sphere(region, shared_noise,  1.0/16.0, 10.0, 1.0, 5, sph);
 
 	object *lightsrc = add_triangle(region, vec3_new(-50.0, 0.0, 25.0), vec3_new(50.0, -50.0, 25.0), vec3_new(50.0, 50.0, 25.0), white_light, light);
 
 	//objects[obj_index++] = sph;
 	objects[obj_index++] = fbm_sph;
-	//objects[obj_index++] = lightsrc;
+	objects[obj_index++] = lightsrc;
 
 	s->objects = objects;
 	s->object_count = obj_index;
+	
 
-	*o = vec3_new(200.0, 0.0, -50.0);
+	vec3 front = vec3_new(200.0, 0.0, -50.0);
+	vec3 side = vec3_new(0.0, 200.0, -50.0);
+	vec3 top_front = vec3_new(250.0, 0.0, -10.0);
+	*o = top_front;
 	*t = vec3_new(0.0, 0.0, -50.0);
 	return *s;
 }
