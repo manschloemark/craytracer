@@ -316,7 +316,7 @@ fcolor NormalTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
 }
 
 fcolor SignedNormalTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
-	fcolor norm_color = fcolor_new((normal->x *0.5) + 0.5, (0.5 * normal->y) + 0.5, (0.5 * normal->z) + 0.5);
+	fcolor norm_color = fcolor_new((normal->x < 0.0) ? 0.0 : normal->x, (normal->y < 0.0) ? 0.0 : normal->y, (normal->z < 0.0) ? 0.0 : normal->z);
 	return norm_color;
 }
 
