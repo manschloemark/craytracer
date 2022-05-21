@@ -412,7 +412,7 @@ scene BlackWhiteGlass(memory_region *region) {
 	return s;
 }
 
-scene RainbowCircle(memory_region *region) {
+void RainbowCircle(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	int object_count = 8;
 	int object_index = 0;
 	object **object_list = (object **)malloc(sizeof(object *) * object_count);
@@ -449,10 +449,11 @@ scene RainbowCircle(memory_region *region) {
 		++object_index;
 	}
 
-	scene s = {};
-	s.objects = object_list;
-	s.object_count = object_index;
-	return s;
+	*o = vec3_new(5.0, 0.0, 0.0);
+	*t = x_offset;
+
+	s->objects = object_list;
+	s->object_count = object_index;
 }
 
 scene TestReflection(memory_region *region) {
@@ -1352,7 +1353,7 @@ void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *
 			*s = BlackWhite(region);
 			return;
 		case 2:
-			*s =  RainbowCircle(region);
+			RainbowCircle(region, s, o, t);
 			return;
 		case 3:
 			*s =  TestReflection(region);
