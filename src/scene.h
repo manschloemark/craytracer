@@ -899,87 +899,53 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	texture *green = add_color_texture(region, fcolor_new(0.3, 1.0, 0.5));
 
 	texture *tile = add_uv_checker_texture(region, orange, white, 16.0);
-	texture *tile2 = add_uv_checker_texture(region, green, gray, 128.0);
+	texture *tile2 = add_uv_checker_texture(region, green, gray, 256.0);
 	texture *earth = add_image_texture(region, "../resource/earth.jpg", 3);
 	texture *perlin = add_noise_sincos_texture(region, shared_perlin, 2.0, pink, yellow);
 	texture *perlin2 = add_noise_texture(region, shared_perlin, 1.0);
 	texture *perlin3 = add_noise_sincos_texture(region, shared_perlin, 1.0, pink, white);
 	texture *normal = add_normal_texture(region);
+	texture *snormal = add_signed_normal_texture(region);
 	texture *xz_levelcurves = add_level_curve_texture(region, vec3_new(0.1, 0.0, 0.1), vec3_new(0.05, 0.0, 0.05), yellow, teal);
 
 	// TODO : make loop to test many different scales quickly
 
-	object *ground = add_triangle(region, vec3_new(-1000.0, -1000.0, 0.0), vec3_new(-1000.0, 1000.0, 0.0), vec3_new(1000.0, 0.0, 0.0), white, mirror);
+	object *ground = add_triangle(region, vec3_new(-1000.0, -1000.0, 0.0), vec3_new(-1000.0, 1000.0, 0.0), vec3_new(1000.0, 0.0, 0.0), tile2, mirror);
 
 	float x_offset = 2.0; 
 	float y_offset = 2.0;
 	float radius = 1.0;
 	float z_offset = radius;
-	float r_offset[4] = {0.0, 0.1, 0.4, 0.6};
+	float offset_scale[4] = {0.0, 0.2, 0.5, 1.0};
 	int index = 0;
 	vec3 points[24];
 	int num_cols = 6, num_rows = 4;
 	for (int i = 0; i < num_cols; ++i) {
 		for (int j = 0; j < num_rows; ++j) {
-			points[index++] = vec3_new((float)i * (x_offset + radius), (float)j * (y_offset + radius), z_offset + r_offset[j]);
+			points[index++] = vec3_new((float)i * (x_offset + radius), (float)j * (y_offset + radius) + offset_scale[j], z_offset + offset_scale[j]);
 		}
 	}
+	texture *textures[6] = {perlin2, snormal, xz_levelcurves, perlin, tile, tile};
+	material *materials[6] = {lamb, lamb, lamb, lamb, metal, lamb};
 
 	index = 0;
 
-	// TODO : add another row of objects - non-uv tiles
-
 	int octaves = 24;
-	float perlin_scale = 0.2;
-	object *perlin_noise_sphere_ctrl = add_sphere(region, points[index++], radius, perlin2, lamb);
-	object *perlin_noise_sphere_1_src = add_sphere(region, points[index++], radius, perlin2, lamb);
-	object *perlin_noise_sphere_1 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.1, 1.0, octaves, perlin_noise_sphere_1_src);
-	object *perlin_noise_sphere_2_src = add_sphere(region, points[index++], radius, perlin2, lamb);
-	object *perlin_noise_sphere_2 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.4, 1.0, octaves, perlin_noise_sphere_2_src);
-	object *perlin_noise_sphere_3_src = add_sphere(region, points[index++], radius, perlin2, lamb);
-	object *perlin_noise_sphere_3 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.6, 1.0, octaves, perlin_noise_sphere_3_src);
-
-	object *normal_sphere_ctrl = add_sphere(region, points[index++], radius, normal, lamb);
-	object *normal_sphere_1_src = add_sphere(region, points[index++], radius, normal, lamb);
-	object *normal_sphere_1 = add_fbm_sphere(region, shared_simp,  perlin_scale, 0.1, 1.0, octaves,normal_sphere_1_src);
-	object *normal_sphere_2_src = add_sphere(region, points[index++], radius, normal, lamb);
-	object *normal_sphere_2 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.4, 1.0, octaves, normal_sphere_2_src);
-	object *normal_sphere_3_src = add_sphere(region, points[index++], radius, normal, lamb);
-	object *normal_sphere_3 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.6, 1.0, octaves, normal_sphere_3_src);
-
-	object *lc_sphere_ctrl = add_sphere(region, points[index++], radius, xz_levelcurves, lamb);
-	object *lc_sphere_1_src = add_sphere(region, points[index++], radius, xz_levelcurves, lamb);
-	object *lc_sphere_1 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.1, 1.0, octaves, lc_sphere_1_src);
-	object *lc_sphere_2_src = add_sphere(region, points[index++], radius, xz_levelcurves, lamb);
-	object *lc_sphere_2 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.4, 1.0, octaves,lc_sphere_2_src);
-	object *lc_sphere_3_src = add_sphere(region, points[index++], radius, xz_levelcurves, lamb);
-	object *lc_sphere_3 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.6, 1.0, octaves, lc_sphere_3_src);
-
-	object *perlin_sphere_ctrl = add_sphere(region, points[index++], radius, perlin, lamb);
-	object *perlin_sphere_1_src = add_sphere(region, points[index++], radius, perlin, lamb);
-	object *perlin_sphere_1 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.1, 1.0, octaves, perlin_sphere_1_src);
-	object *perlin_sphere_2_src = add_sphere(region, points[index++], radius, perlin, lamb);
-	object *perlin_sphere_2 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.4, 1.0, octaves, perlin_sphere_2_src);
-	object *perlin_sphere_3_src = add_sphere(region, points[index++], radius, perlin, lamb);
-	object *perlin_sphere_3 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.6, 1.0, octaves, perlin_sphere_3_src);
-
-	object *tile_metal_sphere_ctrl = add_sphere(region, points[index++], radius, tile, metal);
-	object *tile_metal_sphere_1_src = add_sphere(region, points[index++], radius, tile, metal);
-	object *tile_metal_sphere_1 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.1, 1.0, octaves, tile_metal_sphere_1_src);
-	object *tile_metal_sphere_2_src = add_sphere(region, points[index++], radius, tile, metal);
-	object *tile_metal_sphere_2 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.4, 1.0, octaves, tile_metal_sphere_2_src);
-	object *tile_metal_sphere_3_src = add_sphere(region, points[index++], radius, tile, metal);
-	object *tile_metal_sphere_3 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.6, 1.0, octaves, tile_metal_sphere_3_src);
-
-	object *tile_sphere_ctrl = add_sphere(region, points[index++], radius, tile, lamb);
-	object *tile_sphere_1_src = add_sphere(region, points[index++], radius, tile, lamb);
-	object *tile_sphere_1 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.1, 1.0, octaves, tile_sphere_1_src);
-	object *tile_sphere_2_src = add_sphere(region, points[index++], radius, tile, lamb);
-	object *tile_sphere_2 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.4, 1.0, octaves, tile_sphere_2_src);
-	object *tile_sphere_3_src = add_sphere(region, points[index++], radius, tile, lamb);
-	object *tile_sphere_3 = add_fbm_sphere(region, shared_simp, perlin_scale, 0.6, 1.0, octaves, tile_sphere_3_src);
-
-
+	float perlin_scale = 0.5;
+	int hurst = 1.0;
+	for (int c = 1; c < num_cols; ++c) {
+			object *control_sphere = add_sphere(region, points[index++], radius, textures[c], materials[c]);
+			object *source_sphere_1 = add_sphere(region, points[index++], radius, textures[c], materials[c]);
+			object *source_sphere_2 = add_sphere(region, points[index++], radius, textures[c], materials[c]);
+			object *source_sphere_3 = add_sphere(region, points[index++], radius, textures[c], materials[c]);
+			object *fbm_sphere_1 = add_fbm_sphere(region, shared_simp, perlin_scale, offset_scale[1], hurst, octaves, source_sphere_1);
+			object *fbm_sphere_2 = add_fbm_sphere(region, shared_simp, perlin_scale, offset_scale[2], hurst, octaves, source_sphere_2);
+			object *fbm_sphere_3 = add_fbm_sphere(region, shared_simp, perlin_scale, offset_scale[3], hurst, octaves, source_sphere_3);
+			objects[obj_index++] = control_sphere;
+			objects[obj_index++] = fbm_sphere_1;
+			objects[obj_index++] = fbm_sphere_2;
+			objects[obj_index++] = fbm_sphere_3;
+	}
 
 	float z = 12.0;
 	vec3 pt_a = vec3_new(-3.0 + x_offset, -3.0, z);
@@ -1015,41 +981,10 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 
 	objects[obj_index++] = ground;
 
-	objects[obj_index++] = perlin_sphere_ctrl;
-	objects[obj_index++] = perlin_sphere_1;
-	objects[obj_index++] = perlin_sphere_2;
-	objects[obj_index++] = perlin_sphere_3;
-	objects[obj_index++] = normal_sphere_ctrl;
-	objects[obj_index++] = normal_sphere_1;
-	objects[obj_index++] = normal_sphere_2;
-	objects[obj_index++] = normal_sphere_3;
-	objects[obj_index++] = lc_sphere_ctrl;
-	objects[obj_index++] = lc_sphere_1;
-	objects[obj_index++] = lc_sphere_2;
-	objects[obj_index++] = lc_sphere_3;
-	objects[obj_index++] = tile_sphere_ctrl;
-	objects[obj_index++] = tile_sphere_1;
-	objects[obj_index++] = tile_sphere_2;
-	objects[obj_index++] = tile_sphere_3;
-	objects[obj_index++] = perlin_noise_sphere_ctrl;
-	objects[obj_index++] = perlin_noise_sphere_1;
-	objects[obj_index++] = perlin_noise_sphere_2;
-	objects[obj_index++] = perlin_noise_sphere_3;
-	objects[obj_index++] = tile_metal_sphere_ctrl;
-	objects[obj_index++] = tile_metal_sphere_1;
-	objects[obj_index++] = tile_metal_sphere_2;
-	objects[obj_index++] = tile_metal_sphere_3;
-	//objects[obj_index++] = floor_left1;
-	//objects[obj_index++] = floor_left2;
-	//objects[obj_index++] = angled_tri_left;
-	//objects[obj_index++] = floor_right1;
-	//objects[obj_index++] = floor_right2;
-	//objects[obj_index++] = angled_tri_right;
-
 	s->objects = objects;
 	s->object_count = obj_index;
 
-	*o = vec3_new(-(((float)num_rows) * (x_offset + radius)) - 1.0, ((float)num_cols) * (radius + y_offset) + 8.0, 10.0);
+	*o = vec3_new(-(((float)num_rows) * (x_offset + radius)) - 1.0, ((float)num_cols) * (radius + y_offset) + 8.0, 15.0);
 	vec3 center_of_objects = vec3_new((x_offset + radius) * (float)(num_rows / 2), (radius + y_offset) * (float)(num_cols / 2), 0.0);
 	*t = center_of_objects;
 	return *s;
