@@ -192,21 +192,17 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec) {
 
 	// Check if starting point of ray is inside of the 'max possible sphere'
 	// if it is then you should go straight to the raymarch step
-	// Otherwise check if the ray would hit the sphere in the 'worst' case (largest possible radius)
-	// this saves SO MUCH TIME just because of how expensive fbm is.
 	float dist_to_sphere = vec3_len(vec3_sub(r->pt, temp_sphere.shape.sphere.center));
 	if (dist_to_sphere < max_radius) {
-		temp_hitrec.t = 0.001;
-	} else if(!sph->Intersect(&temp_sphere, r, &temp_hitrec)) {
+		temp_hitrec.t = 0.0;
+	}
+	// An appropriate bounding sphere is the child sphere it's radius extended by fbm_obj->offset_scale
+	// if the ray doesn't intersect with this sphere you can just exit
+	else if(!sph->Intersect(&temp_sphere, r, &temp_hitrec)) {
 		return 0;
 	}
 
-	// If the ray intersects the sphere with the largest possible radius you need to check if it intersects with the real fbm offsets
-	// To generate offsets on the sphere I will use the vectors normal to the sphere at the points
-	// This way the sphere looks the same from all points of view.
-	//
-	// But this is going to be pretty expensive.
-	//
+	// If you make it here you are going to have to check against the actual fbm offset values
 	int hit = 0;
 	vec3 d = vec3_new(0.0, 0.0, 0.0);
 	vec3 normal;
@@ -218,9 +214,10 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec) {
 	// If that's the case then the only way you need to draw the sphere is if the offset at that point is the max
 	float min_t = temp_hitrec.t;
 	hit_record temp_hitrec2 = *hitrec;
+	// Make a new ray that is slight forward along the ray to avoid hitting the same spot twice
 	ray ray_from_hit = ray_new(pt_on_ray(r, min_t + 0.01), r->dir);
 
-	if(!sph->Intersect(&temp_sphere, &ray_from_hit, &temp_hitrec2)) {
+	if(!sph->Intersect(&temp_sphere, &ray_from_hit, &temp_hitrec2)) { // No intersection
 		noise_input = vec3_mul(temp_hitrec.n, noise_scale);
 		fbm_value = fbm_obj->offset_scale * fbm_with_derivative(fbm_obj->noise, noise_input, fbm_obj->hurst, fbm_obj->octaves, &d);
 		offset_radius = sph->shape.sphere.radius + fbm_value;
