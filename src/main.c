@@ -81,7 +81,7 @@ void Render(fcolor *pixels, int samples, int height, int width, int max_depth, c
 	}
 	int i, j;
 	for (j = height-1; j >= 0; --j) {
-		printf("\r%d lines remaining", j);
+		printf("Lines remaining: %-6d\r", j);
 		for (i = 0; i < width; ++i) {
 			int s;
 			for (s = 0; s < samples; ++s) {
@@ -95,7 +95,6 @@ void Render(fcolor *pixels, int samples, int height, int width, int max_depth, c
 			++pixels;
 		}
 	}
-	printf("\r");
 }
 
 struct render_info {
@@ -109,23 +108,28 @@ struct render_info {
 struct render_thread {
 	struct render_info *rinfo;
 	int start_i, start_j;
-	int chunk_width, chunk_height;
+	int chunk_width, chunk_height, end_i, end_j;
+
+	int id;
 };
 
 void RenderChunk(void *args) {
 	struct render_thread *rthread = (struct render_thread *)args;
 	struct render_info *rinfo = rthread->rinfo;
-	for (int j = rthread->start_j; j >= rthread->start_j - rthread->chunk_height; --j) {
-		for (int i = rthread->start_i; i < rthread->start_i + rthread->chunk_width; ++i) {
+	int pixel_row_offset = (rinfo->height - 1 - rthread->start_j) * rinfo->width;
+	for (int j = rthread->start_j; j > rthread->end_j; --j) {
+		for (int i = rthread->start_i; i < rthread->end_i; ++i) {
 			for (int s = 0; s < rinfo->samples; ++s) {
 				float u = ((float)i + random_float()) / (float)(rinfo->width-1);
 				float v = ((float)j + random_float()) / (float)(rinfo->height-1);
 
 				ray r = camera_cast_ray(rinfo->cam, u, v);
 				fcolor sample = TraceRay(r, rinfo->scene, rinfo->bgcolor, rinfo->max_depth, rinfo->max_depth);
-				COLOR_ADD(rinfo->pixels[(j * rinfo->width) + i], sample); 
+
+				COLOR_ADD(rinfo->pixels[pixel_row_offset + i], sample); 
 			}
 		}
+		pixel_row_offset += rinfo->width;
 	}
 }
 
@@ -153,28 +157,45 @@ void MultithreadRender(int thread_count, fcolor *pixels, int samples, int height
 	int chunk_height = 16;
 	int chunk_width = 16;
 	int i, j;
-	for (j = height-1; j >= 0; j -=chunk_height) {
+	int c = 0;
+	int chunk_count = width / chunk_width * height / chunk_height;
+	printf("Starting multithread render. %d total chunks.\n", (chunk_count));
+	for (j = height-1; j >= 0; j -=(chunk_height)) {
 		for (i = 0; i < width; i += chunk_width) {
+			printf("Chunks remaining: %-6d\r", chunk_count - c);
 			pthread_t thread1, thread2;
 			struct render_thread rthread1 = {};
+			rthread1.id = 1;
+			struct render_thread rthread2 = {};
+			rthread2.id = 2;
+
 			rthread1.rinfo = &rinfo;
 			rthread1.start_i = i;
 			rthread1.start_j = j;
-			rthread1.chunk_width = chunk_width / 2;
+			rthread1.chunk_width = (chunk_width / 2);
 			rthread1.chunk_height = chunk_height;
+			int end_i1 = (rthread1.start_i + rthread1.chunk_width >= width) ? width : (rthread1.start_i + rthread1.chunk_width);
+			int end_j1 = (rthread1.start_j - rthread1.chunk_height <= 0) ? -1 : (rthread1.start_j - rthread1.chunk_height);
+			rthread1.end_i = end_i1;
+			rthread1.end_j = end_j1;
 
-			struct render_thread rthread2 = {};
+			// Thread 2
 			rthread2.rinfo = &rinfo;
-			rthread2.start_i = i + rthread1.chunk_width;
-			rthread2.start_j = j - rthread1.chunk_height;
-			rthread2.chunk_width = chunk_width / 2;
+			rthread2.start_i = rthread1.end_i;
+			rthread2.start_j = j;
+			rthread2.chunk_width = (chunk_width - rthread1.chunk_width);
 			rthread2.chunk_height = chunk_height;
+			int end_i2 = (rthread2.start_i + rthread2.chunk_width >= width) ? width : (rthread2.start_i + rthread2.chunk_width);
+			int end_j2 = (rthread2.start_j - rthread2.chunk_height <= 0) ? -1 : (rthread2.start_j - rthread2.chunk_height);
+			rthread2.end_i = end_i2;
+			rthread2.end_j = end_j2;
 
 			pthread_create(&thread1, NULL, (void *)RenderChunk, &rthread1);
 			pthread_create(&thread2, NULL, (void *)RenderChunk, &rthread2);
 
 			pthread_join(thread1, NULL);
 			pthread_join(thread2, NULL);
+			++c;
 		}
 	}
 }
