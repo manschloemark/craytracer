@@ -76,6 +76,7 @@ threadpool *threadpool_new(int thread_count) {
 }
 
 void threadpool_free(threadpool *pool) {
+	if(pool == NULL) return;
 	pthread_mutex_lock(&pool->job_mutex);
 	threadpool_job *job = pool->job_head;
 	threadpool_job *next_job = NULL;
