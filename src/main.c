@@ -9,6 +9,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <pthread.h>
 
@@ -70,46 +71,39 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 	return recursive_result;
 }
 
-void Render(fcolor *pixels, int samples, int height, int width, int max_depth, camera *cam, scene *scene) {
-	// By default, set bgcolor to something light. Then check the scene to see if it has any light objects
-	// If there are lights in the scene, set the background color to black so the lights are the only source of light.
-	fcolor bgcolor = COLOR_VALUE(0.5);
-	for (int obj_index = 0; obj_index < scene->object_count; ++obj_index) {
-		if (scene->objects[obj_index]->mat->id == DiffuseLight) {
-			bgcolor = COLOR_BLACK;
-			break;
-		}
-	}
-	int i, j;
-	for (j = height-1; j >= 0; --j) {
-		printf("Lines remaining: %-6d\r", j);
-		for (i = 0; i < width; ++i) {
-			int s;
-			for (s = 0; s < samples; ++s) {
-				float u = ((float)i + random_float()) / (float)(width-1);
-				float v = ((float)j + random_float()) / (float)(height-1);
-
-				ray r = camera_cast_ray(cam, u, v);
-				fcolor sample = TraceRay(r, scene, &bgcolor, max_depth, max_depth);
-				COLOR_ADD(*pixels, sample); 
-			}
-			++pixels;
-		}
-	}
-}
-
 struct render_info {
 	int samples, height, width, max_depth;
 	fcolor *bgcolor;
 	fcolor *pixels;
 	camera *cam;
 	scene *scene;
+	int *chunks_remaining;
 };
+
+void Render(struct render_info *rinfo) {
+	fcolor *pixels = rinfo->pixels;
+	for (int j = rinfo->height-1; j >= 0; --j) {
+		printf("Lines remaining: %-6d\r", j);
+		for (int i = 0; i < rinfo->width; ++i) {
+			int s;
+			for (s = 0; s < rinfo->samples; ++s) {
+				float u = ((float)i + random_float()) / (float)(rinfo->width-1);
+				float v = ((float)j + random_float()) / (float)(rinfo->height-1);
+
+				ray r = camera_cast_ray(rinfo->cam, u, v);
+				fcolor sample = TraceRay(r, rinfo->scene, rinfo->bgcolor, rinfo->max_depth, rinfo->max_depth);
+				COLOR_ADD(*pixels, sample); 
+			}
+			++pixels;
+		}
+	}
+	printf("\nDone.\n");
+}
+
 
 struct render_thread {
 	struct render_info *rinfo;
-	int start_i, start_j;
-	int chunk_width, chunk_height, end_i, end_j;
+	int start_j, end_j;
 };
 
 void RenderChunk(void *args) {
@@ -117,7 +111,7 @@ void RenderChunk(void *args) {
 	struct render_info *rinfo = rthread->rinfo;
 	int pixel_row_offset = (rinfo->height - 1 - rthread->start_j) * rinfo->width;
 	for (int j = rthread->start_j; j > rthread->end_j; --j) {
-		for (int i = rthread->start_i; i < rthread->end_i; ++i) {
+		for (int i = 0; i < rinfo->width; ++i) {
 			for (int s = 0; s < rinfo->samples; ++s) {
 				float u = ((float)i + random_float()) / (float)(rinfo->width-1);
 				float v = ((float)j + random_float()) / (float)(rinfo->height-1);
@@ -130,70 +124,50 @@ void RenderChunk(void *args) {
 		}
 		pixel_row_offset += rinfo->width;
 	}
+	*rinfo->chunks_remaining -= 1;
+	printf("Bands remaining: %-6d\r", *rinfo->chunks_remaining);
 }
 
-void MultithreadRender(int thread_count, fcolor *pixels, int samples, int height, int width, int max_depth, camera *cam, scene *scene, threadpool *pool) {
-	// By default, set bgcolor to something light. Then check the scene to see if it has any light objects
-	// If there are lights in the scene, set the background color to black so the lights are the only source of light.
-	fcolor bgcolor = COLOR_VALUE(0.5);
-	for (int obj_index = 0; obj_index < scene->object_count; ++obj_index) {
-		if (scene->objects[obj_index]->mat->id == DiffuseLight) {
-			bgcolor = COLOR_BLACK;
-			break;
-		}
-	}
+void MultithreadRender(struct render_info *rinfo, threadpool *pool) {
 
-	struct render_info rinfo = {};
-	rinfo.samples = samples;
-	rinfo.height = height;
-	rinfo.width = width;
-	rinfo.max_depth = max_depth;
-	rinfo.cam = cam;
-	rinfo.scene = scene;
-	rinfo.pixels = pixels;
-	rinfo.bgcolor = &bgcolor;
-
-	int chunk_height = 64;
-	int chunk_width = 64;
-	int i, j;
+	int chunk_height = rinfo->height / pool->thread_count;
+	int j;
 	int c = 0;
-	int i_chunks = (int)(ceilf((float)width / (float)chunk_width));
-	int j_chunks = (int)(ceilf((float)height / (float)chunk_height));
-	int chunk_count = i_chunks * j_chunks;	
-	struct render_thread *rthread_ptr = calloc(chunk_count, sizeof(struct render_thread));
-	struct render_thread *rthreads = rthread_ptr;
-	printf("Starting multithread render. %d total chunks.\n", (chunk_count));
-	for (j = height-1; j >= 0; j -=(chunk_height)) {
-		for (i = 0; i < width; i += chunk_width) {
-			struct render_thread rthread = {};
-			rthread.rinfo = &rinfo;
-			rthread.start_i = i;
-			rthread.start_j = j;
-			rthread.chunk_width = chunk_width;
-			rthread.chunk_height = chunk_height;
-			int end_i1 = (rthread.start_i + rthread.chunk_width >= width) ? width : (rthread.start_i + rthread.chunk_width);
-			int end_j1 = (rthread.start_j - rthread.chunk_height <= 0) ? -1 : (rthread.start_j - rthread.chunk_height);
-			rthread.end_i = end_i1;
-			rthread.end_j = end_j1;
-			*rthreads = rthread;
-
-			threadpool_add_job(pool, RenderChunk, rthreads);
-			++rthreads;
-		}
+	int bands = (int)(ceilf((float)rinfo->height / (float)chunk_height));
+	*rinfo->chunks_remaining = bands;
+	struct render_thread *rthreads = calloc(bands, sizeof(struct render_thread));
+	int i = 0;
+	for (j = rinfo->height-1; j >= 0; j -= (chunk_height)) {
+		rthreads[i].rinfo = rinfo;
+		rthreads[i].start_j = j;
+		rthreads[i].end_j = (rthreads[i].start_j - chunk_height <= 0)
+					? -1
+					: (rthreads[i].start_j - chunk_height);
+		int added = threadpool_add_job(pool, RenderChunk, &rthreads[i]);
+		++i;
 	}
-	printf("Gonna go wait now.\n");
+ 	// NOTE : my threadpool seems to be slow to pick up jobs so I have to wait and left
+	//        the threads in threadpool_worker() take jobs
+	//        theres gotta be a better way to do this. Probably just make another
+	//        pthread_cond but idk it seems like theres a better way
+	printf("Bands remaining: %-6d\r", bands);
+	if(pool->active_count == 0) {
+		usleep(1000);
+	}
 	threadpool_wait(pool);
-	free(rthread_ptr);
+	free(rthreads);
+	printf("\nDone.\n");
 }
 
 
 int main(int argc, char **argv) {
-	timer runtime = {};
-	timer render_timer = {};
+	timer runtime = timer_new();
+	timer render_timer = timer_new();
 	TIMER_START(runtime);
 
 	struct arguments args = {};
-	// Default args
+	args.outfile = NULL;
+	args.verbose = 0;
 	args.img_width = 1280;
 	args.img_height = 0;
 	args.samples = 10;
@@ -202,6 +176,7 @@ int main(int argc, char **argv) {
 	args.seed = 0;
 	args.jpeg_quality = 100;
 	args.vfov = 60.0;
+	args.threadcount = 4;
 
 	if (argp_parse(&argp, argc, argv, 0, 0, &args)) {
 		puts("Error parsing arguments. Use -? for help.");
@@ -238,23 +213,50 @@ int main(int argc, char **argv) {
 	point3 target = vec3_new(0.0, 0.0, 0.0);
 	scene s = {};
 	SceneSelect(&mem_region, args.scene, &s, &origin, &target);
+	// By default, set bgcolor to something light. Then check the scene to see if it has any light objects
+	// If there are lights in the scene, set the background color to black so the lights are the only source of light.
+	fcolor bgcolor = COLOR_VALUE(0.5);
+	for (int obj_index = 0; obj_index < s.object_count; ++obj_index) {
+		if (s.objects[obj_index]->mat->id == DiffuseLight) {
+			bgcolor = COLOR_BLACK;
+			break;
+		}
+	}
 
 	//point3 origin = vec3_new(0.0, 0.0, 0.0);
 	vec3 vup = {0.0, 0.0, 1.0};
 	float focal_length = vec3_len(vec3_sub(target, origin));
 	camera cam = make_camera(origin, target, vup, args.vfov, aspect_ratio, focal_length);
 
+	// TODO : undo the || eventually
+	if (args.verbose || 1)
+		printf("Memory region use: %d / %d bytes.\n", mem_region.used, mem_region.max_size);
 
-	// NOTE : undo the || eventually
-	if (args.verbose || 1) printf("Memory region use: %d / %d bytes.\n", mem_region.used, mem_region.max_size);
+	fcolor *pixels = calloc(args.img_height * args.img_width, sizeof(fcolor)); 
 
-	fcolor *pixels = malloc(args.img_height * args.img_width * sizeof(fcolor)); 
+	struct render_info render_args = {};
+	render_args.height = args.img_height;
+	render_args.width = args.img_width;
+	render_args.samples = args.samples;
+	render_args.max_depth = args.max_depth;
+	render_args.bgcolor = &bgcolor;
+	render_args.pixels = pixels;
+	render_args.cam = &cam;
+	render_args.scene = &s;
 
-	threadpool *pool = threadpool_new(13);
+	int chunks = 0;
+	render_args.chunks_remaining = &chunks;
+
 	TIMER_START(render_timer);
-	MultithreadRender(2, pixels, args.samples, args.img_height, args.img_width, args.max_depth, &cam, &s, pool);
+	threadpool *pool = NULL;
+	if(args.threadcount == 1)
+		Render(&render_args);
+	else {
+		setbuf(stdout, NULL);
+		pool = threadpool_new(args.threadcount);
+		MultithreadRender(&render_args, pool);
+	}
 	TIMER_END(render_timer);
-	threadpool_free(pool);
 
 
 	uint8_t *uint8_t_pixels = PixelToUInt8(pixels, args.samples, args.img_height, args.img_width, bytes_per_channel);
@@ -267,10 +269,14 @@ int main(int argc, char **argv) {
 	FreeScene(&s);
 	FreeMemoryRegion(&mem_region);
 
+	threadpool_free(pool);
+
 	TIMER_END(runtime);
 		
 	printf("Render Time: %ds\n", TIMER_DURATION_S(render_timer));
 	printf("Total Time: %ds\n", TIMER_DURATION_S(runtime));
+	timer_free(&render_timer);
+	timer_free(&runtime);
 
 	if (saved) {
 		puts("Image saved successfully.");
