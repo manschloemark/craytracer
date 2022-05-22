@@ -1,6 +1,7 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
+#include "common.h"
 #include "vector3.h"
 #include "ray.h"
 #include "memory.h"
@@ -11,7 +12,7 @@ vec3 vec3_refract(vec3 v, vec3 n, float ior_ratio);
 typedef struct {
 } lambertian;
 
-vec3 ScatterLambertian(vec3 *n);
+vec3 ScatterLambertian(vec3 *n, thread_context *thread);
 
 typedef struct { 
 	float blur;
@@ -23,7 +24,7 @@ static inline metal metal_new(float blur) {
 	return metal;
 }
 
-vec3 ScatterMetal(metal m, vec3 v, vec3 *n);
+vec3 ScatterMetal(metal m, vec3 v, vec3 *n, thread_context *thread);
 
 // TODO : find a better name for this. It's not just glass, but any medium light can travel _through_
 typedef struct {
@@ -41,10 +42,10 @@ typedef struct {
 } diffuse_light;
 
 // Schlick's Approximation is a formula for approximating contribution of Fresnel factor in specular reflection
-// 1.0 here is tecnically n1 but it is assumed to be air all the time.
+// 1.0f here is tecnically n1 but it is assumed to be air all the time.
 float schlick_approximation(float cos_incident, float ior_ratio);
 
-vec3 ScatterGlass(glass g, vec3 v, vec3 *n, float n1, int hit_front);
+vec3 ScatterGlass(glass g, vec3 v, vec3 *n, float n1, int hit_front, thread_context *thread);
 
 enum MaterialID {
 	Lambertian,
@@ -83,5 +84,5 @@ material *add_glass(memory_region *region, float ior);
 
 material *add_diffuse_light(memory_region *region); 
 
-int Scatter(material *mat, int hit_front, vec3 *n, ray *r); 
+int Scatter(material *mat, int hit_front, vec3 *n, ray *r, thread_context *thread); 
 #endif

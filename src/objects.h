@@ -1,6 +1,7 @@
 #ifndef OBJECTS_H
 #define OBJECTS_H
 
+#include "common.h"
 #include "vector3.h"
 #include "ray.h"
 #include "color.h"
@@ -56,7 +57,7 @@ union shape {
 };
 
 typedef struct {
-	int (*Intersect)(void *self, ray *r, hit_record *hitrec);
+	int (*Intersect)(void *self, ray *r, hit_record *hitrec, thread_context *thread);
 	vec3 (*Normal)(void *self, vec3 relative);
 	union shape shape;
 	material *mat;
@@ -81,14 +82,14 @@ object *add_fbm_sphere(memory_region *region, noise *noise, float scale, float o
 
 
 // TODO : I only make s a pointer here because I don't feel like fixing all the ->, fix it later (also in IntersectTriangle)
-int IntersectSphere(void *self, ray *r, hit_record *hitrec);
+int IntersectSphere(void *self, ray *r, hit_record *hitrec, thread_context *thread);
 
-int IntersectTriangle(void *self, ray *r, hit_record *hitrec);
+int IntersectTriangle(void *self, ray *r, hit_record *hitrec, thread_context *thread);
 
-int Intersect(void *self, ray *r, hit_record *hitrec);
+int Intersect(void *self, ray *r, hit_record *hitrec, thread_context *thread);
 
-int IntersectFBMShape(void *self, ray *r, hit_record *hitrec);
-int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec);
+int IntersectFBMShape(void *self, ray *r, hit_record *hitrec, thread_context *thread);
+int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec, thread_context *thread);
 
 vec3 SphereNormal(void *self, vec3 relative);
 

@@ -28,17 +28,17 @@
 
 #include "threadpool.h"
 
-fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldepth) {
-	if (calldepth <= 0) return fcolor_new(0.0, 0.0, 0.0);
+fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldepth, thread_context *thread) {
+	if (calldepth <= 0) return fcolor_new(0.0f, 0.0f, 0.0f);
 
 	hit_record hitrec = {};
-	hitrec.t_min = 0.0001; // Prevent rounding errors when t ~~ 0.0;
-	hitrec.t = 123123902.0; // TODO : make some const to use for this instead
+	hitrec.t_min = 0.0001f; // Prevent rounding errors when t ~~ 0.0f;
+	hitrec.t = 123123902.0f; // TODO : make some const to use for this instead
 
 	int hit = 0;
 	int c = 0;
 	while(c < scene->object_count) {
-		hit |= scene->objects[c]->Intersect(scene->objects[c], &r, &hitrec);
+		hit |= scene->objects[c]->Intersect(scene->objects[c], &r, &hitrec, thread);
 		++c;
 	}
 
@@ -47,7 +47,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 	ray scattered_ray = {};
 	scattered_ray.pt = hitrec.pt;
 	scattered_ray.dir = r.dir;
-	int scattered = Scatter(hitrec.mat, hitrec.hit_front, &hitrec.n, &scattered_ray);
+	int scattered = Scatter(hitrec.mat, hitrec.hit_front, &hitrec.n, &scattered_ray, thread);
 
  // NOTE : if the ray does not scatter the material is diffuse light
  // if it hit the back of a light I don't want it to emit light, so return black instead
@@ -66,7 +66,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 	}
 
 	// NOTE : I only assign this to a variable for debugging purposes
-	fcolor recursive_result = TraceRay(scattered_ray, scene, bgcolor, maxdepth, calldepth - 1);
+	fcolor recursive_result = TraceRay(scattered_ray, scene, bgcolor, maxdepth, calldepth - 1, thread);
 	COLOR_MUL(recursive_result, hitrec.text->TextureColor(hitrec.text, hitrec.u, hitrec.v, hitrec.pt, &hitrec.n));
 	return recursive_result;
 }
@@ -80,18 +80,18 @@ struct render_info {
 	int *chunks_remaining;
 };
 
-void Render(struct render_info *rinfo) {
+void Render(struct render_info *rinfo, thread_context *thread) {
 	fcolor *pixels = rinfo->pixels;
 	for (int j = rinfo->height-1; j >= 0; --j) {
 		printf("Lines remaining: %-6d\r", j);
 		for (int i = 0; i < rinfo->width; ++i) {
 			int s;
 			for (s = 0; s < rinfo->samples; ++s) {
-				float u = ((float)i + random_float()) / (float)(rinfo->width-1);
-				float v = ((float)j + random_float()) / (float)(rinfo->height-1);
+				float u = ((float)i + random_float(&thread->rand_state)) / (float)(rinfo->width-1);
+				float v = ((float)j + random_float(&thread->rand_state)) / (float)(rinfo->height-1);
 
-				ray r = camera_cast_ray(rinfo->cam, u, v);
-				fcolor sample = TraceRay(r, rinfo->scene, rinfo->bgcolor, rinfo->max_depth, rinfo->max_depth);
+				ray r = camera_cast_ray(rinfo->cam, u, v, thread);
+				fcolor sample = TraceRay(r, rinfo->scene, rinfo->bgcolor, rinfo->max_depth, rinfo->max_depth, thread);
 				COLOR_ADD(*pixels, sample); 
 			}
 			++pixels;
@@ -103,6 +103,7 @@ void Render(struct render_info *rinfo) {
 
 struct render_thread {
 	struct render_info *rinfo;
+	thread_context *context;
 	int start_j, end_j;
 };
 
@@ -113,11 +114,11 @@ void RenderChunk(void *args) {
 	for (int j = rthread->start_j; j > rthread->end_j; --j) {
 		for (int i = 0; i < rinfo->width; ++i) {
 			for (int s = 0; s < rinfo->samples; ++s) {
-				float u = ((float)i + random_float()) / (float)(rinfo->width-1);
-				float v = ((float)j + random_float()) / (float)(rinfo->height-1);
+				float u = ((float)i + random_float(&rthread->context->rand_state)) / (float)(rinfo->width-1);
+				float v = ((float)j + random_float(&rthread->context->rand_state)) / (float)(rinfo->height-1);
 
-				ray r = camera_cast_ray(rinfo->cam, u, v);
-				fcolor sample = TraceRay(r, rinfo->scene, rinfo->bgcolor, rinfo->max_depth, rinfo->max_depth);
+				ray r = camera_cast_ray(rinfo->cam, u, v, rthread->context);
+				fcolor sample = TraceRay(r, rinfo->scene, rinfo->bgcolor, rinfo->max_depth, rinfo->max_depth, rthread->context);
 
 				COLOR_ADD(rinfo->pixels[pixel_row_offset + i], sample); 
 			}
@@ -128,11 +129,12 @@ void RenderChunk(void *args) {
 	printf("Bands remaining: %-6d\r", *rinfo->chunks_remaining);
 }
 
-void MultithreadRender(struct render_info *rinfo, threadpool *pool) {
+void MultithreadRender(struct render_info *rinfo, threadpool *pool, thread_context *contexts) {
 
 	int chunk_height = rinfo->height / pool->thread_count;
 	int j;
 	int c = 0;
+	// TODO : fix band allocation to make one band per thread, making one band LARGER when image_height % thread_count != 0
 	int bands = (int)(ceilf((float)rinfo->height / (float)chunk_height));
 	*rinfo->chunks_remaining = bands;
 	struct render_thread *rthreads = calloc(bands, sizeof(struct render_thread));
@@ -143,6 +145,8 @@ void MultithreadRender(struct render_info *rinfo, threadpool *pool) {
 		rthreads[i].end_j = (rthreads[i].start_j - chunk_height <= 0)
 					? -1
 					: (rthreads[i].start_j - chunk_height);
+		// TODO : fix band allocation to make one band per thread, making one band LARGER when image_height % thread_count != 0
+		rthreads[i].context = contexts + (i % pool->thread_count);
 		int added = threadpool_add_job(pool, RenderChunk, &rthreads[i]);
 		++i;
 	}
@@ -161,6 +165,10 @@ void MultithreadRender(struct render_info *rinfo, threadpool *pool) {
 
 
 int main(int argc, char **argv) {
+	thread_context mainthread = {};
+	mainthread.id = 0;
+	mainthread.rand_state = 0;
+
 	timer runtime = timer_new();
 	timer render_timer = timer_new();
 	TIMER_START(runtime);
@@ -175,7 +183,7 @@ int main(int argc, char **argv) {
 	args.scene = -1;
 	args.seed = 0;
 	args.jpeg_quality = 100;
-	args.vfov = 60.0;
+	args.vfov = 60.0f;
 	args.threadcount = 4;
 
 	if (argp_parse(&argp, argc, argv, 0, 0, &args)) {
@@ -192,16 +200,17 @@ int main(int argc, char **argv) {
 	if (args.seed != 0) {
 		srand(args.seed);
 	} else {
-		int seed = time(NULL);
-		srand(seed); // seed is always 1 by default. I use current time for variety.
-		printf("Random seed: %d\n", seed);
+		args.seed = time(NULL);
+		srand(args.seed); // seed is always 1 by default. I use current time for variety.
+		printf("Random seed: %d\n", args.seed);
 	}
+	mainthread.rand_state = args.seed;
 
 	float aspect_ratio;
 	if (args.img_height) {
 		aspect_ratio = (float)args.img_width / (float)args.img_height;
 	} else {
-		aspect_ratio = 16.0 / 9.0;
+		aspect_ratio = 16.0f / 9.0f;
 		args.img_height = args.img_width / aspect_ratio;
 	}
 
@@ -209,13 +218,13 @@ int main(int argc, char **argv) {
 
 	memory_region mem_region = make_memory_region(MEGABYTES(1));
 
-	point3 origin = vec3_new(0.0, 0.0, 10.0);
-	point3 target = vec3_new(0.0, 0.0, 0.0);
+	point3 origin = vec3_new(0.0f, 0.0f, 10.0f);
+	point3 target = vec3_new(0.0f, 0.0f, 0.0f);
 	scene s = {};
-	SceneSelect(&mem_region, args.scene, &s, &origin, &target);
+	SceneSelect(&mem_region, args.scene, &s, &origin, &target, &mainthread);
 	// By default, set bgcolor to something light. Then check the scene to see if it has any light objects
 	// If there are lights in the scene, set the background color to black so the lights are the only source of light.
-	fcolor bgcolor = COLOR_VALUE(0.5);
+	fcolor bgcolor = COLOR_VALUE(0.5f);
 	for (int obj_index = 0; obj_index < s.object_count; ++obj_index) {
 		if (s.objects[obj_index]->mat->id == DiffuseLight) {
 			bgcolor = COLOR_BLACK;
@@ -223,8 +232,8 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	//point3 origin = vec3_new(0.0, 0.0, 0.0);
-	vec3 vup = {0.0, 0.0, 1.0};
+	//point3 origin = vec3_new(0.0f, 0.0f, 0.0f);
+	vec3 vup = {0.0f, 0.0f, 1.0f};
 	float focal_length = vec3_len(vec3_sub(target, origin));
 	camera cam = make_camera(origin, target, vup, args.vfov, aspect_ratio, focal_length);
 
@@ -250,11 +259,18 @@ int main(int argc, char **argv) {
 	TIMER_START(render_timer);
 	threadpool *pool = NULL;
 	if(args.threadcount == 1)
-		Render(&render_args);
+		Render(&render_args, &mainthread);
 	else {
-		setbuf(stdout, NULL);
+		setbuf(stdout, NULL); // So progress is displayed in shell
+		// make a thread context for each thread
+		thread_context *contexts = calloc(args.threadcount, sizeof(thread_context));
+		for (int i = 0; i < args.threadcount; ++i) {
+			contexts[i].id = i+1;
+			contexts[i].rand_state = args.seed + contexts[i].id;
+		}
 		pool = threadpool_new(args.threadcount);
-		MultithreadRender(&render_args, pool);
+		MultithreadRender(&render_args, pool, contexts);
+		free(contexts);
 	}
 	TIMER_END(render_timer);
 

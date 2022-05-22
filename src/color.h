@@ -40,21 +40,21 @@ static inline fcolor color_normalize(fcolor a) {
 // Returns a new color that is f% color b and the rest color a.
 static inline fcolor color_mix(fcolor a, fcolor b, float f) {
 	fcolor c = {};
-	c.r = (1.0 - f) * a.r + f * b.r;
-	c.g = (1.0 - f) * a.g + f * b.g;
-	c.b = (1.0 - f) * a.b + f * b.b;
+	c.r = (1.0f - f) * a.r + f * b.r;
+	c.g = (1.0f - f) * a.g + f * b.g;
+	c.b = (1.0f - f) * a.b + f * b.b;
 	return c;
 }
 
 // Some macros for common colors
-#define COLOR_RED fcolor_new(1.0, 0.0, 0.0)
-#define COLOR_GREEN fcolor_new(0.0, 1.0, 0.0)
-#define COLOR_BLUE fcolor_new(0.0, 0.0, 1.0)
-#define COLOR_BLACK fcolor_new(0.0, 0.0, 0.0)
-#define COLOR_WHITE fcolor_new(1.0, 1.0, 1.0)
+#define COLOR_RED fcolor_new(1.0f, 0.0f, 0.0f)
+#define COLOR_GREEN fcolor_new(0.0f, 1.0f, 0.0f)
+#define COLOR_BLUE fcolor_new(0.0f, 0.0f, 1.0f)
+#define COLOR_BLACK fcolor_new(0.0f, 0.0f, 0.0f)
+#define COLOR_WHITE fcolor_new(1.0f, 1.0f, 1.0f)
 #define COLOR_VALUE(f) fcolor_new(f, f, f)
 // Color to be used when textures go bad or something
-#define COLOR_UNDEFPURP fcolor_new(1.0, 0.65, 1.0)
+#define COLOR_UNDEFPURP fcolor_new(1.0f, 0.65f, 1.0f)
 
 
 #endif

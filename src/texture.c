@@ -148,7 +148,7 @@ texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *ev
 // noise Noise Texture
 noise_texture noise_texture_new(memory_region *region, noise *noise, float scale, int pointcount, void *texture) {
 	noise_texture p = {};
-	p.noise = (noise == NULL) ? add_simplex_noise(region, pointcount) : noise;
+	p.noise = noise;
 	p.texture = texture;
 	p.scale = scale;
 	return p;
@@ -226,7 +226,7 @@ texture *add_marbled_noise_texture(memory_region *region, noise *noise, float sc
 // gradient noise Textures -- noise textures that use two colors.
 gradient_noise_texture gradient_noise_texture_new(memory_region *region, noise *noise, float scale, int pointcount, void *colA, void *colB) {
 	gradient_noise_texture p = {};
-	p.noise = (noise == NULL) ? add_simplex_noise(region, pointcount) : noise;
+	p.noise = noise;
 	p.colA = colA;
 	p.colB = colB;
 	p.scale = scale;
@@ -258,11 +258,7 @@ fbm_modifier fbm_modifier_new(memory_region *region, noise *noise, float hurst, 
 	fbm_mod.hurst = hurst;
 	fbm_mod.octaves = octaves;
 	fbm_mod.text = text;
-	if (noise) {
 		fbm_mod.noise = noise;
-	} else {
-		fbm_mod.noise = add_simplex_noise(region, 256);
-	}
 	return fbm_mod;
 }
 
@@ -316,7 +312,7 @@ fcolor NormalTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
 }
 
 fcolor SignedNormalTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
-	fcolor norm_color = fcolor_new((normal->x < 0.0) ? 0.0 : normal->x, (normal->y < 0.0) ? 0.0 : normal->y, (normal->z < 0.0) ? 0.0 : normal->z);
+	fcolor norm_color = fcolor_new((normal->x < 0.0f) ? 0.0f : normal->x, (normal->y < 0.0f) ? 0.0f : normal->y, (normal->z < 0.0f) ? 0.0f : normal->z);
 	return norm_color;
 }
 
@@ -328,20 +324,20 @@ fcolor ColorTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
 fcolor ImageTextureColor(void *self, float u, float v, point3 pt, vec3 *normal) {
 	image_texture *imgtxt = &((texture *)self)->type.image;
 	if (!imgtxt->pixels) return COLOR_UNDEFPURP;
-	int x = clamp(u, 0.0, 1.0) * (float)imgtxt->width;
-	int y = imgtxt->height - clamp(v, 0.0, 1.0) * (float)imgtxt->height;
+	int x = clamp(u, 0.0f, 1.0f) * (float)imgtxt->width;
+	int y = imgtxt->height - clamp(v, 0.0f, 1.0f) * (float)imgtxt->height;
 	if(x >= imgtxt->width) x = imgtxt->width - 1;
 	if(y >= imgtxt->height) y = imgtxt->height - 1;
 
 	unsigned char *pixel = imgtxt->pixels + (y * imgtxt->pitch) + (x * imgtxt->bytes_per_pixel);
-	fcolor result = fcolor_new((float)*pixel / 255.0, (float)*(pixel + 1) / 255.0, (float)*(pixel + 2) / 255.0);
+	fcolor result = fcolor_new((float)*pixel / 255.0f, (float)*(pixel + 1) / 255.0f, (float)*(pixel + 2) / 255.0f);
 	return result;
 }
 
 fcolor CheckerTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
 	checker_texture *chtxt = &((texture *)self)->type.checker;
 	float sines = sinf(chtxt->freq * pt.x) * sinf(chtxt->freq * pt.y) * sinf(chtxt->freq * pt.z);
-	if (sines < 0.0)
+	if (sines < 0.0f)
 		return ((texture *)chtxt->odd)->TextureColor(chtxt->odd, u, v, pt, normal);
 	return ((texture *)chtxt->even)->TextureColor(chtxt->even, u, v, pt, normal);
 }
@@ -349,7 +345,7 @@ fcolor CheckerTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) 
 fcolor UVCheckerTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
 	checker_texture *chtxt = &((texture *)self)->type.checker;
 	float sines = sinf(chtxt->freq * u) * sinf(chtxt->freq * v);
-	if (sines < 0.0)
+	if (sines < 0.0f)
 		return ((texture *)chtxt->odd)->TextureColor(chtxt->odd, u, v, pt, normal);
 	return ((texture *)chtxt->even)->TextureColor(chtxt->even, u, v, pt, normal);
 }
@@ -360,10 +356,10 @@ fcolor NoiseTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
 	if (noise->texture != NULL) {
 		col = ((texture *)noise->texture)->TextureColor(noise->texture, u, v, pt, normal);
 	} else {
-		col = fcolor_new(1.0, 1.0, 1.0);
+		col = fcolor_new(1.0f, 1.0f, 1.0f);
 	}
 	point3 scaled_pt = vec3_mul(pt, noise->scale);
-	float n = (1.0 + noise->noise->Noise(noise->noise->source, &scaled_pt)) * 0.5;
+	float n = (1.0f + noise->noise->Noise(noise->noise->source, &scaled_pt)) * 0.5f;
 	return color_mul(col, n);
 }
 
@@ -374,11 +370,11 @@ fcolor FBMTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
 	if (noise->texture != NULL) {
 		col = ((texture *)noise->texture)->TextureColor(noise->texture, u, v, pt, normal);
 	} else {
-		col = fcolor_new(1.0, 1.0, 1.0);
+		col = fcolor_new(1.0f, 1.0f, 1.0f);
 	}
 
 	point3 scaled_pt = vec3_mul(pt, noise->scale);
-	return color_mul(col, fbm(noise->noise, pt, 0.5, depth));
+	return color_mul(col, fbm(noise->noise, pt, 0.5f, depth));
 }
 
 fcolor MarbledNoiseTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
@@ -388,9 +384,9 @@ fcolor MarbledNoiseTextureColor(void *self, float u, float v, vec3 pt, vec3 *nor
 	if (noise->texture != NULL) {
 		col = ((texture *)noise->texture)->TextureColor(noise->texture, u, v, pt, normal);
 	} else {
-		col = fcolor_new(1.0, 1.0, 1.0);
+		col = fcolor_new(1.0f, 1.0f, 1.0f);
 	}
-	float n = 0.5 * (1.0 + sinf(pt.y + 10.0 * fabsf(fbm(noise->noise, pt, 0.5, depth))));
+	float n = 0.5f * (1.0f + sinf(pt.y + 10.0f * fabsf(fbm(noise->noise, pt, 0.5f, depth))));
 	return color_mul(col, n);
 }
 
@@ -398,9 +394,9 @@ fcolor NoiseSinCosTextureColor(void *self, float u, float v, vec3 pt, vec3 *norm
 	gradient_noise_texture *noise = &((texture *)self)->type.gradient_noise;
 	int depth = 7;
 	vec3 swizzled = vec3_new(pt.z, pt.x, pt.y);
-	float turb = sinf(noise->scale * 10.0 * fabsf(fbm(noise->noise, pt, 0.5, depth)));
-	turb *= cosf(noise->scale * fabsf(fbm(noise->noise, swizzled, 0.5, depth)));
-	if (turb > 0.0) {
+	float turb = sinf(noise->scale * 10.0f * fabsf(fbm(noise->noise, pt, 0.5f, depth)));
+	turb *= cosf(noise->scale * fabsf(fbm(noise->noise, swizzled, 0.5f, depth)));
+	if (turb > 0.0f) {
 		return color_mul(((texture *)noise->colA)->TextureColor(noise->colA, u, v, pt, normal), turb);
 	} else {
 		return color_mul(((texture *)noise->colB)->TextureColor(noise->colB, u, v, pt, normal), fabs(turb));

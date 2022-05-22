@@ -59,19 +59,19 @@ static inline vec3 vec3_neg(vec3 a) {
 vec3 vec3_abs(vec3 a);
 
 static inline int vec3_near_zero(vec3 v) {
-	const float epsilon = 0.000001;
+	const float epsilon = 0.000001f;
 	vec3 abs_v = vec3_abs(v);
 	return (abs_v.x < epsilon) && (abs_v.y < epsilon) && (abs_v.z < epsilon);
 }
 
 vec3 vec3_unit(vec3 a);
 
-vec3 vec3_random();
+vec3 vec3_random(unsigned int *state);
 
-vec3 vec3_bounded_random(float min, float max);
+vec3 vec3_bounded_random(float min, float max, unsigned int *state);
 
-vec3 vec3_random_in_unit_sphere();
+vec3 vec3_random_in_unit_sphere(unsigned int *state);
 
-vec3 vec3_random_in_hemisphere(vec3 n);
+vec3 vec3_random_in_hemisphere(vec3 n, unsigned int *state);
 
 #endif

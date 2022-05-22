@@ -12,10 +12,10 @@ typedef struct {
 	int pointcount;
 } perlin;
 
-void permute(int *perm, int pointcount);
+void permute(int *perm, int pointcount, thread_context *thread);
 
-perlin perlin_new(int pointcount);
-perlin *add_perlin(memory_region *region, int pointcount);
+perlin perlin_new(int pointcount, thread_context *thread);
+perlin *add_perlin(memory_region *region, int pointcount, thread_context *thread);
 
 float perlin_interpolate(vec3 c[2][2][2], float u, float v, float w);
 float perlin_noise(void *perl, point3 *pt);
@@ -33,8 +33,8 @@ typedef struct {
 	int pointcount;
 } simplex;
 
-simplex simplex_new(int pointcount);
-simplex *add_simplex(memory_region *region, int pointcount);
+simplex simplex_new(int pointcount, thread_context *thread);
+simplex *add_simplex(memory_region *region, int pointcount, thread_context *thread);
 
 float simplex_noise(void *simp, vec3 *pt);
 float simplex_noise_with_derivative(void *simp, vec3 *pt, vec3 *d);
@@ -45,8 +45,8 @@ typedef struct {
 	void *source;
 } noise;
 
-noise *add_perlin_noise(memory_region *region, int pointcount);
-noise *add_simplex_noise(memory_region *region, int pointcount);
+noise *add_perlin_noise(memory_region *region, int pointcount, thread_context *thread);
+noise *add_simplex_noise(memory_region *region, int pointcount, thread_context *thread);
 
 float fbm(noise *noise, vec3 v, float h, int octaves);
 float fbm_with_derivative(noise *noise, vec3 v, float h, int octaves, vec3 *d);
