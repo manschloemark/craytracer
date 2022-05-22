@@ -25,6 +25,7 @@
 #include "output.h"
 #include "timer.h"
 
+#include "threadpool.h"
 
 fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldepth) {
 	if (calldepth <= 0) return fcolor_new(0.0, 0.0, 0.0);
@@ -109,8 +110,6 @@ struct render_thread {
 	struct render_info *rinfo;
 	int start_i, start_j;
 	int chunk_width, chunk_height, end_i, end_j;
-
-	int id;
 };
 
 void RenderChunk(void *args) {
@@ -133,7 +132,7 @@ void RenderChunk(void *args) {
 	}
 }
 
-void MultithreadRender(int thread_count, fcolor *pixels, int samples, int height, int width, int max_depth, camera *cam, scene *scene) {
+void MultithreadRender(int thread_count, fcolor *pixels, int samples, int height, int width, int max_depth, camera *cam, scene *scene, threadpool *pool) {
 	// By default, set bgcolor to something light. Then check the scene to see if it has any light objects
 	// If there are lights in the scene, set the background color to black so the lights are the only source of light.
 	fcolor bgcolor = COLOR_VALUE(0.5);
@@ -154,50 +153,37 @@ void MultithreadRender(int thread_count, fcolor *pixels, int samples, int height
 	rinfo.pixels = pixels;
 	rinfo.bgcolor = &bgcolor;
 
-	int chunk_height = 16;
-	int chunk_width = 16;
+	int chunk_height = 64;
+	int chunk_width = 64;
 	int i, j;
 	int c = 0;
-	int chunk_count = width / chunk_width * height / chunk_height;
+	int i_chunks = (int)(ceilf((float)width / (float)chunk_width));
+	int j_chunks = (int)(ceilf((float)height / (float)chunk_height));
+	int chunk_count = i_chunks * j_chunks;	
+	struct render_thread *rthread_ptr = calloc(chunk_count, sizeof(struct render_thread));
+	struct render_thread *rthreads = rthread_ptr;
 	printf("Starting multithread render. %d total chunks.\n", (chunk_count));
 	for (j = height-1; j >= 0; j -=(chunk_height)) {
 		for (i = 0; i < width; i += chunk_width) {
-			printf("Chunks remaining: %-6d\r", chunk_count - c);
-			pthread_t thread1, thread2;
-			struct render_thread rthread1 = {};
-			rthread1.id = 1;
-			struct render_thread rthread2 = {};
-			rthread2.id = 2;
+			struct render_thread rthread = {};
+			rthread.rinfo = &rinfo;
+			rthread.start_i = i;
+			rthread.start_j = j;
+			rthread.chunk_width = chunk_width;
+			rthread.chunk_height = chunk_height;
+			int end_i1 = (rthread.start_i + rthread.chunk_width >= width) ? width : (rthread.start_i + rthread.chunk_width);
+			int end_j1 = (rthread.start_j - rthread.chunk_height <= 0) ? -1 : (rthread.start_j - rthread.chunk_height);
+			rthread.end_i = end_i1;
+			rthread.end_j = end_j1;
+			*rthreads = rthread;
 
-			rthread1.rinfo = &rinfo;
-			rthread1.start_i = i;
-			rthread1.start_j = j;
-			rthread1.chunk_width = (chunk_width / 2);
-			rthread1.chunk_height = chunk_height;
-			int end_i1 = (rthread1.start_i + rthread1.chunk_width >= width) ? width : (rthread1.start_i + rthread1.chunk_width);
-			int end_j1 = (rthread1.start_j - rthread1.chunk_height <= 0) ? -1 : (rthread1.start_j - rthread1.chunk_height);
-			rthread1.end_i = end_i1;
-			rthread1.end_j = end_j1;
-
-			// Thread 2
-			rthread2.rinfo = &rinfo;
-			rthread2.start_i = rthread1.end_i;
-			rthread2.start_j = j;
-			rthread2.chunk_width = (chunk_width - rthread1.chunk_width);
-			rthread2.chunk_height = chunk_height;
-			int end_i2 = (rthread2.start_i + rthread2.chunk_width >= width) ? width : (rthread2.start_i + rthread2.chunk_width);
-			int end_j2 = (rthread2.start_j - rthread2.chunk_height <= 0) ? -1 : (rthread2.start_j - rthread2.chunk_height);
-			rthread2.end_i = end_i2;
-			rthread2.end_j = end_j2;
-
-			pthread_create(&thread1, NULL, (void *)RenderChunk, &rthread1);
-			pthread_create(&thread2, NULL, (void *)RenderChunk, &rthread2);
-
-			pthread_join(thread1, NULL);
-			pthread_join(thread2, NULL);
-			++c;
+			threadpool_add_job(pool, RenderChunk, rthreads);
+			++rthreads;
 		}
 	}
+	printf("Gonna go wait now.\n");
+	threadpool_wait(pool);
+	free(rthread_ptr);
 }
 
 
@@ -264,9 +250,11 @@ int main(int argc, char **argv) {
 
 	fcolor *pixels = malloc(args.img_height * args.img_width * sizeof(fcolor)); 
 
+	threadpool *pool = threadpool_new(13);
 	TIMER_START(render_timer);
-	MultithreadRender(2, pixels, args.samples, args.img_height, args.img_width, args.max_depth, &cam, &s);
+	MultithreadRender(2, pixels, args.samples, args.img_height, args.img_width, args.max_depth, &cam, &s, pool);
 	TIMER_END(render_timer);
+	threadpool_free(pool);
 
 
 	uint8_t *uint8_t_pixels = PixelToUInt8(pixels, args.samples, args.img_height, args.img_width, bytes_per_channel);
@@ -281,8 +269,8 @@ int main(int argc, char **argv) {
 
 	TIMER_END(runtime);
 		
-	printf("Render Time: %fs\n", TIMER_DURATION_S(render_timer));
-	printf("Total Time: %fs\n", TIMER_DURATION_S(runtime));
+	printf("Render Time: %ds\n", TIMER_DURATION_S(render_timer));
+	printf("Total Time: %ds\n", TIMER_DURATION_S(runtime));
 
 	if (saved) {
 		puts("Image saved successfully.");
