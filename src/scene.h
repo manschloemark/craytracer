@@ -419,6 +419,7 @@ void RainbowCircle(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 
 	material *lambertian = add_lambertian(region);
 	material *clearmetal = add_metal(region, 0.0);
+	material *difflight = add_diffuse_light(region);
 
 	vec3 x_offset = vec3_new(-4.0, 0.0, 0.0);
 	texture *centertxt = add_color_texture(region, fcolor_new(1.0, 1.0, 1.0));
@@ -431,6 +432,7 @@ void RainbowCircle(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 	int outer_count = 7;
 	float outer_radius = 2.1;
 	float r = 0.9;
+	texture *white_light = add_color_texture(region, COLOR_VALUE(7.0));
 	texture *rainbow[7];
 	rainbow[0] = add_color_texture(region, COLOR_RED);
 	rainbow[1] = add_color_texture(region, fcolor_new(0.7, 0.5, 0.0));
@@ -448,6 +450,9 @@ void RainbowCircle(memory_region *region, scene *s, vec3 *o, vec3 *t) {
 		object_list[object_index] = o;
 		++object_index;
 	}
+
+	object *light = add_sphere(region, vec3_new(10.0, 0.0, 10.0), 3.0, white_light, difflight);
+	object_list[object_index++] = light;
 
 	*o = vec3_new(5.0, 0.0, 0.0);
 	*t = x_offset;
