@@ -35,6 +35,68 @@ triangle triangle_new(point3 x, point3 y, point3 z, int double_sided) {
 	return t;
 }
 
+// really hastily made just to get it out there. this will not stay long
+int about_equal(vec3 a, vec3 b) {
+	const float eps = 0.001f;
+	return !(vec3_len(vec3_sub(a, b)) > eps);
+}
+
+// NOTE : this is full of bugs, it's ugly, and poorly written
+// But I plan to implement meshes which would make this pretty much redundant, I think.
+quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, texture *text, material *mat) {
+	quad q = {};
+	vec3 a_b = vec3_sub(b, a);
+	vec3 a_c = vec3_sub(c, a);
+	vec3 a_d = vec3_sub(d, a);
+
+	vec3 cross_abc = vec3_unit(vec3_cross(a_b, a_c));
+	vec3 cross_abd = vec3_unit(vec3_cross(a_b, a_d));
+
+	// Check if all points lie in the same plane
+	if(!about_equal((cross_abc), (cross_abd))) {
+		if (!about_equal(cross_abc, vec3_abs(cross_abd))) {
+					q.tri_a = NULL;
+					q.tri_b = NULL;
+					return q;
+		}
+	}
+
+	point3 *tri_b_v1 = NULL;
+	point3 *tri_b_v2 = NULL;
+	point3 *tri_b_v3 = NULL;
+
+	float ang_ad_ab = vec3_dot(cross_abc, vec3_cross(a_d, a_b));
+	float ang_ad_ac = vec3_dot(cross_abc, vec3_cross(a_d, a_c));
+	if (signbit(ang_ad_ab) != signbit(ang_ad_ac)) {
+		tri_b_v1 = &c;
+		tri_b_v2 = &b;
+		tri_b_v3 = &d;
+	} else {
+		if (ang_ad_ab > ang_ad_ac) {
+			tri_b_v1 = &d;
+			tri_b_v2 = &a;
+			tri_b_v3 = &c;
+		} else {
+			tri_b_v1 = &d;
+			tri_b_v2 = &a;
+			tri_b_v3 = &b;
+		}
+	}
+	object *tri_a = add_triangle(region, a, b, c, text, mat);
+	object *tri_b = add_triangle(region, *tri_b_v1, *tri_b_v2, *tri_b_v3, text, mat);
+
+	vec3 norm_b = TriangleNormal(tri_a, vec3_new(0.0, 0.0, 0.0));
+	if (!about_equal(cross_abc, norm_b)) {
+		vec3 temp = tri_b->shape.triangle.a;
+		tri_b->shape.triangle.a = tri_b->shape.triangle.b;
+		tri_b->shape.triangle.b = temp;
+	}
+
+	q.tri_a = tri_a;
+	q.tri_b = tri_b;
+	return q;
+}
+
 fbm_shape fbm_shape_new(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, void *obj) {
 	fbm_shape fs;
 	// NOTE : no longer accept uninitialized noise objects
@@ -143,6 +205,25 @@ int IntersectTriangle(void *self, ray *r, hit_record *hitrec, thread_context *th
 
 	return 1;
 	// NOTE : u and v are the uv coordinates. I don't need them yet but that'll be useful.
+}
+
+int IntersectQuad(void *self, ray *r, hit_record *hitrec, thread_context *thread) {
+	object *q_obj = (object *)self;
+	quad q = q_obj->shape.quad;
+	//hit_record temp = *hitrec;
+	int hit_a = IntersectTriangle(q.tri_a, r, hitrec, thread);
+	// Pretty sure hitrec prevents hit on b if a is blocking it
+	int hit_b = IntersectTriangle(q.tri_b, r, hitrec, thread);
+	if (hit_a == 0 && hit_b == 0) {
+		return 0;
+	}
+	// tri_a.a is the bottom left, uv = 0,0
+	// tri_b.c is top right, uv = 1,1
+	if(!hit_b) {
+		hitrec->v *= 0.5;
+	}
+	
+	return hit_a || hit_b;
 }
 
 // NOTE: this should never be called anyway
@@ -480,6 +561,24 @@ object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *te
 	return o;
 }
 
+// If a quads given points are not in the same plane it cannot be created.
+// So to be able to tell when that happens without changing a bunch of stuff
+// I'm being lazy and adding a SHAPE_ERROR enum to ShapeID.
+// This way my program won't crash
+object make_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, texture *text, material *mat) {
+	object o;
+	o.shape.quad = quad_new(region, a, b, c, d, text, mat);
+	o.id = Quad;
+	if (o.shape.quad.tri_a == NULL || o.shape.quad.tri_b == NULL) {
+		o.id = SHAPE_ERROR;
+	}
+	o.Intersect = (*IntersectQuad);
+	o.text = text;
+	o.mat = mat;
+
+	return o;
+}
+
 object make_fbm_shape(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj) {
 	object o;
 	o.Intersect = (*IntersectFBMShape);
@@ -510,6 +609,15 @@ object *add_triangle(memory_region *region, point3 a, point3 b, point3 c, textur
 object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, point3 c, texture *text, material *mat) {
 	object o = make_triangle(a, b, c, 0, text, mat);
 	return (object *)memory_region_add(region, &o, sizeof(object));
+}
+
+object *add_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, texture *text, material *mat) {
+	object q = make_quad(region, a, b, c, d, text, mat);
+	if (q.id == SHAPE_ERROR) {
+		return NULL;
+	}
+	return (object *)memory_region_add(region, &q, sizeof(object));
+
 }
 
 object *add_fbm_shape(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj) {

@@ -8,7 +8,6 @@
 #include "texture.h"
 #include "material.h"
 
-
 typedef struct {
 	object **objects;
 	int object_count;
@@ -916,10 +915,10 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context
 
 	// TODO : make loop to test many different scales quickly
 
-	object *ground = add_triangle(region, vec3_new(-1000.0f, -1000.0f, 0.0f), vec3_new(-1000.0f, 1000.0f, 0.0f), vec3_new(1000.0f, 0.0f, 0.0f), tile2, mirror);
+	object *ground = add_triangle(region, vec3_new(-1000.0f, -1000.0f, 0.0f), vec3_new(-1000.0f, 1000.0f, 0.0f), vec3_new(1000.0f, 0.0f, 0.0f), tile2, blurry_mirror);
 
-	float x_offset = 2.0f; 
-	float y_offset = 2.0f;
+	float x_offset = 3.0f; 
+	float y_offset = 3.0f;
 	float radius = 1.0f;
 	float z_offset = radius;
 	float offset_scale[4] = {0.0f, 0.2f, 0.5f, 1.0f};
@@ -982,17 +981,24 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context
 	object *angled_tri_right = add_fbm_shape(region, shared_simp, 0.1f, 0.5f, 0.5f, 24, angled_tri_right_src);
 
 
+	object *light_sphere = add_sphere(region, vec3_new(-5.0, 40.0, 15.0), 8.0, white_light, light);
+
 	//objects[obj_index++] = light_tri;
 	//objects[obj_index++] = light_tri2;
+	
+	//objects[obj_index++] = light_sphere;
 
 	objects[obj_index++] = ground;
 
 	s->objects = objects;
 	s->object_count = obj_index;
 
-	*o = vec3_new(-(((float)num_rows) * (x_offset + radius)) - 1.0f, ((float)num_cols) * (radius + y_offset) + 8.0f, 15.0f);
-	vec3 center_of_objects = vec3_new((x_offset + radius) * (float)(num_rows / 2), (radius + y_offset) * (float)(num_cols / 2), 0.0f);
-	*t = center_of_objects;
+	vec3 diagonal = vec3_add(points[num_rows - 1], points[num_rows * (num_cols - 1)]);
+	vec3 center = vec3_add(points[num_rows - 1], vec3_mul(points[num_rows * (num_cols - 1)], 0.9f));
+	//vec3 center = vec3_new((x_offset + radius) * ((float)num_cols-1) * 0.5f,(radius + y_offset) * ((float)num_rows-1) * 0.5f, 0.0f);
+	//*o = vec3_new(-(((float)num_rows) * (x_offset + radius)) - 1.0f, ((float)num_cols) * (radius + y_offset) + 12.0f, 15.0f);
+	*o = vec3_add(vec3_add(vec3_mul(diagonal, 1.8f), center), vec3_new(0.0, 0.0, 12.0f));
+	*t = center;
 	return *s;
 }
 
@@ -1338,18 +1344,165 @@ scene Planet(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *
 
 	//objects[obj_index++] = sph;
 	objects[obj_index++] = fbm_sph;
-	objects[obj_index++] = lightsrc;
+	//objects[obj_index++] = lightsrc;
 
 	s->objects = objects;
 	s->object_count = obj_index;
 	
-
 	vec3 front = vec3_new(200.0f, 0.0f, -50.0f);
 	vec3 side = vec3_new(0.0f, 200.0f, -50.0f);
 	vec3 top_front = vec3_new(250.0f, 0.0f, -10.0f);
-	*o = top_front;
+	vec3 bottom = vec3_new(0.0f, 0.0f, -300.0f);
+	*o = front;
 	*t = vec3_new(0.0f, 0.0f, -50.0f);
 	return *s;
+}
+
+scene Test_Quad(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *thread) {
+	int max_objects = 16;
+	int obj_index = 0;
+	object **objects = (object **)malloc(sizeof(object *) * max_objects);
+
+	noise *shared_perlin = add_perlin_noise(region, 32, thread);
+	noise *shared_noise = add_simplex_noise(region, 256, thread);
+
+	material *lamb = add_lambertian(region);
+	material *mirror = add_metal(region, 0.01f);
+	material *light = add_diffuse_light(region);
+	
+	texture *white_light = add_color_texture(region, COLOR_VALUE(7.0f));
+
+	texture *white = add_color_texture(region, COLOR_VALUE(1.0f));
+	texture *pine = add_color_texture(region, fcolor_new(0.2f, 0.55f, 0.24f));
+	texture *blue = add_color_texture(region, fcolor_new(0.33f, 0.44f, 0.75f));
+	texture *darkblue = add_color_texture(region, fcolor_new(0.02f, 0.04f, 0.45f));
+	texture *land_src = add_noise_sincos_texture(region, shared_noise, 8.0f, blue, pine);
+	texture *land = add_fbm_modifier(region, shared_noise, 0.5f, 4, land_src);
+	texture *normal = add_normal_texture(region);
+	texture *snormal = add_signed_normal_texture(region);
+	texture *tile = add_uv_checker_texture(region, pine, blue, 8.0f);
+	texture *uv = add_uv_texture(region);
+	point3 a, b, c, d, e, f, g, h;
+	a = vec3_new(-1.0, -1.0, -1.0);
+	b = vec3_new(-1.0, -1.0, 1.0);
+	c = vec3_new(-1.0, 1.0, -1.0);
+	d = vec3_new(-1.0, 1.0, 1.0);
+
+	e = vec3_new(2.0, -1.0, -2.0);
+	f = vec3_new(2.0, 1.0, -2.0);
+	g = vec3_new(-2.0, -1.0, 2.0);
+	h = vec3_new(-2.0, 1.0, 2.0);
+
+
+	object *quad = add_quad(region, a, b, c, d, land, lamb);
+	object *quad2 = add_quad(region, b, g, d, h, normal, lamb);
+	object *quad3 = add_quad(region, a, c, e, f, tile, lamb);
+	
+
+	objects[obj_index++] = quad;
+	objects[obj_index++] = quad2;
+	objects[obj_index++] = quad3;
+	s->objects = objects;
+	s->object_count = obj_index;
+	
+	*o = vec3_new(5.0f, 0.0f, 0.0f);
+	*t = vec3_new(-1.0f, 0.0f, 0.0f);
+	return *s;
+}
+
+
+void CornellBox(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *tc) {
+	int max_objects = 64;
+	int obj_index = 0;
+	object **objects = (object **)malloc(sizeof(object *) * max_objects);
+
+	*o = vec3_new(800.0, 278.0, 273.0);
+	*t = vec3_new(-1.0, 0.0, 0.0);
+
+	material *lamb = add_lambertian(region);
+	material *glass = add_glass(region, 1.51);
+	material *light = add_diffuse_light(region);
+
+	texture *white_light = add_color_texture(region, fcolor_new(5.0, 5.5, 5.5));
+
+	texture *red = add_color_texture(region, fcolor_new(0.9, 0.22, 0.2));
+	texture *green = add_color_texture(region, fcolor_new(0.3, 0.88, 0.5));
+	texture *white = add_color_texture(region, COLOR_VALUE(1.0));
+	texture *gray = add_color_texture(region, COLOR_VALUE(0.5));
+
+	// Floor
+	vec3 floor_back_right = vec3_new(0.0, 552.8, 0.0);
+	vec3 floor_back_left = vec3_new(0.0, 0.0, 0.0);
+	vec3 floor_front_left = vec3_new(559.2, 0.0, 0.0);
+	vec3 floor_front_right = vec3_new(559.2, 549.6, 0.0);
+	object *floor_left = add_triangle(region, floor_front_left, floor_back_right, floor_back_left, white, lamb);
+	object *floor_right = add_triangle(region, floor_front_left, floor_front_right, floor_back_right, white, lamb);
+
+	// Light in ceiling
+	vec3 light_back_right = vec3_new(227.0, 343.0, 548.8);
+	vec3 light_front_right = vec3_new(332.0, 343.0, 548.8);
+	vec3 light_front_left = vec3_new(332.0, 213.0, 548.8);
+	vec3 light_back_left= vec3_new(227.0, 213.0, 548.8);
+	object *light_left = add_triangle(region, light_front_left, light_back_right, light_back_left, white_light, light);
+	object *light_right = add_triangle(region, light_front_left, light_front_right, light_back_right, white_light, light);
+
+	// Ceiling
+	vec3 ceiling_back_right = vec3_new(0.0, 556.0, 548.8);
+	vec3 ceiling_front_right = vec3_new(559.2, 556.0, 548.8);
+	vec3 ceiling_front_left = vec3_new(559.2, 0.0, 548.8);
+	vec3 ceiling_back_left = vec3_new(0.0, 0.0, 548.8);
+	object *ceiling_left = add_triangle(region, ceiling_front_left, ceiling_back_right, ceiling_back_left, white, lamb);
+	object *ceiling_right = add_triangle(region, ceiling_front_left, ceiling_back_right, ceiling_front_right, white, lamb);
+
+
+	// Back wall
+	vec3 back_bottom_right = vec3_new(559.2, 549.6, 0.0);
+	vec3 back_bottom_left = vec3_new(559.2, 0.0, 0.0);
+	vec3 back_top_left = vec3_new(559.2, 0.0, 548.8);
+	vec3 back_top_right = vec3_new(559.2, 556.0, 548.8);
+	object *back_left = add_triangle(region, back_top_left, back_bottom_right, back_bottom_left, white, lamb);
+	object *back_right = add_triangle(region, back_top_left, back_bottom_right, back_top_right, white, lamb);
+
+	// Right wall
+	vec3 right_front_bottom = vec3_new(559.2, 0.0, 0.0);
+	vec3 right_front_top = vec3_new(559.2, 0.0, 548.8);
+	vec3 right_back_bottom = vec3_new(0.0, 0.0, 0.0);
+	vec3 right_back_top = vec3_new(0.0, 0.0, 548.8);
+	object *right_front = add_triangle(region, right_front_top, right_back_bottom, right_back_top, green, lamb);
+	object *right_back = add_triangle(region, right_front_top, right_back_bottom, right_front_bottom, green, lamb);
+
+	// Left wall
+	vec3 left_front_bottom = vec3_new(559.2, 0.0, 0.0);
+	vec3 left_front_top = vec3_new(559.2, 0.0, 548.8);
+	vec3 left_back_bottom = vec3_new(0.0, 0.0, 0.0);
+	vec3 left_back_top = vec3_new(0.0, 0.0, 548.8);
+	object *left_front = add_triangle(region, left_front_top, left_back_bottom, left_back_top, red, lamb);
+	object *left_back = add_triangle(region, left_front_top, left_back_bottom, left_front_bottom, red, lamb);
+
+	// Short block (using sphere because blocks are too much work atm
+ 	object *small_sphere = add_sphere(region, vec3_new(100.0, 200.0, 50.0), 100.0, white, lamb);
+
+	// Tall block (using sphere because blocks are too much work atm
+ 	object *tall_sphere = add_sphere(region, vec3_new(150.0, 400.0, 80.0), 80.0, white, lamb);
+
+	//objects[obj_index++] = light_left;
+	//objects[obj_index++] = light_right;
+	objects[obj_index++] = floor_left;
+	objects[obj_index++] = floor_right;
+	objects[obj_index++] = ceiling_left;
+	objects[obj_index++] = ceiling_right;
+	objects[obj_index++] = back_left;
+	objects[obj_index++] = back_right;
+	objects[obj_index++] = right_front;
+	objects[obj_index++] = right_back;
+	objects[obj_index++] = left_front;
+	objects[obj_index++] = left_back;
+	objects[obj_index++] = small_sphere;
+	objects[obj_index++] = tall_sphere;
+
+
+	s->objects = objects;
+	s->object_count = obj_index;
 }
 
 void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *t, thread_context *tc) {
@@ -1410,8 +1563,11 @@ void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *
 		case 19:
 			Planet(region, s, o, t, tc);
 			return;
+		case 20:
+			Test_Quad(region, s, o, t, tc);
+			return;
 		default:
-			Demo(region, s, o, t, tc);
+			CornellBox(region, s, o, t, tc);
 			return;
 	}
 }
