@@ -28,6 +28,8 @@
 
 #include "threadpool.h"
 
+#define DEBUG_BANDS 0
+
 fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldepth, thread_context *thread) {
 	if (calldepth <= 0) return fcolor_new(0.0f, 0.0f, 0.0f);
 
@@ -111,14 +113,35 @@ void RenderChunk(void *args) {
 	struct render_thread *rthread = (struct render_thread *)args;
 	struct render_info *rinfo = rthread->rinfo;
 	int pixel_row_offset = (rinfo->height - 1 - rthread->start_j) * rinfo->width;
+
+	// TODO : maybe instead of a macro make this a cli flag like "debug-info" or "debug-image" or something like that.
+#if DEBUG_BANDS
+	// Render first line of band as a single color so you can see where the each job starts.
+	int j = rthread->start_j;
+	for (int i = 0; i < rinfo->width; ++i) {
+		for (int s = 0; s < rinfo->samples; ++s) {
+			float u = ((float)i + random_float(&rthread->context->rand_state)) / (float)(rinfo->width-1);
+			float v = ((float)j + random_float(&rthread->context->rand_state)) / (float)(rinfo->height-1);
+
+			ray r = camera_cast_ray(rinfo->cam, u, v, rthread->context);
+			fcolor sample = COLOR_UNDEFPURP;
+
+			COLOR_ADD(rinfo->pixels[pixel_row_offset + i], sample); 
+		}
+	}
+	pixel_row_offset += rinfo->width;
+	for (int j = rthread->start_j - 1; j > rthread->end_j; --j) {
+#else
 	for (int j = rthread->start_j; j > rthread->end_j; --j) {
+#endif
 		for (int i = 0; i < rinfo->width; ++i) {
 			for (int s = 0; s < rinfo->samples; ++s) {
 				float u = ((float)i + random_float(&rthread->context->rand_state)) / (float)(rinfo->width-1);
 				float v = ((float)j + random_float(&rthread->context->rand_state)) / (float)(rinfo->height-1);
 
 				ray r = camera_cast_ray(rinfo->cam, u, v, rthread->context);
-				fcolor sample = TraceRay(r, rinfo->scene, rinfo->bgcolor, rinfo->max_depth, rinfo->max_depth, rthread->context);
+				fcolor sample;
+					sample = TraceRay(r, rinfo->scene, rinfo->bgcolor, rinfo->max_depth, rinfo->max_depth, rthread->context);
 
 				COLOR_ADD(rinfo->pixels[pixel_row_offset + i], sample); 
 			}
@@ -129,15 +152,16 @@ void RenderChunk(void *args) {
 	printf("Bands remaining: %-6d\r", *rinfo->chunks_remaining);
 }
 
-void MultithreadRender(struct render_info *rinfo, threadpool *pool, thread_context *contexts) {
+void MultithreadRender(struct render_info *rinfo, threadpool *pool, thread_context *contexts, int job_count) {
 
-	int chunk_height = rinfo->height / pool->thread_count;
+	int chunk_height = rinfo->height / job_count;
 	int j;
 	int c = 0;
 	// TODO : fix band allocation to make one band per thread, making one band LARGER when image_height % thread_count != 0
 	int bands = (int)(ceilf((float)rinfo->height / (float)chunk_height));
 	*rinfo->chunks_remaining = bands;
 	struct render_thread *rthreads = calloc(bands, sizeof(struct render_thread));
+	printf("Render Thread memory use: %d\n", bands * (int)sizeof(struct render_thread));
 	int i = 0;
 	for (j = rinfo->height-1; j >= 0; j -= (chunk_height)) {
 		rthreads[i].rinfo = rinfo;
@@ -146,7 +170,7 @@ void MultithreadRender(struct render_info *rinfo, threadpool *pool, thread_conte
 					? -1
 					: (rthreads[i].start_j - chunk_height);
 		// TODO : fix band allocation to make one band per thread, making one band LARGER when image_height % thread_count != 0
-		rthreads[i].context = contexts + (i % pool->thread_count);
+		rthreads[i].context = contexts + (i % job_count);
 		int added = threadpool_add_job(pool, RenderChunk, &rthreads[i]);
 		++i;
 	}
@@ -185,6 +209,7 @@ int main(int argc, char **argv) {
 	args.jpeg_quality = 100;
 	args.vfov = 60.0f;
 	args.threadcount = 4;
+	args.jobcount = 12;
 
 	if (argp_parse(&argp, argc, argv, 0, 0, &args)) {
 		puts("Error parsing arguments. Use -? for help.");
@@ -262,14 +287,17 @@ int main(int argc, char **argv) {
 		Render(&render_args, &mainthread);
 	else {
 		setbuf(stdout, NULL); // So progress is displayed in shell
-		// make a thread context for each thread
-		thread_context *contexts = calloc(args.threadcount, sizeof(thread_context));
-		for (int i = 0; i < args.threadcount; ++i) {
+		// make a thread context for each job
+		// NOTE : now that I updated thread contexts to be created for each JOB not thread, maybe it's a misnomer.
+		// the purpose is still the same. to allow for reentrant rng.
+		if (args.jobcount < args.threadcount) args.jobcount = args.threadcount;
+		thread_context *contexts = calloc(args.jobcount, sizeof(thread_context));
+		for (int i = 0; i < args.jobcount; ++i) {
 			contexts[i].id = i+1;
 			contexts[i].rand_state = args.seed + contexts[i].id;
 		}
 		pool = threadpool_new(args.threadcount);
-		MultithreadRender(&render_args, pool, contexts);
+		MultithreadRender(&render_args, pool, contexts, args.jobcount);
 		free(contexts);
 	}
 	TIMER_END(render_timer);

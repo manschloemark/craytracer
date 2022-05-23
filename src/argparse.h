@@ -22,6 +22,7 @@ static struct argp_option options[] = {
 	{"num-samples", 'n', "N_SAMPLES", 0, "Take a sample from each pixel N_SAMPLES times", 2},
 	{"max-depth", 'd', "MAX_DEPTH", 0, "MAX_DEPTH is the number of times a ray can be reflected.", 2},
 	{"thread-count", 't', "N_THREADS", 0, "Number of threads to use. (1 is better for renders)", 2},
+	{"job-count", 'b', "N_THREADS", 0, "Number of jobs to create. Splits up the image into pieces that are rendered by threads.", 2},
 	{"seed", 's', "SEED", 0, "Seed to pass to stdlib.h srand()", 2},
 	//{"num-threads", 't', "N_THREADS", 0, "Create N_THREADS threads to render the image in parallel. Default is estimated number of cores.", 2},
 	// Debugging related
@@ -40,7 +41,7 @@ struct arguments {
 	int verbose;
 	unsigned int seed;
 	int scene;
-	int threadcount;
+	int threadcount, jobcount;
 	float vfov;
 };
 
@@ -77,7 +78,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 		args->seed = (unsigned int)atoi(arg);
 		break;
 	case 't':
-		args->threadcount = (unsigned int)atoi(arg);
+		args->threadcount = atoi(arg);
+		break;
+	case 'b': // TODO : maybe rename to bandcount
+		args->jobcount = atoi(arg);
 		break;
 	/*
 	case 't':
