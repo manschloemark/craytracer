@@ -930,7 +930,7 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context
 			points[index++] = vec3_new((float)i * (x_offset + radius), (float)j * (y_offset + radius) + offset_scale[j], z_offset + offset_scale[j]);
 		}
 	}
-	texture *textures[6] = {perlin2, snormal, xz_levelcurves, perlin, tile, tile};
+	texture *textures[6] = {snormal, perlin2, xz_levelcurves, perlin, tile, tile};
 	material *materials[6] = {lamb, lamb, lamb, lamb, metal, lamb};
 
 	index = 0;
@@ -938,7 +938,7 @@ scene FBM_Test(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context
 	int octaves = 24;
 	float perlin_scale = 0.5f;
 	int hurst = 1.0f;
-	for (int c = 1; c < num_cols; ++c) {
+	for (int c = 0; c < num_cols; ++c) {
 			object *control_sphere = add_sphere(region, points[index++], radius, textures[c], materials[c]);
 			object *source_sphere_1 = add_sphere(region, points[index++], radius, textures[c], materials[c]);
 			object *source_sphere_2 = add_sphere(region, points[index++], radius, textures[c], materials[c]);
