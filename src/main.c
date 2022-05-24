@@ -34,7 +34,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 	if (calldepth <= 0) return fcolor_new(0.0f, 0.0f, 0.0f);
 
 	hit_record hitrec = {};
-	hitrec.t_min = 0.0001f; // Prevent rounding errors when t ~~ 0.0f;
+	hitrec.t_min = 0.0002f; // Prevent rounding errors when t ~~ 0.0f;
 	hitrec.t = 123123902.0f; // TODO : make some const to use for this instead
 
 	int hit = 0;
