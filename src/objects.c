@@ -65,14 +65,14 @@ quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, tex
 	point3 *tri_b_v2 = NULL;
 	point3 *tri_b_v3 = NULL;
 
-	float ang_ad_ab = vec3_dot(cross_abc, vec3_cross(a_d, a_b));
-	float ang_ad_ac = vec3_dot(cross_abc, vec3_cross(a_d, a_c));
+	float ang_ad_ab = vec3_dot(cross_abc, vec3_cross(a_d, a_b)) / (vec3_len(a_b) * vec3_len(a_d));
+	float ang_ad_ac = vec3_dot(cross_abc, vec3_cross(a_d, a_c)) / (vec3_len(a_c) * vec3_len(a_d));;
 	if (signbit(ang_ad_ab) != signbit(ang_ad_ac)) {
 		tri_b_v1 = &c;
 		tri_b_v2 = &b;
 		tri_b_v3 = &d;
 	} else {
-		if (ang_ad_ab > ang_ad_ac) {
+		if (fabs(ang_ad_ab) > fabs(ang_ad_ac)) {
 			tri_b_v1 = &d;
 			tri_b_v2 = &a;
 			tri_b_v3 = &c;
