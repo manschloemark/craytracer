@@ -344,7 +344,8 @@ fcolor CheckerTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) 
 
 fcolor UVCheckerTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
 	checker_texture *chtxt = &((texture *)self)->type.checker;
-	float sines = sinf(chtxt->freq * u) * sinf(chtxt->freq * v);
+	const float twopi = 2.0f * pi;
+	float sines = sinf(chtxt->freq * u * twopi) * sinf(chtxt->freq * v * twopi);
 	if (sines < 0.0f)
 		return ((texture *)chtxt->odd)->TextureColor(chtxt->odd, u, v, pt, normal);
 	return ((texture *)chtxt->even)->TextureColor(chtxt->even, u, v, pt, normal);
