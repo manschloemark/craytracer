@@ -223,10 +223,10 @@ int main(int argc, char **argv) {
 	}
 
 	if (args.seed != 0) {
-		srand(args.seed);
+		//srand(args.seed);
 	} else {
 		args.seed = time(NULL);
-		srand(args.seed); // seed is always 1 by default. I use current time for variety.
+		//srand(args.seed); // seed is always 1 by default. I use current time for variety.
 		printf("Random seed: %d\n", args.seed);
 	}
 	mainthread.rand_state = args.seed;
@@ -245,8 +245,9 @@ int main(int argc, char **argv) {
 
 	point3 origin = vec3_new(0.0f, 0.0f, 10.0f);
 	point3 target = vec3_new(0.0f, 0.0f, 0.0f);
+	vec3 vup = vec3_new(0.0f, 0.0f, 1.0f);
 	scene s = {};
-	SceneSelect(&mem_region, args.scene, &s, &origin, &target, &mainthread);
+	SceneSelect(&mem_region, args.scene, &s, &origin, &target, &vup, &mainthread);
 	// By default, set bgcolor to something light. Then check the scene to see if it has any light objects
 	// If there are lights in the scene, set the background color to black so the lights are the only source of light.
 	fcolor bgcolor = COLOR_VALUE(0.5f);
@@ -258,7 +259,6 @@ int main(int argc, char **argv) {
 	}
 
 	//point3 origin = vec3_new(0.0f, 0.0f, 0.0f);
-	vec3 vup = {0.0f, 0.0f, 1.0f};
 	float focal_length = vec3_len(vec3_sub(target, origin));
 	camera cam = make_camera(origin, target, vup, args.vfov, aspect_ratio, focal_length);
 

@@ -1411,101 +1411,114 @@ scene Test_Quad(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_contex
 }
 
 
-void CornellBox(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *tc) {
+void CornellBox(memory_region *region, scene *s, vec3 *o, vec3 *t, vec3 *vup, thread_context *tc) {
 	int max_objects = 64;
 	int obj_index = 0;
 	object **objects = (object **)malloc(sizeof(object *) * max_objects);
 
-	*o = vec3_new(800.0, 278.0, 273.0);
-	*t = vec3_new(-1.0, 0.0, 0.0);
 
 	material *lamb = add_lambertian(region);
-	material *glass = add_glass(region, 1.51);
+	material *metal = add_metal(region, 0.1);
+	material *glass = add_glass(region, 1.52);
 	material *light = add_diffuse_light(region);
 
-	texture *white_light = add_color_texture(region, fcolor_new(5.0, 5.5, 5.5));
+	texture *white_light = add_color_texture(region, fcolor_new(6.2, 6.5, 6.5));
 
 	texture *red = add_color_texture(region, fcolor_new(0.9, 0.22, 0.2));
 	texture *green = add_color_texture(region, fcolor_new(0.3, 0.88, 0.5));
 	texture *white = add_color_texture(region, COLOR_VALUE(1.0));
 	texture *gray = add_color_texture(region, COLOR_VALUE(0.5));
+	texture *tile = add_uv_checker_texture(region, green, red, 16.0);
 
-	// Floor
-	vec3 floor_back_right = vec3_new(0.0, 552.8, 0.0);
-	vec3 floor_back_left = vec3_new(0.0, 0.0, 0.0);
-	vec3 floor_front_left = vec3_new(559.2, 0.0, 0.0);
-	vec3 floor_front_right = vec3_new(559.2, 549.6, 0.0);
-	object *floor_left = add_triangle(region, floor_front_left, floor_back_right, floor_back_left, white, lamb);
-	object *floor_right = add_triangle(region, floor_front_left, floor_front_right, floor_back_right, white, lamb);
+	// Vertices of the box itself
+	float bottom = 0.0, top = 550.0;
+	float left = 0.0, right = 555.0;
+	float back = 0.0, front = 560.0;
 
-	// Light in ceiling
-	vec3 light_back_right = vec3_new(227.0, 343.0, 548.8);
-	vec3 light_front_right = vec3_new(332.0, 343.0, 548.8);
-	vec3 light_front_left = vec3_new(332.0, 213.0, 548.8);
-	vec3 light_back_left= vec3_new(227.0, 213.0, 548.8);
-	object *light_left = add_triangle(region, light_front_left, light_back_right, light_back_left, white_light, light);
-	object *light_right = add_triangle(region, light_front_left, light_front_right, light_back_right, white_light, light);
+	*o = vec3_new(2.0f * front, right * 0.5, top * 0.5);
+	*t = vec3_sub(*o, vec3_new(1.0, 0.0, 0.0));
 
-	// Ceiling
-	vec3 ceiling_back_right = vec3_new(0.0, 556.0, 548.8);
-	vec3 ceiling_front_right = vec3_new(559.2, 556.0, 548.8);
-	vec3 ceiling_front_left = vec3_new(559.2, 0.0, 548.8);
-	vec3 ceiling_back_left = vec3_new(0.0, 0.0, 548.8);
-	object *ceiling_left = add_triangle(region, ceiling_front_left, ceiling_back_right, ceiling_back_left, white, lamb);
-	object *ceiling_right = add_triangle(region, ceiling_front_left, ceiling_back_right, ceiling_front_right, white, lamb);
+	vec3 box_right_bottom_front = vec3_new(front, right, bottom);
+	vec3 box_left_bottom_front = vec3_new(front, left, bottom);
+	vec3 box_right_bottom_back = vec3_new(back, right, bottom);
+	vec3 box_left_bottom_back = vec3_new(back, left, bottom);
+	vec3 box_right_top_front = vec3_new(front, right, top);
+	vec3 box_left_top_front = vec3_new(front, left, top);
+	vec3 box_right_top_back = vec3_new(back, right, top);
+	vec3 box_left_top_back = vec3_new(back, left, top);
+
+	/* This was the data from cornell.edu. Their coordinates are oriented differently.
+	vec3 box_right_bottom_back = vec3_new(552.8, 0.0, 0.0);
+	vec3 box_left_bottom_back = vec3_new(0.0, 0.0, 0.0);
+	vec3 box_left_bottom_front = vec3_new(0.0, 0.0, 559.2);
+	vec3 box_right_bottom_front = vec3_new(549.6, 0.0, 559.2);
+	vec3 box_right_top_back = vec3_new(556.0, 548.8, 0.0);
+	vec3 box_right_top_front = vec3_new(556.0, 548.8, 559.2);
+	vec3 box_left_top_front = vec3_new(0.0, 548.8, 559.2);
+	vec3 box_left_top_back = vec3_new(0.0, 548.8, 0.0);
+	*/
 
 
-	// Back wall
-	vec3 back_bottom_right = vec3_new(559.2, 549.6, 0.0);
-	vec3 back_bottom_left = vec3_new(559.2, 0.0, 0.0);
-	vec3 back_top_left = vec3_new(559.2, 0.0, 548.8);
-	vec3 back_top_right = vec3_new(559.2, 556.0, 548.8);
-	object *back_left = add_triangle(region, back_top_left, back_bottom_right, back_bottom_left, white, lamb);
-	object *back_right = add_triangle(region, back_top_left, back_bottom_right, back_top_right, white, lamb);
+	vec3 floor_a = box_right_bottom_back;
+	vec3 floor_b = box_left_bottom_back;
+	vec3 floor_c = box_left_bottom_front;
+	vec3 floor_d = box_right_bottom_front;
+	object *floor = add_quad(region, floor_a, floor_b, floor_c, floor_d, white, lamb);
+	
+	float light_radius = right * 0.2;
+	vec3 light_a = vec3_new(front * 0.5f - light_radius, right * 0.5f - light_radius, top - 0.005f);
+	vec3 light_b = vec3_new(front * 0.5f + light_radius, right * 0.5f - light_radius, top - 0.005f);
+	vec3 light_c = vec3_new(front * 0.5f - light_radius, right * 0.5f + light_radius, top - 0.005f);
+	vec3 light_d = vec3_new(front * 0.5f + light_radius, right * 0.5f + light_radius, top - 0.005f);
+	object *light_on_ceiling = add_ss_quad(region, light_b, light_a, light_c, light_d, white_light, light);
 
-	// Right wall
-	vec3 right_front_bottom = vec3_new(559.2, 0.0, 0.0);
-	vec3 right_front_top = vec3_new(559.2, 0.0, 548.8);
-	vec3 right_back_bottom = vec3_new(0.0, 0.0, 0.0);
-	vec3 right_back_top = vec3_new(0.0, 0.0, 548.8);
-	object *right_front = add_triangle(region, right_front_top, right_back_bottom, right_back_top, green, lamb);
-	object *right_back = add_triangle(region, right_front_top, right_back_bottom, right_front_bottom, green, lamb);
+	vec3 ceiling_a = box_right_top_back;
+	vec3 ceiling_b = box_right_top_front;
+	vec3 ceiling_c = box_left_top_front;
+	vec3 ceiling_d = box_left_top_back;
+	object *ceiling = add_quad(region, ceiling_a, ceiling_b, ceiling_c, ceiling_d, white, lamb);
 
-	// Left wall
-	vec3 left_front_bottom = vec3_new(559.2, 0.0, 0.0);
-	vec3 left_front_top = vec3_new(559.2, 0.0, 548.8);
-	vec3 left_back_bottom = vec3_new(0.0, 0.0, 0.0);
-	vec3 left_back_top = vec3_new(0.0, 0.0, 548.8);
-	object *left_front = add_triangle(region, left_front_top, left_back_bottom, left_back_top, red, lamb);
-	object *left_back = add_triangle(region, left_front_top, left_back_bottom, left_front_bottom, red, lamb);
+	vec3 backwall_a = box_right_bottom_back;
+	vec3 backwall_b = box_left_bottom_back;
+	vec3 backwall_c = box_right_top_back;
+	vec3 backwall_d = box_left_top_back;
+	object *backwall = add_quad(region, backwall_a, backwall_b, backwall_c, backwall_d, white, lamb);
 
-	// Short block (using sphere because blocks are too much work atm
- 	object *small_sphere = add_sphere(region, vec3_new(100.0, 200.0, 50.0), 100.0, white, lamb);
+	vec3 rightwall_a = box_right_top_back;
+	vec3 rightwall_b = box_right_top_front;
+	vec3 rightwall_c = box_right_bottom_front;
+	vec3 rightwall_d = box_right_bottom_back;
+	object *rightwall = add_quad(region, rightwall_a, rightwall_b, rightwall_c, rightwall_d, green, lamb);
 
-	// Tall block (using sphere because blocks are too much work atm
- 	object *tall_sphere = add_sphere(region, vec3_new(150.0, 400.0, 80.0), 80.0, white, lamb);
+	vec3 leftwall_a = box_left_top_front;
+	vec3 leftwall_b = box_left_top_back;
+	vec3 leftwall_c = box_left_bottom_front;
+	vec3 leftwall_d = box_left_bottom_back;
+	object *leftwall = add_quad(region, leftwall_a, leftwall_b, leftwall_c, leftwall_d, red, lamb);
 
-	//objects[obj_index++] = light_left;
-	//objects[obj_index++] = light_right;
-	objects[obj_index++] = floor_left;
-	objects[obj_index++] = floor_right;
-	objects[obj_index++] = ceiling_left;
-	objects[obj_index++] = ceiling_right;
-	objects[obj_index++] = back_left;
-	objects[obj_index++] = back_right;
-	objects[obj_index++] = right_front;
-	objects[obj_index++] = right_back;
-	objects[obj_index++] = left_front;
-	objects[obj_index++] = left_back;
-	objects[obj_index++] = small_sphere;
-	objects[obj_index++] = tall_sphere;
+	float small_radius = right * 0.15, big_radius = right * 0.18, glass_radius = right * 0.155;
+	object *smallsphere = add_sphere(region, vec3_new(front * 0.27, right * 0.27, small_radius), small_radius, white, metal);
 
+	object *bigsphere = add_sphere(region ,vec3_new(front * 0.26, right * 0.75, big_radius), big_radius, gray, lamb);
+
+	object *glasssphere = add_sphere(region ,vec3_new(front * 0.7, right * 0.7, glass_radius * 1.0), glass_radius, white, glass);
+
+
+	objects[obj_index++] = floor;
+	//objects[obj_index++] = light_on_ceiling;
+	objects[obj_index++] = ceiling;
+	objects[obj_index++] = backwall;
+	objects[obj_index++] = leftwall;
+	objects[obj_index++] = rightwall;
+	objects[obj_index++] = smallsphere;
+	//objects[obj_index++] = bigsphere;
+	objects[obj_index++] = glasssphere;
 
 	s->objects = objects;
 	s->object_count = obj_index;
 }
 
-void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *t, thread_context *tc) {
+void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *t, vec3 *vup, thread_context *tc) {
 	switch(selection) {
 		case 1:
 			*s = BlackWhite(region);
@@ -1567,7 +1580,7 @@ void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *
 			Test_Quad(region, s, o, t, tc);
 			return;
 		default:
-			CornellBox(region, s, o, t, tc);
+			CornellBox(region, s, o, t, vup, tc);
 			return;
 	}
 }
