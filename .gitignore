@@ -3,3 +3,5 @@ todo
 resource/
 *.exe
 test/
+misc/
+.dev-tmux.conf
