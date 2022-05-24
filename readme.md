@@ -6,13 +6,13 @@ This is largely inspired by Peter Shirley's _Ray Tracing in One Weekend_, but it
 This project will help me practice C, architecture, graphics programming principles, and math.  
 
 
+![My version of the cornell box. Uses spheres in lieu of a convenient way to make boxes atm.](./examples/cornell_box.jpg)
+![A demo of spheres modified by fractional brownian motion with various textures](./examples/fbm_test.jpg)
 ![A box with a few spheres](./examples/box.jpg)
 ![A sphere with it's surface modified by fractional brownian motion. The colors represent normal vectors.](./examples/fbm_planet.jpg)
-![A demo of spheres modified by fractional brownian motion with various textures](./examples/fbm_test.jpg)
 ![A scene demonstrating diffuse lights](./examples/lights.jpg)
 ![A scene demonstrating checker_texture and perlin_sincos_texture](./examples/textures.jpg)
 ![A scene showcasing reflections](./examples/reflection.jpg)
-![A demo scene](./examples/ex.jpg)
 
 Usage
 ---
