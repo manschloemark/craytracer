@@ -10,7 +10,8 @@ typedef struct {
 	unsigned int rand_state;
 } thread_context;
 
-static const float pi = 3.141592f;
+static const float pi   = 3.141592f;
+static const float pi_2 = 1.570796f;
 
 static inline float clamp(float n, float min, float max) {
 	return (n < min) ? min : (n > max) ? max : n;
