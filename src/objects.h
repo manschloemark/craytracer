@@ -40,7 +40,7 @@ typedef struct {
 	void *tri_a, *tri_b;
 } quad;
 
-quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, texture *text, material *mat);
+quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, int double_sided, texture *text, material *mat);
 
 typedef struct {
 	noise *noise;
@@ -77,7 +77,7 @@ object make_sphere(point3 center, float r, texture *text, material *mat);
 
 object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *text, material *mat);
 
-object make_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, texture *text, material *mat);
+object make_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, int double_sided, texture *text, material *mat);
 
 object make_fbm_shape(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octabes, object *obj);
 object make_fbm_sphere(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj);
@@ -88,6 +88,7 @@ object *add_triangle(memory_region *region, point3 a, point3 b, point3 c, textur
 object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, point3 c, texture *text, material *mat);
 
 object *add_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, texture *text, material *mat);
+object *add_ss_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, texture *text, material *mat);
 
 object *add_fbm_shape(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj);
 object *add_fbm_sphere(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj);

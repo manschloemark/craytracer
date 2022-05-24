@@ -37,13 +37,13 @@ triangle triangle_new(point3 x, point3 y, point3 z, int double_sided) {
 
 // really hastily made just to get it out there. this will not stay long
 int about_equal(vec3 a, vec3 b) {
-	const float eps = 0.001f;
+	const float eps = 0.000001f;
 	return !(vec3_len(vec3_sub(a, b)) > eps);
 }
 
 // NOTE : this is full of bugs, it's ugly, and poorly written
 // But I plan to implement meshes which would make this pretty much redundant, I think.
-quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, texture *text, material *mat) {
+quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, int double_sided, texture *text, material *mat) {
 	quad q = {};
 	vec3 a_b = vec3_sub(b, a);
 	vec3 a_c = vec3_sub(c, a);
@@ -91,6 +91,9 @@ quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, tex
 		tri_b->shape.triangle.a = tri_b->shape.triangle.b;
 		tri_b->shape.triangle.b = temp;
 	}
+
+	tri_a->shape.triangle.double_sided = double_sided;
+	tri_b->shape.triangle.double_sided = double_sided;
 
 	q.tri_a = tri_a;
 	q.tri_b = tri_b;
@@ -565,9 +568,9 @@ object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *te
 // So to be able to tell when that happens without changing a bunch of stuff
 // I'm being lazy and adding a SHAPE_ERROR enum to ShapeID.
 // This way my program won't crash
-object make_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, texture *text, material *mat) {
+object make_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, int double_sided, texture *text, material *mat) {
 	object o;
-	o.shape.quad = quad_new(region, a, b, c, d, text, mat);
+	o.shape.quad = quad_new(region, a, b, c, d, double_sided, text, mat);
 	o.id = Quad;
 	if (o.shape.quad.tri_a == NULL || o.shape.quad.tri_b == NULL) {
 		o.id = SHAPE_ERROR;
@@ -612,12 +615,20 @@ object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, poi
 }
 
 object *add_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, texture *text, material *mat) {
-	object q = make_quad(region, a, b, c, d, text, mat);
+	object q = make_quad(region, a, b, c, d, 1, text, mat);
 	if (q.id == SHAPE_ERROR) {
 		return NULL;
 	}
 	return (object *)memory_region_add(region, &q, sizeof(object));
 
+}
+
+object *add_ss_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, texture *text, material *mat) {
+	object q = make_quad(region, a, b, c, d, 0, text, mat);
+	if (q.id == SHAPE_ERROR) {
+		return NULL;
+	}
+	return (object *)memory_region_add(region, &q, sizeof(object));
 }
 
 object *add_fbm_shape(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj) {
