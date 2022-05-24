@@ -1436,7 +1436,7 @@ void CornellBox(memory_region *region, scene *s, vec3 *o, vec3 *t, vec3 *vup, th
 	float back = 0.0, front = 560.0;
 
 	*o = vec3_new(2.0f * front, right * 0.5, top * 0.5);
-	*t = vec3_sub(*o, vec3_new(1.0, 0.0, 0.0));
+	*t = vec3_sub(*o, vec3_new(1.5 * front, 0.0, 0.0));
 
 	vec3 box_right_bottom_front = vec3_new(front, right, bottom);
 	vec3 box_left_bottom_front = vec3_new(front, left, bottom);
@@ -1497,15 +1497,15 @@ void CornellBox(memory_region *region, scene *s, vec3 *o, vec3 *t, vec3 *vup, th
 	object *leftwall = add_quad(region, leftwall_a, leftwall_b, leftwall_c, leftwall_d, red, lamb);
 
 	float small_radius = right * 0.15, big_radius = right * 0.18, glass_radius = right * 0.155;
-	object *smallsphere = add_sphere(region, vec3_new(front * 0.27, right * 0.27, small_radius), small_radius, white, metal);
+	object *smallsphere = add_sphere(region, vec3_new(front * 0.27, right * 0.27, small_radius + 0.001), small_radius, gray, metal);
 
-	object *bigsphere = add_sphere(region ,vec3_new(front * 0.26, right * 0.75, big_radius), big_radius, gray, lamb);
+	object *bigsphere = add_sphere(region ,vec3_new(front * 0.26, right * 0.75, big_radius + 0.001), big_radius, gray, lamb);
 
-	object *glasssphere = add_sphere(region ,vec3_new(front * 0.7, right * 0.7, glass_radius * 1.0), glass_radius, white, glass);
+	object *glasssphere = add_sphere(region ,vec3_new(front * 0.7, right * 0.7, glass_radius * 1.0 + 0.001), glass_radius, white, glass);
 
 
 	objects[obj_index++] = floor;
-	//objects[obj_index++] = light_on_ceiling;
+	objects[obj_index++] = light_on_ceiling;
 	objects[obj_index++] = ceiling;
 	objects[obj_index++] = backwall;
 	objects[obj_index++] = leftwall;
