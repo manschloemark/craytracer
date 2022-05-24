@@ -190,8 +190,9 @@ void MultithreadRender(struct render_info *rinfo, threadpool *pool, thread_conte
 
 int main(int argc, char **argv) {
 	thread_context mainthread = {};
+	struct drand48_data buff;
 	mainthread.id = 0;
-	mainthread.rand_state = 0;
+	mainthread.rand_state = buff;
 
 	timer runtime = timer_new();
 	timer render_timer = timer_new();
@@ -229,7 +230,7 @@ int main(int argc, char **argv) {
 		//srand(args.seed); // seed is always 1 by default. I use current time for variety.
 		printf("Random seed: %d\n", args.seed);
 	}
-	mainthread.rand_state = args.seed;
+	srand48_r(args.seed, &mainthread.rand_state);
 
 	float aspect_ratio;
 	if (args.img_height) {
@@ -294,7 +295,9 @@ int main(int argc, char **argv) {
 		thread_context *contexts = calloc(args.jobcount, sizeof(thread_context));
 		for (int i = 0; i < args.jobcount; ++i) {
 			contexts[i].id = i+1;
-			contexts[i].rand_state = args.seed + contexts[i].id;
+			struct drand48_data buff = {};
+			srand48_r(args.seed + contexts[i].id, &buff);
+			contexts[i].rand_state = buff;
 		}
 		pool = threadpool_new(args.threadcount);
 		MultithreadRender(&render_args, pool, contexts, args.jobcount);

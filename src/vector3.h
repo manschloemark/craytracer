@@ -66,12 +66,12 @@ static inline int vec3_near_zero(vec3 v) {
 
 vec3 vec3_unit(vec3 a);
 
-vec3 vec3_random(unsigned int *state);
+vec3 vec3_random(struct drand48_data *state);
 
-vec3 vec3_bounded_random(float min, float max, unsigned int *state);
+vec3 vec3_bounded_random(float min, float max, struct drand48_data *state);
 
-vec3 vec3_random_in_unit_sphere(unsigned int *state);
+vec3 vec3_random_in_unit_sphere(struct drand48_data *state);
 
-vec3 vec3_random_in_hemisphere(vec3 n, unsigned int *state);
+vec3 vec3_random_in_hemisphere(vec3 n, struct drand48_data *state);
 
 #endif

@@ -34,7 +34,7 @@ vec3 vec3_unit(vec3 a) {
 	return a;
 }
 
-vec3 vec3_random(unsigned int *state) {
+vec3 vec3_random(struct drand48_data *state) {
 	vec3 v = {};
 	v.x = random_float(state);
 	v.y = random_float(state);
@@ -42,7 +42,7 @@ vec3 vec3_random(unsigned int *state) {
 	return v;
 }
 
-vec3 vec3_bounded_random(float min, float max, unsigned int *state) {
+vec3 vec3_bounded_random(float min, float max, struct drand48_data *state) {
 	vec3 v = {};
 	v.x = random_float_between(min, max, state);
 	v.y = random_float_between(min, max, state);
@@ -51,7 +51,7 @@ vec3 vec3_bounded_random(float min, float max, unsigned int *state) {
 }
 
 // Pretty much copied from Raytracing in One Weekend.
-vec3 vec3_random_in_unit_sphere(unsigned int *state) {
+vec3 vec3_random_in_unit_sphere(struct drand48_data *state) {
 	while(1) {
 		vec3 v = vec3_bounded_random(-1.0f, 1.0f, state);
 		if (vec3_lensq(v) < 1.0f) return v;
@@ -60,7 +60,7 @@ vec3 vec3_random_in_unit_sphere(unsigned int *state) {
 
 // According to Raytracing in One Weekend this provides a better distribution
 // for lambertian surfaces
-vec3 vec3_random_in_hemisphere(vec3 n, unsigned int *state) {
+vec3 vec3_random_in_hemisphere(vec3 n, struct drand48_data *state) {
 	vec3 v = vec3_random_in_unit_sphere(state);
 	if (vec3_dot(v, n) > 0.0f) return v;
 	else return vec3_neg(v);

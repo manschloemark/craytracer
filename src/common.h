@@ -7,7 +7,7 @@
 
 typedef struct {
 	int id;
-	unsigned int rand_state;
+	struct drand48_data rand_state;
 } thread_context;
 
 static const float pi   = 3.141592f;
@@ -17,11 +17,13 @@ static inline float clamp(float n, float min, float max) {
 	return (n < min) ? min : (n > max) ? max : n;
 }
 
-static inline float random_float(unsigned int *state) {
-	return (float)rand_r(state) / ((float)RAND_MAX + 1.0f);
+static inline float random_float(struct drand48_data *state) {
+	double result;
+	drand48_r(state, &result);
+	return (float)result;
 }
 
-static inline float random_float_between(float min, float max, unsigned int *state) {
+static inline float random_float_between(float min, float max, struct drand48_data *state) {
 	float result = random_float(state)*(max - min) + min;
 	return result;
 }
