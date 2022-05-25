@@ -53,9 +53,9 @@ typedef struct {
 	void *text;
 	float hurst;
 	int octaves;
-} fbm_modifier;
+} fbm_texture;
 
-fbm_modifier fbm_modifier_new(memory_region *region, noise *noise, float hurst, int octaves, void *text);
+fbm_texture fbm_modifier_new(memory_region *region, noise *noise, float hurst, int octaves, void *text);
 
 typedef struct {
 	vec3 intervals, widths;
@@ -105,7 +105,7 @@ union texture_type {
 	checker_texture checker;
 	noise_texture noise;
 	gradient_noise_texture gradient_noise;
-	fbm_modifier fbm_mod;
+	fbm_texture fbm;
 	level_curve_texture level_curve;
 	distance_texture distance;
 };

@@ -253,8 +253,8 @@ texture *add_noise_sincos_texture(memory_region *region, noise *noise, float sca
 
 
 // FBM Modifier -- take some other texture and return the value when you mess with the point
-fbm_modifier fbm_modifier_new(memory_region *region, noise *noise, float hurst, int octaves, void *text) {
-	fbm_modifier fbm_mod = {};
+fbm_texture fbm_modifier_new(memory_region *region, noise *noise, float hurst, int octaves, void *text) {
+	fbm_texture fbm_mod = {};
 	fbm_mod.hurst = hurst;
 	fbm_mod.octaves = octaves;
 	fbm_mod.text = text;
@@ -265,8 +265,8 @@ fbm_modifier fbm_modifier_new(memory_region *region, noise *noise, float hurst, 
 texture make_fbm_modifier(memory_region *region, noise *noise, float hurst, int octaves, texture *text) {
 	texture txt = {};
 	txt.TextureColor = (*FBMModifierTextureColor);
-	fbm_modifier fbm_mod = fbm_modifier_new(region, noise, hurst, octaves, text);
-	txt.type.fbm_mod = fbm_mod;
+	fbm_texture fbm_mod = fbm_modifier_new(region, noise, hurst, octaves, text);
+	txt.type.fbm = fbm_mod;
 	txt.id = FBM;
 	return txt;
 }
@@ -405,7 +405,7 @@ fcolor NoiseSinCosTextureColor(void *self, float u, float v, vec3 pt, vec3 *norm
 }
 
 fcolor FBMModifierTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
-	fbm_modifier *fbm_mod = &((texture *)self)->type.fbm_mod;
+	fbm_texture *fbm_mod = &((texture *)self)->type.fbm;
 	vec3 warped = vec3_mul(pt, fbm(fbm_mod->noise, pt, fbm_mod->hurst, fbm_mod->octaves));
 	return ((texture *)fbm_mod->text)->TextureColor(fbm_mod->text, u, v, warped, normal);
 }
