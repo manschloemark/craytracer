@@ -4,13 +4,19 @@
 #include "common.h"
 #include "memory.h"
 #include "color.h"
-#include "objects.h"
 #include "texture.h"
 #include "material.h"
+#include "objects.h"
+#include "object_list.h"
 
 typedef struct {
-	object **objects;
-	int object_count;
+	union {
+		struct {
+		object **objects;
+		int object_count, placeholder;
+		};
+		object_list ol;
+	};
 } scene;
 
 scene Demo(memory_region *region, scene *s, vec3 *origin, vec3 *target, thread_context *thread) {
@@ -1518,6 +1524,34 @@ void CornellBox(memory_region *region, scene *s, vec3 *o, vec3 *t, vec3 *vup, th
 	s->object_count = obj_index;
 }
 
+void Test_ObjectList(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *tc) {
+	object_list ol = object_list_new(region, 32);
+	
+	noise *shared_noise = add_simplex_noise(region, 32, tc);
+
+	material *lamb = add_lambertian(region);
+
+	texture *blue = add_color_texture(region, fcolor_new(0.3, 0.4, 0.65));
+	texture *n = add_colored_noise_texture(region, shared_noise, 2.0, blue);
+	texture *fbm1 = add_fbm_modifier(region, shared_noise, 1.0, 9, n);
+	texture *fbm2 = add_fbm_modifier(region, shared_noise, 1.0, 9, fbm1);
+	texture *fbm3 = add_fbm_modifier(region, shared_noise, 1.0, 9, fbm2);
+
+	object *sph = add_sphere(region, vec3_new(0.0, -3.0, 3.0), 2.0, n, lamb);
+	object *sph1 = add_sphere(region, vec3_new(0.0, 3.0, 3.0), 2.0, fbm1, lamb);
+	object *sph2 = add_sphere(region, vec3_new(0.0, -3.0, -3.0), 2.0, fbm2, lamb);
+	object *sph3 = add_sphere(region, vec3_new(0.0, 3.0, -3.0), 2.0, fbm3, lamb);
+
+	object_list_add(&ol, sph);
+	object_list_add(&ol, sph1);
+	object_list_add(&ol, sph2);
+	object_list_add(&ol, sph3);
+
+	s->ol = ol;
+	*o = vec3_new(-10.0, 0.0, 0.0);
+	*t = vec3_new(0.0, 0.0, 0.0);
+	}
+
 void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *t, vec3 *vup, thread_context *tc) {
 	switch(selection) {
 		case 1:
@@ -1578,6 +1612,9 @@ void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *
 			return;
 		case 20:
 			Test_Quad(region, s, o, t, tc);
+			return;
+		case 21:
+			Test_ObjectList(region, s, o, t, tc);
 			return;
 		default:
 			CornellBox(region, s, o, t, vup, tc);

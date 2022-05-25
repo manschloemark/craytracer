@@ -21,6 +21,7 @@
 #include "objects.h"
 #include "material.h"
 #include "texture.h"
+#include "object_list.h"
 #include "scene.h"
 #include "memory.h"
 #include "output.h"
@@ -37,12 +38,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 	hitrec.t_min = 0.0002f; // Prevent rounding errors when t ~~ 0.0f;
 	hitrec.t = 123123902.0f; // TODO : make some const to use for this instead
 
-	int hit = 0;
-	int c = 0;
-	while(c < scene->object_count) {
-		hit |= scene->objects[c]->Intersect(scene->objects[c], &r, &hitrec, thread);
-		++c;
-	}
+	int hit = object_list_intersect(&scene->ol, &r, &hitrec, thread);
 
 	if (!hit) return *bgcolor;
 
