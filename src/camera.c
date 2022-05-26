@@ -1,14 +1,14 @@
 #include "camera.h"
 
 // TODO : implement lens size stuff for blur and depth of field simulation
-camera make_camera(point3 origin, point3 target, vec3 vup, float vfov, float aspect_ratio, float focal_length) {
+camera make_camera(point3 origin, point3 target, vec3 vup, double vfov, double aspect_ratio, double focal_length) {
 	camera cam = {};
 	cam.origin = origin;
 
-	float theta = degrees_to_radians(vfov);
-	float h = tanf(theta / 2.0);
-	float vp_height = 2.0 * h;
-	float vp_width = aspect_ratio * vp_height;
+	double theta = degrees_to_radians(vfov);
+	double h = tanf(theta / 2.0);
+	double vp_height = 2.0 * h;
+	double vp_width = aspect_ratio * vp_height;
 
 	cam.w = vec3_unit(vec3_sub(origin, target));
 	// NOTE : when vup and (origin - target) are parallel the cross product is the 0 vector. This is not good.

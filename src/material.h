@@ -7,7 +7,7 @@
 #include "memory.h"
 
 vec3 vec3_reflect(vec3 v, vec3 n);
-vec3 vec3_refract(vec3 v, vec3 n, float ior_ratio);
+vec3 vec3_refract(vec3 v, vec3 n, double ior_ratio);
 
 typedef struct {
 } lambertian;
@@ -15,10 +15,10 @@ typedef struct {
 vec3 ScatterLambertian(vec3 *n, thread_context *thread);
 
 typedef struct { 
-	float blur;
+	double blur;
 } metal;
 
-static inline metal metal_new(float blur) {
+static inline metal metal_new(double blur) {
 	metal metal = {};
 	metal.blur = blur;
 	return metal;
@@ -28,10 +28,10 @@ vec3 ScatterMetal(metal m, vec3 v, vec3 *n, thread_context *thread);
 
 // TODO : find a better name for this. It's not just glass, but any medium light can travel _through_
 typedef struct {
-	float ior;
+	double ior;
 } glass;
 
-static inline glass glass_new(float ior) {
+static inline glass glass_new(double ior) {
 	glass glass = {};
 	glass.ior = ior;
 	return glass;
@@ -42,10 +42,10 @@ typedef struct {
 } diffuse_light;
 
 // Schlick's Approximation is a formula for approximating contribution of Fresnel factor in specular reflection
-// 1.0f here is tecnically n1 but it is assumed to be air all the time.
-float schlick_approximation(float cos_incident, float ior_ratio);
+// 1.0 here is tecnically n1 but it is assumed to be air all the time.
+double schlick_approximation(double cos_incident, double ior_ratio);
 
-vec3 ScatterGlass(glass g, vec3 v, vec3 *n, float n1, int hit_front, thread_context *thread);
+vec3 ScatterGlass(glass g, vec3 v, vec3 *n, double n1, int hit_front, thread_context *thread);
 
 enum MaterialID {
 	Lambertian,
@@ -70,17 +70,17 @@ typedef struct {
 
 material make_lambertian();
 
-material make_metal(float blur); 
+material make_metal(double blur); 
 
-material make_glass(float ior); 
+material make_glass(double ior); 
 
 material make_diffuse_light(); 
 
 material *add_lambertian(memory_region *region); 
 
-material *add_metal(memory_region *region, float blur); 
+material *add_metal(memory_region *region, double blur); 
 
-material *add_glass(memory_region *region, float ior); 
+material *add_glass(memory_region *region, double ior); 
 
 material *add_diffuse_light(memory_region *region); 
 

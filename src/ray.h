@@ -16,7 +16,7 @@ static inline ray ray_new(point3 pt, vec3 dir) {
 	return r;
 }
 
-static inline point3 pt_on_ray(ray *r, float t) {
+static inline point3 pt_on_ray(ray *r, double t) {
 	return vec3_add(r->pt, vec3_mul(r->dir, t));
 }
 

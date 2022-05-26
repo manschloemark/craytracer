@@ -10,26 +10,26 @@ typedef struct {
 	struct drand48_data rand_state;
 } thread_context;
 
-static const float pi   = 3.141592f;
-static const float pi_2 = 1.570796f;
+static const double pi   = 3.141592;
+static const double pi_2 = 1.570796;
 
-static inline float clamp(float n, float min, float max) {
+static inline double clamp(double n, double min, double max) {
 	return (n < min) ? min : (n > max) ? max : n;
 }
 
-static inline float random_float(struct drand48_data *state) {
+static inline double random_double(struct drand48_data *state) {
 	double result;
 	drand48_r(state, &result);
-	return (float)result;
-}
-
-static inline float random_float_between(float min, float max, struct drand48_data *state) {
-	float result = random_float(state)*(max - min) + min;
 	return result;
 }
 
-static inline float degrees_to_radians(float degrees) {
-	float rad = degrees * pi / 180.0f;
+static inline double random_double_between(double min, double max, struct drand48_data *state) {
+	double result = random_double(state)*(max - min) + min;
+	return result;
+}
+
+static inline double degrees_to_radians(double degrees) {
+	double rad = degrees * pi / 180.0;
 	return rad;
 }
 

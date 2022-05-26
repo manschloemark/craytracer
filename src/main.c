@@ -32,11 +32,11 @@
 #define DEBUG_BANDS 0
 
 fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldepth, thread_context *thread) {
-	if (calldepth <= 0) return fcolor_new(0.0f, 0.0f, 0.0f);
+	if (calldepth <= 0) return fcolor_new(0.0, 0.0, 0.0);
 
 	hit_record hitrec = {};
-	hitrec.t_min = 0.0002f; // Prevent rounding errors when t ~~ 0.0f;
-	hitrec.t = 123123902.0f; // TODO : make some const to use for this instead
+	hitrec.t_min = 0.0002; // Prevent rounding errors when t ~~ 0.0;
+	hitrec.t = 123123902.0; // TODO : make some const to use for this instead
 
 	int hit = object_list_intersect(&scene->ol, &r, &hitrec, thread);
 
@@ -85,8 +85,8 @@ void Render(struct render_info *rinfo, thread_context *thread) {
 		for (int i = 0; i < rinfo->width; ++i) {
 			int s;
 			for (s = 0; s < rinfo->samples; ++s) {
-				float u = ((float)i + random_float(&thread->rand_state)) / (float)(rinfo->width-1);
-				float v = ((float)j + random_float(&thread->rand_state)) / (float)(rinfo->height-1);
+				double u = ((double)i + random_double(&thread->rand_state)) / (double)(rinfo->width-1);
+				double v = ((double)j + random_double(&thread->rand_state)) / (double)(rinfo->height-1);
 
 				ray r = camera_cast_ray(rinfo->cam, u, v, thread);
 				fcolor sample = TraceRay(r, rinfo->scene, rinfo->bgcolor, rinfo->max_depth, rinfo->max_depth, thread);
@@ -116,8 +116,8 @@ void RenderChunk(void *args) {
 	int j = rthread->start_j;
 	for (int i = 0; i < rinfo->width; ++i) {
 		for (int s = 0; s < rinfo->samples; ++s) {
-			float u = ((float)i + random_float(&rthread->context->rand_state)) / (float)(rinfo->width-1);
-			float v = ((float)j + random_float(&rthread->context->rand_state)) / (float)(rinfo->height-1);
+			double u = ((double)i + random_double(&rthread->context->rand_state)) / (double)(rinfo->width-1);
+			double v = ((double)j + random_double(&rthread->context->rand_state)) / (double)(rinfo->height-1);
 
 			ray r = camera_cast_ray(rinfo->cam, u, v, rthread->context);
 			fcolor sample = COLOR_UNDEFPURP;
@@ -132,8 +132,8 @@ void RenderChunk(void *args) {
 #endif
 		for (int i = 0; i < rinfo->width; ++i) {
 			for (int s = 0; s < rinfo->samples; ++s) {
-				float u = ((float)i + random_float(&rthread->context->rand_state)) / (float)(rinfo->width-1);
-				float v = ((float)j + random_float(&rthread->context->rand_state)) / (float)(rinfo->height-1);
+				double u = ((double)i + random_double(&rthread->context->rand_state)) / (double)(rinfo->width-1);
+				double v = ((double)j + random_double(&rthread->context->rand_state)) / (double)(rinfo->height-1);
 
 				ray r = camera_cast_ray(rinfo->cam, u, v, rthread->context);
 				fcolor sample;
@@ -154,7 +154,7 @@ void MultithreadRender(struct render_info *rinfo, threadpool *pool, thread_conte
 	int j;
 	int c = 0;
 	// TODO : fix band allocation to make one band per thread, making one band LARGER when image_height % thread_count != 0
-	int bands = (int)(ceilf((float)rinfo->height / (float)chunk_height));
+	int bands = (int)(ceilf((double)rinfo->height / (double)chunk_height));
 	*rinfo->chunks_remaining = bands;
 	struct render_thread *rthreads = calloc(bands, sizeof(struct render_thread));
 	printf("Render Thread memory use: %d\n", bands * (int)sizeof(struct render_thread));
@@ -204,7 +204,7 @@ int main(int argc, char **argv) {
 	args.scene = -1;
 	args.seed = 0;
 	args.jpeg_quality = 100;
-	args.vfov = 60.0f;
+	args.vfov = 60.0;
 	args.threadcount = 4;
 	args.jobcount = 12;
 
@@ -228,11 +228,11 @@ int main(int argc, char **argv) {
 	}
 	srand48_r(args.seed, &mainthread.rand_state);
 
-	float aspect_ratio;
+	double aspect_ratio;
 	if (args.img_height) {
-		aspect_ratio = (float)args.img_width / (float)args.img_height;
+		aspect_ratio = (double)args.img_width / (double)args.img_height;
 	} else {
-		aspect_ratio = 16.0f / 9.0f;
+		aspect_ratio = 16.0 / 9.0;
 		args.img_height = args.img_width / aspect_ratio;
 	}
 
@@ -240,14 +240,14 @@ int main(int argc, char **argv) {
 
 	memory_region mem_region = make_memory_region(MEGABYTES(1));
 
-	point3 origin = vec3_new(0.0f, 0.0f, 10.0f);
-	point3 target = vec3_new(0.0f, 0.0f, 0.0f);
-	vec3 vup = vec3_new(0.0f, 0.0f, 1.0f);
+	point3 origin = vec3_new(0.0, 0.0, 10.0);
+	point3 target = vec3_new(0.0, 0.0, 0.0);
+	vec3 vup = vec3_new(0.0, 0.0, 1.0);
 	scene s = {};
 	SceneSelect(&mem_region, args.scene, &s, &origin, &target, &vup, &mainthread);
 	// By default, set bgcolor to something light. Then check the scene to see if it has any light objects
 	// If there are lights in the scene, set the background color to black so the lights are the only source of light.
-	fcolor bgcolor = COLOR_VALUE(0.5f);
+	fcolor bgcolor = COLOR_VALUE(0.5);
 	for (int obj_index = 0; obj_index < s.object_count; ++obj_index) {
 		if (s.objects[obj_index]->mat->id == DiffuseLight) {
 			bgcolor = COLOR_BLACK;
@@ -255,8 +255,8 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	//point3 origin = vec3_new(0.0f, 0.0f, 0.0f);
-	float focal_length = vec3_len(vec3_sub(target, origin));
+	//point3 origin = vec3_new(0.0, 0.0, 0.0);
+	double focal_length = vec3_len(vec3_sub(target, origin));
 	camera cam = make_camera(origin, target, vup, args.vfov, aspect_ratio, focal_length);
 
 	// TODO : undo the || eventually
@@ -304,7 +304,7 @@ int main(int argc, char **argv) {
 
 	uint8_t *uint8_t_pixels = PixelToUInt8(pixels, args.samples, args.img_height, args.img_width, bytes_per_channel);
 
-	free(pixels); // no longer need float pixels
+	free(pixels); // no longer need double pixels
 
 	int saved = SaveRenderToImage(args.outfile, uint8_t_pixels, args.img_height, args.img_width, output_extension, args.jpeg_quality);
 

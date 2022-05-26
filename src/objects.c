@@ -12,14 +12,14 @@
 // Return 1 otherwise
 // NOTE : this function serves two purposes and that is not very clear, but it kills two birds with one stone
 int outward_normal(vec3 incident, vec3 *normal) {
-	if(vec3_dot(incident, *normal) > 0.0f) {
+	if(vec3_dot(incident, *normal) > 0.0) {
 		*normal = vec3_neg(*normal);
 		return 0;
 	}
 	return 1;
 }
 
-sphere sphere_new(vec3 center, float radius) {
+sphere sphere_new(vec3 center, double radius) {
 	sphere s = {};
 	s.center = center;
 	s.radius = radius;
@@ -37,7 +37,7 @@ triangle triangle_new(point3 x, point3 y, point3 z, int double_sided) {
 
 // really hastily made just to get it out there. this will not stay long
 int about_equal(vec3 a, vec3 b) {
-	const float eps = 0.000001f;
+	const double eps = 0.000001;
 	return !(vec3_len(vec3_sub(a, b)) > eps);
 }
 
@@ -65,8 +65,8 @@ quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, int
 	point3 *tri_b_v2 = NULL;
 	point3 *tri_b_v3 = NULL;
 
-	float ang_ad_ab = vec3_dot(cross_abc, vec3_cross(a_d, a_b)) / (vec3_len(a_b) * vec3_len(a_d));
-	float ang_ad_ac = vec3_dot(cross_abc, vec3_cross(a_d, a_c)) / (vec3_len(a_c) * vec3_len(a_d));;
+	double ang_ad_ab = vec3_dot(cross_abc, vec3_cross(a_d, a_b)) / (vec3_len(a_b) * vec3_len(a_d));
+	double ang_ad_ac = vec3_dot(cross_abc, vec3_cross(a_d, a_c)) / (vec3_len(a_c) * vec3_len(a_d));;
 	if (signbit(ang_ad_ab) != signbit(ang_ad_ac)) {
 		tri_b_v1 = &d;
 		tri_b_v2 = &b;
@@ -100,7 +100,7 @@ quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, int
 	return q;
 }
 
-fbm_shape fbm_shape_new(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, void *obj) {
+fbm_shape fbm_shape_new(memory_region *region, noise *noise, double scale, double offset_scale, double hurst, int octaves, void *obj) {
 	fbm_shape fs;
 	// NOTE : no longer accept uninitialized noise objects
 	//fs.noise = (noise == NULL) ? add_perlin_noise(region, 32) : noise;
@@ -124,17 +124,17 @@ int IntersectSphere(void *self, ray *r, hit_record *hitrec, thread_context *thre
 	sphere *s = &((object *)self)->shape.sphere;
 
 	vec3 T = vec3_sub(r->pt, s->center);
-	float a = vec3_lensq(r->dir);
-	float half_b = vec3_dot(T, r->dir);
-	float c = vec3_lensq(T) - s->radius*s->radius; 
+	double a = vec3_lensq(r->dir);
+	double half_b = vec3_dot(T, r->dir);
+	double c = vec3_lensq(T) - s->radius*s->radius; 
 
-	float discriminant = half_b*half_b - a*c;
+	double discriminant = half_b*half_b - a*c;
 
-	if (discriminant < 0.0f) {
+	if (discriminant < 0.0) {
 		return 0;
 	}
 
-	float root = (-half_b - sqrt(discriminant)) / a;
+	double root = (-half_b - sqrt(discriminant)) / a;
 	if (root < hitrec->t_min || root > hitrec->t) {
 		root = (- half_b + sqrt(discriminant)) / a;
 		if (root < hitrec->t_min || root > hitrec->t) return 0;
@@ -147,9 +147,9 @@ int IntersectSphere(void *self, ray *r, hit_record *hitrec, thread_context *thre
 	hitrec->n = n;
 	hitrec->mat = obj->mat;
 	hitrec->text = obj->text;
-	float phi = acosf(-hitrec->n.z);
-	float theta = atan2(-hitrec->n.x, hitrec->n.y) + pi;
-	hitrec->u = theta / (2.0f * pi);
+	double phi = acosf(-hitrec->n.z);
+	double theta = atan2(-hitrec->n.x, hitrec->n.y) + pi;
+	hitrec->u = theta / (2.0 * pi);
 	hitrec->v = phi / pi;
 
 	return 1;
@@ -170,25 +170,25 @@ int IntersectTriangle(void *self, ray *r, hit_record *hitrec, thread_context *th
 	vec3 CA = vec3_sub(tri->c, tri->a);
 
 	vec3 dir_cross_CA = vec3_cross(r->dir, CA);
-	float determinant = vec3_dot(BA, dir_cross_CA);
+	double determinant = vec3_dot(BA, dir_cross_CA);
 
 	// TODO : change this small value to a variable
-	if (fabs(determinant) < 0.0001f) return 0;
+	if (fabs(determinant) < 0.0001) return 0;
 
-	float inv_determinant = 1.0f / determinant;
+	double inv_determinant = 1.0 / determinant;
 
 	vec3 raypointA = vec3_sub(r->pt, tri->a);
 
-	float u = vec3_dot(raypointA, dir_cross_CA) * inv_determinant;
+	double u = vec3_dot(raypointA, dir_cross_CA) * inv_determinant;
 
-	if (u < 0.0f || u > 1.0f) return 0;
+	if (u < 0.0 || u > 1.0) return 0;
 
 	vec3 raypointA_cross_BA = vec3_cross(raypointA, BA);
-	float v = vec3_dot(r->dir, raypointA_cross_BA) * inv_determinant;
+	double v = vec3_dot(r->dir, raypointA_cross_BA) * inv_determinant;
 
-	if (v < 0.0f || u + v > 1.0f) return 0;
+	if (v < 0.0 || u + v > 1.0) return 0;
 
-	float t = vec3_dot(CA, raypointA_cross_BA) * inv_determinant;
+	double t = vec3_dot(CA, raypointA_cross_BA) * inv_determinant;
 
 	if (t < hitrec->t_min || t > hitrec->t) return 0;
 
@@ -227,11 +227,11 @@ int IntersectQuad(void *self, ray *r, hit_record *hitrec, thread_context *thread
 	// tri_b.c is top right, uv = 1,1
 	/*
 	if(hit_b) {
-		hitrec->u = 1.0f - (hitrec->u * 0.5f);
-		hitrec->v = 1.0f - (hitrec->v * 0.5f);
+		hitrec->u = 1.0 - (hitrec->u * 0.5);
+		hitrec->v = 1.0 - (hitrec->v * 0.5);
 	} else {
-		hitrec->u *= 0.5f;
-		hitrec->v *= 0.5f;
+		hitrec->u *= 0.5;
+		hitrec->v *= 0.5;
 	}
 	*/
 	
@@ -240,15 +240,15 @@ int IntersectQuad(void *self, ray *r, hit_record *hitrec, thread_context *thread
 
 // NOTE: this should never be called anyway
 vec3 FBMNormal(void *self, vec3 relative) {
-	return vec3_new(0.0f, 0.0f, 0.0f);
+	return vec3_new(0.0, 0.0, 0.0);
 }
 
 /* Add offset to warper_ray.pt */
 int IntersectFBMShape(void *self, ray *r, hit_record *hitrec, thread_context *thread) {
 	object *obj = self;
 	fbm_shape *fbm_obj = &obj->shape.fbm_shape;
-	vec3 d = vec3_new(0.0f, 0.0f, 0.0f);
-	float fbm_value = fbm_obj->offset_scale * fbm_with_derivative(fbm_obj->noise, vec3_mul(r->dir, fbm_obj->scale), fbm_obj->hurst, fbm_obj->octaves, &d);
+	vec3 d = vec3_new(0.0, 0.0, 0.0);
+	double fbm_value = fbm_obj->offset_scale * fbm_with_derivative(fbm_obj->noise, vec3_mul(r->dir, fbm_obj->scale), fbm_obj->hurst, fbm_obj->octaves, &d);
 	vec3 offset = vec3_mul(((object *)fbm_obj->obj)->Normal(fbm_obj->obj, r->dir), fbm_value);
 
 	ray warped_ray = ray_new(vec3_add(r->pt, offset), r->dir); // Offset ray point
@@ -282,14 +282,14 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec, thread_context *t
 	hit_record temp_hitrec = *hitrec;
 	object temp_sphere = *sph;
 
-	float max_radius = sph->shape.sphere.radius + fbm_obj->offset_scale;
+	double max_radius = sph->shape.sphere.radius + fbm_obj->offset_scale;
 	temp_sphere.shape.sphere.radius = max_radius;
 
 	// Check if starting point of ray is inside of the 'max possible sphere'
 	// if it is then you should go straight to the raymarch step
-	float dist_to_sphere = vec3_len(vec3_sub(r->pt, temp_sphere.shape.sphere.center));
+	double dist_to_sphere = vec3_len(vec3_sub(r->pt, temp_sphere.shape.sphere.center));
 	if (dist_to_sphere < max_radius) {
-		temp_hitrec.t = 0.0f;
+		temp_hitrec.t = 0.0;
 	}
 	// An appropriate bounding sphere is the child sphere it's radius extended by fbm_obj->offset_scale
 	// if the ray doesn't intersect with this sphere you can just exit
@@ -299,18 +299,18 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec, thread_context *t
 
 	// If you make it here you are going to have to check against the actual fbm offset values
 	int hit = 0;
-	vec3 d = vec3_new(0.0f, 0.0f, 0.0f);
+	vec3 d = vec3_new(0.0, 0.0, 0.0);
 	vec3 normal;
-	vec3 noise_input = vec3_new(0.0f, 0.0f, 0.0f);
-	float fbm_value, offset_radius;
-	float noise_scale = fbm_obj->scale * sph->shape.sphere.radius;
+	vec3 noise_input = vec3_new(0.0, 0.0, 0.0);
+	double fbm_value, offset_radius;
+	double noise_scale = fbm_obj->scale * sph->shape.sphere.radius;
 
 	// First check if the initial intersection was a glance - it only intersected the sphere at one point.
 	// If that's the case then the only way you need to draw the sphere is if the offset at that point is the max
-	float min_t = temp_hitrec.t;
+	double min_t = temp_hitrec.t;
 	hit_record temp_hitrec2 = *hitrec;
 	// Make a new ray that is slight forward along the ray to avoid hitting the same spot twice
-	ray ray_from_hit = ray_new(pt_on_ray(r, min_t + 0.01f), r->dir);
+	ray ray_from_hit = ray_new(pt_on_ray(r, min_t + 0.01), r->dir);
 
 	if(!sph->Intersect(&temp_sphere, &ray_from_hit, &temp_hitrec2, thread)) { // No intersection
 		noise_input = vec3_mul(temp_hitrec.n, noise_scale);
@@ -324,23 +324,23 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec, thread_context *t
 	} else {
 		// In this case the incident ray cuts through the "largest possible sphere"
 		// Need to check if the offset_radii intersect the ray at any point between the two intersections 
-		float max_t = temp_hitrec2.t + min_t;
-		float t_inc = (max_t - min_t) * 0.001f / noise_scale; // divide by noise scale because large noise scale has faster changes
-		float current_t = min_t; // NOTE: this t_increment might be too largs. It's super possible I'll just miss fbm values
+		double max_t = temp_hitrec2.t + min_t;
+		double t_inc = (max_t - min_t) * 0.001 / noise_scale; // divide by noise scale because large noise scale has faster changes
+		double current_t = min_t; // NOTE: this t_increment might be too largs. It's super possible I'll just miss fbm values
 		// NOTE : is there a faster way to get the normals for different t values?
 		//        could I use the dot product or projections somehow?
 		point3 raypt, raypt_to_center;
-		float dist_to_center = 0.0f;
-		float prev_delta = 0.1f;
-		float marker = 0.0f;
-		float EPSILON = 0.0002f;
-		float t_inc_save = t_inc;
+		double dist_to_center = 0.0;
+		double prev_delta = 0.1;
+		double marker = 0.0;
+		double EPSILON = 0.0002;
+		double t_inc_save = t_inc;
 		// Backtracking is a flag that tells whether or not you have crossed a potential intersection
 		// backtracking is kind of like a binary search - you keep halfing the increment and checking which direction you should go next
 		// spheres with large radii will have larger t_increments which means it's less likely any given t value is an exact intersection
 		// so add more backtracking steps based on the size of the sphere.
 		int backtracking = 0;
-		int BACKTRACKING_STEPS = 10 + (int)(max_radius * 0.1f);
+		int BACKTRACKING_STEPS = 10 + (int)(max_radius * 0.1);
 		hit_record loop_hitrec = *hitrec;
 		while ((current_t < max_t)) {
 			loop_hitrec.t_min = current_t;
@@ -351,17 +351,17 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec, thread_context *t
 			normal = vec3_unit(raypt_to_center);
 			fbm_value = fbm_obj->offset_scale * fbm_with_derivative(fbm_obj->noise, vec3_mul(normal, noise_scale), fbm_obj->hurst, fbm_obj->octaves, &d);
 			offset_radius = sph->shape.sphere.radius + fbm_value;
-			float delta = (dist_to_center - offset_radius);
+			double delta = (dist_to_center - offset_radius);
 
 			if(fabs(delta) < EPSILON) {
 				temp_sphere.shape.sphere.radius = offset_radius;
 				hit = sph->Intersect(&temp_sphere, r, &loop_hitrec, thread);
-				EPSILON *= 0.5f;
+				EPSILON *= 0.5;
 			}
 			if (hit) break;
 			if (signbit(prev_delta) == signbit(delta)) {
-				if (backtracking) t_inc *= 0.5f;
-				else t_inc *= 1.1f; // NOTE : this factor of 1.2f is kind of just a guess at a number that speeds up the render without skipping over the edges
+				if (backtracking) t_inc *= 0.5;
+				else t_inc *= 1.1; // NOTE : this factor of 1.2 is kind of just a guess at a number that speeds up the render without skipping over the edges
 			} else {
 				// Sign has changed since last check.
 				// If you aren't already backtracking, start backtracking and set backtracking to max number of backtracking steps
@@ -371,7 +371,7 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec, thread_context *t
 					backtracking = BACKTRACKING_STEPS;
 				}
 				// Flip increment sign so you are moving towards the intercept
-				t_inc *= -0.5f;
+				t_inc *= -0.5;
 			}
 			if (backtracking) {
 				--backtracking;
@@ -425,10 +425,10 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec, thread_context *t
 		return 0;
 	}
 
-	vec3 d = vec3_new(0.0f, 0.0f, 0.0f);
+	vec3 d = vec3_new(0.0, 0.0, 0.0);
 	vec3 spt = vec3_mul(temp_hitrec.pt, fbm_obj->scale / fbm_obj->offset_scale);
-	float fbm_value = fbm_obj->offset_scale * fbm_with_derivative(fbm_obj->noise, spt, fbm_obj->hurst, fbm_obj->octaves, &d);
-	float offset = sph->shape.sphere.radius + fbm_value;
+	double fbm_value = fbm_obj->offset_scale * fbm_with_derivative(fbm_obj->noise, spt, fbm_obj->hurst, fbm_obj->octaves, &d);
+	double offset = sph->shape.sphere.radius + fbm_value;
 	temp_sphere.shape.sphere.radius = offset;
 	int hit = sph->Intersect(&temp_sphere, r, hitrec, thread);
 	if (!hit) return hit;
@@ -454,7 +454,7 @@ int IntersectStringySphere(void *self, ray *r, hit_record *hitrec, thread_contex
 	object *sph = ((object *)fbm_obj->obj);
 	hit_record temp_hitrec = *hitrec;
 	object temp_sphere = *sph;
-	temp_sphere.shape.sphere.radius += (fbm_obj->offset_scale * 1.1f); // NOTE: my noise functions seem to return values slightly greater than 1
+	temp_sphere.shape.sphere.radius += (fbm_obj->offset_scale * 1.1); // NOTE: my noise functions seem to return values slightly greater than 1
 
 	// First check if the ray would hit the sphere in the 'worst' case (largest possible radius)
 	// this saves SO MUCH TIME just because of how expensive fbm is.
@@ -470,15 +470,15 @@ int IntersectStringySphere(void *self, ray *r, hit_record *hitrec, thread_contex
 	//
 
 	int hit = 0;
-	vec3 d = vec3_new(0.0f, 0.0f, 0.0f);
-	vec3 noise_input = vec3_new(0.0f, 0.0f, 0.0f);
-	float fbm_value, offset_radius;
+	vec3 d = vec3_new(0.0, 0.0, 0.0);
+	vec3 noise_input = vec3_new(0.0, 0.0, 0.0);
+	double fbm_value, offset_radius;
 
 	// First check if the initial intersection was a glance - it only intersected the sphere at one point.
 	// If that's the case then the only way you need to draw the sphere is if the offset at that point is the max
-	float min_t = temp_hitrec.t;
+	double min_t = temp_hitrec.t;
 	hit_record temp_hitrec2 = *hitrec;
-	ray ray_from_hit = ray_new(pt_on_ray(r, min_t + 0.001f), r->dir);
+	ray ray_from_hit = ray_new(pt_on_ray(r, min_t + 0.001), r->dir);
 
 	if(!sph->Intersect(&temp_sphere, &ray_from_hit, &temp_hitrec2, thread)) {
 		noise_input = vec3_mul(temp_hitrec.n, fbm_obj->scale);
@@ -489,15 +489,15 @@ int IntersectStringySphere(void *self, ray *r, hit_record *hitrec, thread_contex
 	} else {
 		// In this case the incident ray cuts through the "largest possible sphere"
 		// Need to check if the offset_radii intersect the ray at any point between the two intersections 
-		float max_t = temp_hitrec2.t + min_t;
-		float t_inc = (max_t - min_t) / fbm_obj->scale * 0.001f; // Aim to check 100 points along the ray scaled to the inverse of the fbm object
-		float current_t = min_t; // NOTE: this t_increment might be too largs. It's super possible I'll just miss fbm values
-		float marker = NAN; // This is used to 
+		double max_t = temp_hitrec2.t + min_t;
+		double t_inc = (max_t - min_t) / fbm_obj->scale * 0.001; // Aim to check 100 points along the ray scaled to the inverse of the fbm object
+		double current_t = min_t; // NOTE: this t_increment might be too largs. It's super possible I'll just miss fbm values
+		double marker = NAN; // This is used to 
 		// NOTE : is there a faster way to get the normals for different t values?
 		//        could I use the dot product or projections somehow?
 		point3 ray_point, normal;
-		float dist_to_center;
-		float intersection_epsilon = fbm_obj->_epsilon * sph->shape.sphere.radius;
+		double dist_to_center;
+		double intersection_epsilon = fbm_obj->_epsilon * sph->shape.sphere.radius;
 		while (!hit && (current_t < max_t)) {
 			ray_point = pt_on_ray(r, current_t);
 			normal = vec3_sub(ray_point, sph->shape.sphere.center);
@@ -507,11 +507,11 @@ int IntersectStringySphere(void *self, ray *r, hit_record *hitrec, thread_contex
 			offset_radius = sph->shape.sphere.radius + fbm_value;
 
 			// NOTE : this is very poorly done. Clean it up because you end up backtracking multiple times
- 			// if the offset radius is greater than the current distance to center then there is an intersection behind you OR there is a "floating island" type thing
+ 			// if the offset radius is greater than the current distance to center then there is an intersection behind you OR there is a "doubleing island" type thing
 			/*
 			if (offset_radius > dist_to_center) {
 				marker = current_t;
-				current_t -= (t_inc * 0.4f);
+				current_t -= (t_inc * 0.4);
 			} else if (offset_radius < dist_to_center) {
 				if (marker == marker) {
 					current_t = marker; marker = NAN;
@@ -523,7 +523,7 @@ int IntersectStringySphere(void *self, ray *r, hit_record *hitrec, thread_contex
 			*/
 			if(fabs(offset_radius-dist_to_center) < intersection_epsilon) hit = 1;
 			else current_t += t_inc;
-			t_inc *= 1.05f;
+			t_inc *= 1.05;
 		}
 
 		if(!hit) {
@@ -552,7 +552,7 @@ int IntersectStringySphere(void *self, ray *r, hit_record *hitrec, thread_contex
 	return hit;
 }
 
-object make_sphere(point3 center, float r, texture *text, material *mat) {
+object make_sphere(point3 center, double r, texture *text, material *mat) {
 	object o;
 	o.Intersect = (*IntersectSphere);
 	o.Normal = (*SphereNormal);
@@ -592,7 +592,7 @@ object make_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, int doub
 	return o;
 }
 
-object make_fbm_shape(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj) {
+object make_fbm_shape(memory_region *region, noise *noise, double scale, double offset_scale, double hurst, int octaves, object *obj) {
 	object o;
 	o.Intersect = (*IntersectFBMShape);
 	o.id = FBMShape;
@@ -602,13 +602,13 @@ object make_fbm_shape(memory_region *region, noise *noise, float scale, float of
 	return o;
 }
 
-object make_fbm_sphere(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj) {
+object make_fbm_sphere(memory_region *region, noise *noise, double scale, double offset_scale, double hurst, int octaves, object *obj) {
 	object fbm_obj = make_fbm_shape(region, noise, scale, offset_scale, hurst, octaves, obj);
 	fbm_obj.Intersect = (*IntersectFBMSphere);
 	return fbm_obj;
 }
 
-object *add_sphere(memory_region *region, point3 center, float r, texture *text, material *mat) {
+object *add_sphere(memory_region *region, point3 center, double r, texture *text, material *mat) {
 	object o = make_sphere(center, r, text, mat);
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }
@@ -641,17 +641,17 @@ object *add_ss_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, textu
 	return (object *)memory_region_add(region, &q, sizeof(object));
 }
 
-object *add_fbm_shape(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj) {
+object *add_fbm_shape(memory_region *region, noise *noise, double scale, double offset_scale, double hurst, int octaves, object *obj) {
 	object o = make_fbm_shape(region, noise, scale, offset_scale, hurst, octaves, obj);
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }
 
-object *add_fbm_sphere(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj) {
+object *add_fbm_sphere(memory_region *region, noise *noise, double scale, double offset_scale, double hurst, int octaves, object *obj) {
 	object o = make_fbm_sphere(region, noise, scale, offset_scale, hurst, octaves, obj);
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }
 
-object *add_stringy_sphere(memory_region *region, noise *noise, float epsilon, float scale, float offset_scale, float hurst, int octaves, object *obj) {
+object *add_stringy_sphere(memory_region *region, noise *noise, double epsilon, double scale, double offset_scale, double hurst, int octaves, object *obj) {
 	object o = make_fbm_sphere(region, noise, scale, offset_scale, hurst, octaves, obj);
 	o.shape.fbm_shape._epsilon = epsilon * fmax(sqrt(o.shape.sphere.radius), 1.0);
 	o.Intersect = (*IntersectStringySphere);
