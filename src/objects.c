@@ -68,9 +68,9 @@ quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, int
 	float ang_ad_ab = vec3_dot(cross_abc, vec3_cross(a_d, a_b)) / (vec3_len(a_b) * vec3_len(a_d));
 	float ang_ad_ac = vec3_dot(cross_abc, vec3_cross(a_d, a_c)) / (vec3_len(a_c) * vec3_len(a_d));;
 	if (signbit(ang_ad_ab) != signbit(ang_ad_ac)) {
-		tri_b_v1 = &c;
+		tri_b_v1 = &d;
 		tri_b_v2 = &b;
-		tri_b_v3 = &d;
+		tri_b_v3 = &c;
 	} else {
 		if (fabs(ang_ad_ab) > fabs(ang_ad_ac)) {
 			tri_b_v1 = &d;
@@ -87,8 +87,8 @@ quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, int
 
 	vec3 norm_b = TriangleNormal(tri_a, vec3_new(0.0, 0.0, 0.0));
 	if (!about_equal(cross_abc, norm_b)) {
-		vec3 temp = tri_b->shape.triangle.a;
-		tri_b->shape.triangle.a = tri_b->shape.triangle.b;
+		vec3 temp = tri_b->shape.triangle.c;
+		tri_b->shape.triangle.c = tri_b->shape.triangle.b;
 		tri_b->shape.triangle.b = temp;
 	}
 
@@ -220,11 +220,20 @@ int IntersectQuad(void *self, ray *r, hit_record *hitrec, thread_context *thread
 	if (hit_a == 0 && hit_b == 0) {
 		return 0;
 	}
+	// TODO : learn how to map uv coordinates properly.
+	// right now I'm just letting the triangles do their thing
+	// but that means I have two sets of 0 - 1
 	// tri_a.a is the bottom left, uv = 0,0
 	// tri_b.c is top right, uv = 1,1
-	if(!hit_b) {
-		hitrec->v *= 0.5;
+	/*
+	if(hit_b) {
+		hitrec->u = 1.0f - (hitrec->u * 0.5f);
+		hitrec->v = 1.0f - (hitrec->v * 0.5f);
+	} else {
+		hitrec->u *= 0.5f;
+		hitrec->v *= 0.5f;
 	}
+	*/
 	
 	return hit_a || hit_b;
 }
@@ -439,7 +448,7 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec, thread_context *t
 #endif
 
 // This is an error but it looks kind of neat
-int IntersectConfettiSphere(void *self, ray *r, hit_record *hitrec, thread_context *thread) {
+int IntersectStringySphere(void *self, ray *r, hit_record *hitrec, thread_context *thread) {
 	object *obj = self;
 	fbm_shape *fbm_obj = &obj->shape.fbm_shape;
 	object *sph = ((object *)fbm_obj->obj);
@@ -488,6 +497,7 @@ int IntersectConfettiSphere(void *self, ray *r, hit_record *hitrec, thread_conte
 		//        could I use the dot product or projections somehow?
 		point3 ray_point, normal;
 		float dist_to_center;
+		float intersection_epsilon = fbm_obj->_epsilon * sph->shape.sphere.radius;
 		while (!hit && (current_t < max_t)) {
 			ray_point = pt_on_ray(r, current_t);
 			normal = vec3_sub(ray_point, sph->shape.sphere.center);
@@ -511,8 +521,9 @@ int IntersectConfettiSphere(void *self, ray *r, hit_record *hitrec, thread_conte
 				hit = 1;
 			}
 			*/
-			if(fabs(offset_radius-dist_to_center) < 0.04f) hit = 1;
+			if(fabs(offset_radius-dist_to_center) < intersection_epsilon) hit = 1;
 			else current_t += t_inc;
+			t_inc *= 1.05f;
 		}
 
 		if(!hit) {
@@ -529,15 +540,14 @@ int IntersectConfettiSphere(void *self, ray *r, hit_record *hitrec, thread_conte
 
 	hit = sph->Intersect(&temp_sphere, r, hitrec, thread);
 
-	//d = vec3_unit(d);
-	d = vec3_div(d, fbm_value);
+	d = vec3_mul(d, fbm_obj->scale);
 	// p is the point on the sphere where offset = 0.
-	vec3 p = vec3_sub(vec3_sub(hitrec->pt, vec3_mul(hitrec->n, fbm_value)), sph->shape.sphere.center);
-	vec3 h = vec3_sub(d, vec3_mul(p, vec3_dot(d, p)));
-	vec3 n = vec3_sub(p, vec3_mul(h, fbm_obj->offset_scale));
+	vec3 p = vec3_mul(hitrec->n, sph->shape.sphere.radius);
+	vec3 h = vec3_sub(vec3_mul(d, fbm_obj->offset_scale), vec3_mul(hitrec->n, vec3_dot(d, hitrec->n)));
+	vec3 n = vec3_sub(p, vec3_mul(h, offset_radius));
 
 	n = vec3_unit(n);
-	outward_normal(r->dir, &n);
+	//hitrec->hit_front = outward_normal(r->dir, &n);
 	hitrec->n = n;
 	return hit;
 }
@@ -638,5 +648,12 @@ object *add_fbm_shape(memory_region *region, noise *noise, float scale, float of
 
 object *add_fbm_sphere(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj) {
 	object o = make_fbm_sphere(region, noise, scale, offset_scale, hurst, octaves, obj);
+	return (object *)memory_region_add(region, &o, sizeof(object));
+}
+
+object *add_stringy_sphere(memory_region *region, noise *noise, float epsilon, float scale, float offset_scale, float hurst, int octaves, object *obj) {
+	object o = make_fbm_sphere(region, noise, scale, offset_scale, hurst, octaves, obj);
+	o.shape.fbm_shape._epsilon = epsilon * fmax(sqrt(o.shape.sphere.radius), 1.0);
+	o.Intersect = (*IntersectStringySphere);
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }

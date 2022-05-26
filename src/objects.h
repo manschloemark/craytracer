@@ -47,7 +47,9 @@ typedef struct {
 	void *obj;
 	float hurst;
 	float offset_scale, scale;
+	float _epsilon; // NOTE : this is only used for "stringy fbm shapes" (please excuse the name)
 	int octaves;
+
 } fbm_shape;
 
 fbm_shape fbm_shape_new(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, void *obj);
@@ -93,6 +95,7 @@ object *add_ss_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, textu
 object *add_fbm_shape(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj);
 object *add_fbm_sphere(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj);
 
+object *add_stringy_sphere(memory_region *region, noise *noise, float epsilon, float scale, float offset_scale, float hurst, int octaves, object *obj);
 
 
 // TODO : I only make s a pointer here because I don't feel like fixing all the ->, fix it later (also in IntersectTriangle)
@@ -105,6 +108,7 @@ int Intersect(void *self, ray *r, hit_record *hitrec, thread_context *thread);
 
 int IntersectFBMShape(void *self, ray *r, hit_record *hitrec, thread_context *thread);
 int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec, thread_context *thread);
+int IntersectStringySphere(void *self, ray *r, hit_record *hitrec, thread_context *thread);
 
 vec3 SphereNormal(void *self, vec3 relative);
 
