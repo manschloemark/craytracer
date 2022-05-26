@@ -631,8 +631,43 @@ scene SimpleGlass(memory_region *region, thread_context *thread) {
 	return s;
 }
 
-scene TestGlass(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *thread) {
-	object_list *ol = add_object_list(region, 64);
+void TestGlass(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *thread) {
+	object_list ol = object_list_new(region, 64);
+
+	material *lamb = add_lambertian(region);
+	material *glass = add_glass(region, 1.51);
+	material *metal = add_metal(region, 0.5);
+	material *light = add_diffuse_light(region);
+
+	texture *white_light = add_color_texture(region, COLOR_VALUE(10.0));
+	texture *white = add_color_texture(region, COLOR_WHITE);
+	texture *red = add_color_texture(region, COLOR_RED);
+	texture *blue = add_color_texture(region, COLOR_BLUE);
+	texture *green = add_color_texture(region, COLOR_GREEN);
+	texture *yellow = add_color_texture(region, fcolor_new(0.7, 0.77, 0.22));
+
+	texture *tile = add_uv_checker_texture(region, green, yellow, 128.0);
+
+	float side = 100.0;
+	object *floor = add_quad(region, vec3_new(-side, -side, 0.0), vec3_new(-side, side, 0.0), vec3_new(side, -side, 0.0), vec3_new(side, side, 0.0), tile, lamb);
+	object *back = add_quad(region, vec3_new(-side, -side, 0.0), vec3_new(-side, side, 0.0), vec3_new(-side, -side, side), vec3_new(-side, side, side), tile, lamb);
+	object *wlight = add_quad(region, vec3_new(-side * 0.05, -side * 0.05, 10.0), vec3_new(-side * 0.05, side * 0.05, 10.0), vec3_new(side * 0.05, -side * 0.05, 10.0), vec3_new(side * 0.05, side * 0.05, 10.0), white_light, light);
+
+	object *left = add_sphere(region, vec3_new(-5.0, -4.0, 4.0), 4.0, blue, lamb);
+	object *right = add_sphere(region, vec3_new(-3.0, 3.0, 1.5), 1.50, red, metal);
+
+	object *middle = add_sphere(region, vec3_new(0.0, 0.0, 2.0), 2.0, white, glass);
+
+	object_list_append(&ol, floor);
+	object_list_append(&ol, back);
+	object_list_append(&ol, wlight);
+	object_list_append(&ol, left);
+	object_list_append(&ol, right);
+	object_list_append(&ol, middle);
+
+	s->ol = ol;
+	*o = vec3_new(10.0, 0.0, 2.0);
+	*t = vec3_new(0.0, 0.0, 2.0);
 }
 
 scene TestTextures(memory_region *region, thread_context *thread) {
@@ -1162,7 +1197,7 @@ scene FBM_NormalTest(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_c
 }
 
 void TestStringSphere(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *thread) {
-	object_list *ol = add_object_list(region, 32);
+	object_list ol = object_list_new(region, 32);
 
 	noise *snoise = add_simplex_noise(region, 32, thread);
 	noise *pnoise = add_perlin_noise(region, 32, thread);
@@ -1189,14 +1224,14 @@ void TestStringSphere(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_
 	float back = -100.0, side = 500.0;
 	object *bg = add_quad(region, vec3_new(back, -side, -side), vec3_new(back, side, -side), vec3_new(back, -side, side), vec3_new(back, side, side), tile, lamb);
 
-	object_list_append(ol, control_sphere);
-	object_list_append(ol, string_sph);
-	object_list_append(ol, string_sph2);
-	object_list_append(ol, string_sph3);
-	object_list_append(ol, string_sph4);
-	object_list_append(ol, bg);
+	object_list_append(&ol, control_sphere);
+	object_list_append(&ol, string_sph);
+	object_list_append(&ol, string_sph2);
+	object_list_append(&ol, string_sph3);
+	object_list_append(&ol, string_sph4);
+	object_list_append(&ol, bg);
 
-	s->ol = *ol;
+	s->ol = ol;
 	*o = vec3_new(6.0, 0.0, 0.0);
 	*t = vec3_new(0.0, 0.0, 0.0);
 }
@@ -1628,7 +1663,7 @@ void CornellBox_WithString(memory_region *region, scene *s, vec3 *o, vec3 *t, ve
 }
 
 void Test_ObjectList(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *tc) {
-	object_list *ol = add_object_list(region, 32);
+	object_list ol = object_list_new(region, 32);
 	
 	noise *shared_noise = add_simplex_noise(region, 32, tc);
 
@@ -1645,12 +1680,12 @@ void Test_ObjectList(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_c
 	object *sph2 = add_sphere(region, vec3_new(0.0, -3.0, -3.0), 2.0, fbm2, lamb);
 	object *sph3 = add_sphere(region, vec3_new(0.0, 3.0, -3.0), 2.0, fbm3, lamb);
 
-	object_list_append(ol, sph);
-	object_list_append(ol, sph1);
-	object_list_append(ol, sph2);
-	object_list_append(ol, sph3);
+	object_list_append(&ol, sph);
+	object_list_append(&ol, sph1);
+	object_list_append(&ol, sph2);
+	object_list_append(&ol, sph3);
 
-	s->ol = *ol;
+	s->ol = ol;
 	*o = vec3_new(-10.0, 0.0, 0.0);
 	*t = vec3_new(0.0, 0.0, 0.0);
 	}
