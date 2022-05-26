@@ -631,64 +631,8 @@ scene SimpleGlass(memory_region *region, thread_context *thread) {
 	return s;
 }
 
-scene TestGlass(memory_region *region, thread_context *thread) {
-	int object_count = 11;
-	int object_index = 0;
-	object **object_list = (object **)malloc(sizeof(object *) * object_count);
-
-	texture *rainbow[7];
-	rainbow[0] = add_color_texture(region, COLOR_RED);
-	rainbow[1] = add_color_texture(region, fcolor_new(0.7f, 0.5f, 0.0f));
-	rainbow[2] = add_color_texture(region, fcolor_new(0.8f, 0.8f, 0.0f));
-	rainbow[3] = add_color_texture(region, fcolor_new(0.0f, 1.0f, 0.0f));
-	rainbow[4] = add_color_texture(region, fcolor_new(0.0f, 0.0f, 1.0f));
-	rainbow[5] = add_color_texture(region, fcolor_new(0.12f, 0.0f, 0.6f));
-	rainbow[6] = add_color_texture(region, fcolor_new(0.77f, 0.0f, 0.77f));
-	texture *white = add_color_texture(region, COLOR_WHITE);
-	texture *purple = add_color_texture(region, COLOR_UNDEFPURP);
-
-	material *lambertian = add_lambertian(region);
-	material *clearmetal = add_metal(region, 0.0f);
-	material *glass = add_glass(region, 1.52f);
-
-	vec3 x_offset = vec3_new(-15.0f, 0.0f, 0.0f);
-
-	object *glass_sphere = add_sphere(region, vec3_new(-5.0f, 0.0f, 0.0f), 1.2f, purple, glass);
-	object_list[object_index] = glass_sphere;
-	++object_index;
-
-	object *sphere_below = add_sphere(region, vec3_new(-5.0f, 0.0f, -5.0f), 0.8f, purple, clearmetal);
-	object_list[object_index] = sphere_below;
-	++object_index;
-
-	object *center_sphere = add_sphere(region, vec3_add(x_offset, vec3_new(0.0f, 0.0f, 0.0f)), 1.0f, white, clearmetal);
-	object_list[object_index] = center_sphere;
-	++object_index;
-
-	vec3 offset = vec3_new(0.0f, 1.0f, 0.0f);
-
-	int outer_count = 7;
-	float outer_radius = 2.1f;
-	float r = 0.9f;
-	float theta_inc = 360.0f / (float)(outer_count);
-	for (int i = 0; i < outer_count; ++i) {
-		float theta = -degrees_to_radians(theta_inc * (float)i);
-		vec3 center = vec3_mul(vec3_new(0.0f, cosf(theta), sinf(theta)), outer_radius);
-		center = vec3_add(x_offset, center);
-		object *o = add_sphere(region, center, r, rainbow[i], lambertian);
-		object_list[object_index] = o;
-		++object_index;
-	}
-
-	texture *gray = add_color_texture(region, fcolor_new(0.6f, 0.6f, 0.6f));
-	object *tri = add_triangle(region, vec3_new(-20.0f, -20.0f, -5.0f), vec3_new(-20.0f, 0.0f, 20.0f), vec3_new(-20.0f, 20.0f, -5.0f), gray, lambertian);
-	object_list[object_index] = tri;
-	++object_index;
-
-	scene s = {};
-	s.objects = object_list;
-	s.object_count = object_index;
-	return s;
+scene TestGlass(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *thread) {
+	object_list *ol = add_object_list(region, 64);
 }
 
 scene TestTextures(memory_region *region, thread_context *thread) {
@@ -1218,7 +1162,7 @@ scene FBM_NormalTest(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_c
 }
 
 void TestStringSphere(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *thread) {
-	object_list ol = object_list_new(region, 32);
+	object_list *ol = add_object_list(region, 32);
 
 	noise *snoise = add_simplex_noise(region, 32, thread);
 	noise *pnoise = add_perlin_noise(region, 32, thread);
@@ -1245,14 +1189,14 @@ void TestStringSphere(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_
 	float back = -100.0, side = 500.0;
 	object *bg = add_quad(region, vec3_new(back, -side, -side), vec3_new(back, side, -side), vec3_new(back, -side, side), vec3_new(back, side, side), tile, lamb);
 
-	object_list_add(&ol, control_sphere);
-	object_list_add(&ol, string_sph);
-	object_list_add(&ol, string_sph2);
-	object_list_add(&ol, string_sph3);
-	object_list_add(&ol, string_sph4);
-	object_list_add(&ol, bg);
+	object_list_append(ol, control_sphere);
+	object_list_append(ol, string_sph);
+	object_list_append(ol, string_sph2);
+	object_list_append(ol, string_sph3);
+	object_list_append(ol, string_sph4);
+	object_list_append(ol, bg);
 
-	s->ol = ol;
+	s->ol = *ol;
 	*o = vec3_new(6.0, 0.0, 0.0);
 	*t = vec3_new(0.0, 0.0, 0.0);
 }
@@ -1684,7 +1628,7 @@ void CornellBox_WithString(memory_region *region, scene *s, vec3 *o, vec3 *t, ve
 }
 
 void Test_ObjectList(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *tc) {
-	object_list ol = object_list_new(region, 32);
+	object_list *ol = add_object_list(region, 32);
 	
 	noise *shared_noise = add_simplex_noise(region, 32, tc);
 
@@ -1701,12 +1645,12 @@ void Test_ObjectList(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_c
 	object *sph2 = add_sphere(region, vec3_new(0.0, -3.0, -3.0), 2.0, fbm2, lamb);
 	object *sph3 = add_sphere(region, vec3_new(0.0, 3.0, -3.0), 2.0, fbm3, lamb);
 
-	object_list_add(&ol, sph);
-	object_list_add(&ol, sph1);
-	object_list_add(&ol, sph2);
-	object_list_add(&ol, sph3);
+	object_list_append(ol, sph);
+	object_list_append(ol, sph1);
+	object_list_append(ol, sph2);
+	object_list_append(ol, sph3);
 
-	s->ol = ol;
+	s->ol = *ol;
 	*o = vec3_new(-10.0, 0.0, 0.0);
 	*t = vec3_new(0.0, 0.0, 0.0);
 	}
@@ -1723,7 +1667,7 @@ void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *
 			*s =  TestReflection(region, tc);
 			return;
 		case 4:
-			*s =  TestGlass(region, tc);
+			TestGlass(region, s, o, t, tc);
 			return;
 		case 5:
 			*s =  TestTextures(region, tc);

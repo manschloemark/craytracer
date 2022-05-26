@@ -12,8 +12,10 @@ typedef struct {
 
 object_list object_list_new(memory_region *region, int max_objects);
 
-int object_list_add(object_list *ol, object *new_object);
+int object_list_append(object_list *ol, object *new_object);
 
 int object_list_intersect(object_list *ol, ray *r, hit_record *hitrec, thread_context *thread);
+
+object_list *add_object_list(memory_region *region, int max_objects);
 
 #endif
