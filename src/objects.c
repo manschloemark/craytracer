@@ -72,7 +72,7 @@ quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, int
 		tri_b_v2 = &b;
 		tri_b_v3 = &c;
 	} else {
-		if (fabs(ang_ad_ab) > fabs(ang_ad_ac)) {
+		if (fabsf(ang_ad_ab) > fabsf(ang_ad_ac)) {
 			tri_b_v1 = &d;
 			tri_b_v2 = &a;
 			tri_b_v3 = &c;
@@ -134,9 +134,9 @@ int IntersectSphere(void *self, ray *r, hit_record *hitrec, thread_context *thre
 		return 0;
 	}
 
-	float root = (-half_b - sqrt(discriminant)) / a;
+	float root = (-half_b - sqrtf(discriminant)) / a;
 	if (root < hitrec->t_min || root > hitrec->t) {
-		root = (- half_b + sqrt(discriminant)) / a;
+		root = (- half_b + sqrtf(discriminant)) / a;
 		if (root < hitrec->t_min || root > hitrec->t) return 0;
 	}
 
@@ -173,7 +173,7 @@ int IntersectTriangle(void *self, ray *r, hit_record *hitrec, thread_context *th
 	float determinant = vec3_dot(BA, dir_cross_CA);
 
 	// TODO : change this small value to a variable
-	if (fabs(determinant) < 0.0001f) return 0;
+	if (fabsf(determinant) < 0.0001f) return 0;
 
 	float inv_determinant = 1.0f / determinant;
 
@@ -353,7 +353,7 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec, thread_context *t
 			offset_radius = sph->shape.sphere.radius + fbm_value;
 			float delta = (dist_to_center - offset_radius);
 
-			if(fabs(delta) < EPSILON) {
+			if(fabsf(delta) < EPSILON) {
 				temp_sphere.shape.sphere.radius = offset_radius;
 				hit = sph->Intersect(&temp_sphere, r, &loop_hitrec, thread);
 				EPSILON *= 0.5f;
@@ -521,7 +521,7 @@ int IntersectStringySphere(void *self, ray *r, hit_record *hitrec, thread_contex
 				hit = 1;
 			}
 			*/
-			if(fabs(offset_radius-dist_to_center) < intersection_epsilon) hit = 1;
+			if(fabsf(offset_radius-dist_to_center) < intersection_epsilon) hit = 1;
 			else current_t += t_inc;
 			t_inc *= 1.05f;
 		}
@@ -653,7 +653,7 @@ object *add_fbm_sphere(memory_region *region, noise *noise, float scale, float o
 
 object *add_stringy_sphere(memory_region *region, noise *noise, float epsilon, float scale, float offset_scale, float hurst, int octaves, object *obj) {
 	object o = make_fbm_sphere(region, noise, scale, offset_scale, hurst, octaves, obj);
-	o.shape.fbm_shape._epsilon = epsilon * fmax(sqrt(o.shape.sphere.radius), 1.0);
+	o.shape.fbm_shape._epsilon = epsilon * fmaxf(sqrtf(o.shape.sphere.radius), 1.0);
 	o.Intersect = (*IntersectStringySphere);
 	return (object *)memory_region_add(region, &o, sizeof(object));
 }

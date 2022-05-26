@@ -293,7 +293,7 @@ texture *add_level_curve_texture(memory_region *region, vec3 intervals, vec3 wid
 texture make_distance_texture(point3 point, float cutoff, texture *textA, texture *textB) {
 	texture dtxt = {};
 	dtxt.TextureColor = (*DistanceTextureColor);
-	dtxt.type.distance = distance_texture_new(point, fabs(cutoff), textA, textB);
+	dtxt.type.distance = distance_texture_new(point, fabsf(cutoff), textA, textB);
 	dtxt.id = Distance;
 	return dtxt;
 }
@@ -307,7 +307,7 @@ texture *add_distance_texture(memory_region *region, point3 point, float cutoff,
 
 // Assume all normals are unit vectors already. Pretty sure they are.
 fcolor NormalTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal) {
-	fcolor norm_color = fcolor_new(fabs(normal->x), fabs(normal->y), fabs(normal->z));
+	fcolor norm_color = fcolor_new(fabsf(normal->x), fabsf(normal->y), fabsf(normal->z));
 	return norm_color;
 }
 
@@ -400,7 +400,7 @@ fcolor NoiseSinCosTextureColor(void *self, float u, float v, vec3 pt, vec3 *norm
 	if (turb > 0.0f) {
 		return color_mul(((texture *)noise->colA)->TextureColor(noise->colA, u, v, pt, normal), turb);
 	} else {
-		return color_mul(((texture *)noise->colB)->TextureColor(noise->colB, u, v, pt, normal), fabs(turb));
+		return color_mul(((texture *)noise->colB)->TextureColor(noise->colB, u, v, pt, normal), fabsf(turb));
 	}
 }
 

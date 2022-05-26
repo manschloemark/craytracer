@@ -118,7 +118,7 @@ float perlin_turbulence(perlin *perl, point3 *pt, int depth) {
 		weight *= 0.5f;
 		temp_pt = vec3_mul(temp_pt, 2.0f);
 	}
-	return fabs(accumulation);
+	return fabsf(accumulation);
 }
 
 

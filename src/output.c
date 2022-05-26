@@ -40,9 +40,9 @@ void *PixelToUInt8(fcolor *pixels, int samples, int height, int width, int bytes
 	int count;
 	for (count = 0; count < height * width * 3; count = count + 3) {
 		// gamma 2 correction
-		float r = sqrt(pixels->r / (float)samples);
-		float g = sqrt(pixels->g / (float)samples);
-		float b = sqrt(pixels->b / (float)samples);
+		float r = sqrtf(pixels->r / (float)samples);
+		float g = sqrtf(pixels->g / (float)samples);
+		float b = sqrtf(pixels->b / (float)samples);
 		temp[count] = (uint8_t)(clamp(r, 0.0f, 0.999f) * 256);
 		temp[count+1] = (uint8_t)(clamp(g, 0.0f, 0.999f) * 256);
 		temp[count+2] = (uint8_t)(clamp(b, 0.0f, 0.999f) * 256);

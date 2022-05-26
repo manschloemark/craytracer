@@ -9,7 +9,7 @@ vec3 vec3_refract(vec3 v, vec3 n, float ior_ratio) {
 	float cos_theta = vec3_dot(vec3_neg(v), n);
 	if (cos_theta > 1.0f) cos_theta = 1.0f;
 	vec3 horizontal_component = vec3_mul(vec3_add(v, vec3_mul(n, cos_theta)), ior_ratio);
-	vec3 vertical_component = vec3_mul(n, -1.0f * sqrtf(fabs(1.0f - vec3_lensq(horizontal_component))));
+	vec3 vertical_component = vec3_mul(n, -1.0f * sqrtf(fabsf(1.0f - vec3_lensq(horizontal_component))));
 	return vec3_add(horizontal_component, vertical_component);
 }
 
