@@ -43,9 +43,9 @@ void *PixelToUInt8(fcolor *pixels, int samples, int height, int width, int bytes
 		double r = sqrt(pixels->r / (double)samples);
 		double g = sqrt(pixels->g / (double)samples);
 		double b = sqrt(pixels->b / (double)samples);
-		temp[count] = (uint8_t)(clamp(r, 0.0, 0.999) * 256);
-		temp[count+1] = (uint8_t)(clamp(g, 0.0, 0.999) * 256);
-		temp[count+2] = (uint8_t)(clamp(b, 0.0, 0.999) * 256);
+		temp[count] = (uint8_t)(clamp(r, 0.0, 0.99999) * 256);
+		temp[count+1] = (uint8_t)(clamp(g, 0.0, 0.99999) * 256);
+		temp[count+2] = (uint8_t)(clamp(b, 0.0, 0.99999) * 256);
 		++pixels;
 	}
 	return temp;

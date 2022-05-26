@@ -20,11 +20,11 @@ vec3 vec3_addf(vec3 a, double f) {
 }
 
 double vec3_len(vec3 a) {
-	return sqrtf(vec3_lensq(a));
+	return sqrt(vec3_lensq(a));
 }
 
 vec3 vec3_abs(vec3 a) {
-	vec3 v = {fabsf(a.x), fabsf(a.y), fabsf(a.z)};
+	vec3 v = {fabs(a.x), fabs(a.y), fabs(a.z)};
 	return v;
 }
 

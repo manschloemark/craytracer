@@ -387,7 +387,7 @@ fcolor MarbledNoiseTextureColor(void *self, double u, double v, vec3 pt, vec3 *n
 	} else {
 		col = fcolor_new(1.0, 1.0, 1.0);
 	}
-	double n = 0.5 * (1.0 + sinf(pt.y + 10.0 * fabsf(fbm(noise->noise, pt, 0.5, depth))));
+	double n = 0.5 * (1.0 + sinf(pt.y + 10.0 * fabs(fbm(noise->noise, pt, 0.5, depth))));
 	return color_mul(col, n);
 }
 
@@ -395,8 +395,8 @@ fcolor NoiseSinCosTextureColor(void *self, double u, double v, vec3 pt, vec3 *no
 	gradient_noise_texture *noise = &((texture *)self)->type.gradient_noise;
 	int depth = 7;
 	vec3 swizzled = vec3_new(pt.z, pt.x, pt.y);
-	double turb = sinf(noise->scale * 10.0 * fabsf(fbm(noise->noise, pt, 0.5, depth)));
-	turb *= cosf(noise->scale * fabsf(fbm(noise->noise, swizzled, 0.5, depth)));
+	double turb = sinf(noise->scale * 10.0 * fabs(fbm(noise->noise, pt, 0.5, depth)));
+	turb *= cosf(noise->scale * fabs(fbm(noise->noise, swizzled, 0.5, depth)));
 	if (turb > 0.0) {
 		return color_mul(((texture *)noise->colA)->TextureColor(noise->colA, u, v, pt, normal), turb);
 	} else {

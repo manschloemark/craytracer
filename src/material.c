@@ -9,7 +9,7 @@ vec3 vec3_refract(vec3 v, vec3 n, double ior_ratio) {
 	double cos_theta = vec3_dot(vec3_neg(v), n);
 	if (cos_theta > 1.0) cos_theta = 1.0;
 	vec3 horizontal_component = vec3_mul(vec3_add(v, vec3_mul(n, cos_theta)), ior_ratio);
-	vec3 vertical_component = vec3_mul(n, -1.0 * sqrtf(fabs(1.0 - vec3_lensq(horizontal_component))));
+	vec3 vertical_component = vec3_mul(n, -1.0 * sqrt(fabs(1.0 - vec3_lensq(horizontal_component))));
 	return vec3_add(horizontal_component, vertical_component);
 }
 
@@ -38,7 +38,7 @@ vec3 ScatterGlass(glass g, vec3 v, vec3 *n, double n1, int hit_front, thread_con
 	vec3 unit_dir = vec3_unit(v);
 	double cos_theta = vec3_dot(vec3_neg(unit_dir), *n);
 	if (cos_theta > 1.0) cos_theta = 1.0;
-	double sin_theta = sqrtf(1.0 - cos_theta * cos_theta);
+	double sin_theta = sqrt(1.0 - cos_theta * cos_theta);
 
 	// NOTE : should I do something different if it's at the critical angle?
 	vec3 scattered_dir;
