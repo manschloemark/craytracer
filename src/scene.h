@@ -1217,6 +1217,46 @@ scene FBM_NormalTest(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_c
 	return *s;
 }
 
+void TestStringSphere(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *thread) {
+	object_list ol = object_list_new(region, 32);
+
+	noise *snoise = add_simplex_noise(region, 32, thread);
+	noise *pnoise = add_perlin_noise(region, 32, thread);
+	material *lamb = add_lambertian(region);
+	material *mirror = add_metal(region, 0.0);
+	texture *normal = add_normal_texture(region);
+	texture *snormal = add_signed_normal_texture(region);
+	texture *black = add_color_texture(region, COLOR_BLACK);
+	texture *gray = add_color_texture(region, COLOR_VALUE(0.68f));
+	texture *white = add_color_texture(region, COLOR_WHITE);
+	texture *tile = add_uv_checker_texture(region, white, black, 32.0);
+	
+	object *control_sphere = add_sphere(region, vec3_new(0.0, 0.0, 0.0), 0.5, snormal, lamb);
+	object *sph = add_sphere(region, vec3_new(0.0, -1.5, 1.5), 1.0, normal, lamb);
+	object *sph2 = add_sphere(region, vec3_new(0.0, 1.5, 1.5), 1.0, normal, lamb);
+	object *string_sph = add_stringy_sphere(region, snoise, 0.005, 1.0, 0.8, 1.0, 4, sph);
+	object *string_sph2 = add_stringy_sphere(region, pnoise, 0.005, 1.0, 0.8, 1.0, 4, sph2);
+
+	object *sph3 = add_sphere(region, vec3_new(0.0, -1.5, -1.5), 1.0, normal, lamb);
+	object *sph4 = add_sphere(region, vec3_new(0.0, 1.5, -1.5), 1.0, normal, lamb);
+	object *string_sph3 = add_stringy_sphere(region, snoise, 0.005, 0.5, 0.5, 0.5, 4, sph3);
+	object *string_sph4 = add_stringy_sphere(region, pnoise, 0.005, 0.5, 0.5, 0.5, 4, sph4);
+
+	float back = -100.0, side = 500.0;
+	object *bg = add_quad(region, vec3_new(back, -side, -side), vec3_new(back, side, -side), vec3_new(back, -side, side), vec3_new(back, side, side), tile, lamb);
+
+	object_list_add(&ol, control_sphere);
+	object_list_add(&ol, string_sph);
+	object_list_add(&ol, string_sph2);
+	object_list_add(&ol, string_sph3);
+	object_list_add(&ol, string_sph4);
+	object_list_add(&ol, bg);
+
+	s->ol = ol;
+	*o = vec3_new(6.0, 0.0, 0.0);
+	*t = vec3_new(0.0, 0.0, 0.0);
+}
+
 scene FBM_Reflection(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *thread) {
 	int max_objects = 16;
 	int obj_index = 0;
@@ -1524,6 +1564,125 @@ void CornellBox(memory_region *region, scene *s, vec3 *o, vec3 *t, vec3 *vup, th
 	s->object_count = obj_index;
 }
 
+void CornellBox_WithString(memory_region *region, scene *s, vec3 *o, vec3 *t, vec3 *vup, thread_context *tc) {
+
+	int max_objects = 64;
+	int obj_index = 0;
+	object **objects = (object **)malloc(sizeof(object *) * max_objects);
+
+
+	material *lamb = add_lambertian(region);
+	material *metal = add_metal(region, 0.1);
+	material *glass = add_glass(region, 1.52);
+	material *light = add_diffuse_light(region);
+
+	texture *white_light = add_color_texture(region, fcolor_new(6.2, 6.5, 6.5));
+
+	texture *red = add_color_texture(region, fcolor_new(0.9, 0.22, 0.2));
+	texture *green = add_color_texture(region, fcolor_new(0.3, 0.88, 0.5));
+	texture *white = add_color_texture(region, COLOR_VALUE(1.0));
+	texture *gray = add_color_texture(region, COLOR_VALUE(0.5));
+	texture *tile = add_uv_checker_texture(region, green, red, 16.0);
+
+	// Vertices of the box itself
+	float bottom = 0.0, top = 550.0;
+	float left = 0.0, right = 555.0;
+	float back = 0.0, front = 560.0;
+
+	*o = vec3_new(2.0f * front, right * 0.5, top * 0.5);
+	*t = vec3_sub(*o, vec3_new(1.5 * front, 0.0, 0.0));
+
+	vec3 box_right_bottom_front = vec3_new(front, right, bottom);
+	vec3 box_left_bottom_front = vec3_new(front, left, bottom);
+	vec3 box_right_bottom_back = vec3_new(back, right, bottom);
+	vec3 box_left_bottom_back = vec3_new(back, left, bottom);
+	vec3 box_right_top_front = vec3_new(front, right, top);
+	vec3 box_left_top_front = vec3_new(front, left, top);
+	vec3 box_right_top_back = vec3_new(back, right, top);
+	vec3 box_left_top_back = vec3_new(back, left, top);
+
+	/* This was the data from cornell.edu. Their coordinates are oriented differently.
+	vec3 box_right_bottom_back = vec3_new(552.8, 0.0, 0.0);
+	vec3 box_left_bottom_back = vec3_new(0.0, 0.0, 0.0);
+	vec3 box_left_bottom_front = vec3_new(0.0, 0.0, 559.2);
+	vec3 box_right_bottom_front = vec3_new(549.6, 0.0, 559.2);
+	vec3 box_right_top_back = vec3_new(556.0, 548.8, 0.0);
+	vec3 box_right_top_front = vec3_new(556.0, 548.8, 559.2);
+	vec3 box_left_top_front = vec3_new(0.0, 548.8, 559.2);
+	vec3 box_left_top_back = vec3_new(0.0, 548.8, 0.0);
+	*/
+
+
+	vec3 floor_a = box_right_bottom_back;
+	vec3 floor_b = box_left_bottom_back;
+	vec3 floor_c = box_left_bottom_front;
+	vec3 floor_d = box_right_bottom_front;
+	object *floor = add_quad(region, floor_a, floor_b, floor_c, floor_d, white, lamb);
+	
+	float light_radius = right * 0.2;
+	vec3 light_a = vec3_new(front * 0.5f - light_radius, right * 0.5f - light_radius, top - 0.005f);
+	vec3 light_b = vec3_new(front * 0.5f + light_radius, right * 0.5f - light_radius, top - 0.005f);
+	vec3 light_c = vec3_new(front * 0.5f - light_radius, right * 0.5f + light_radius, top - 0.005f);
+	vec3 light_d = vec3_new(front * 0.5f + light_radius, right * 0.5f + light_radius, top - 0.005f);
+	object *light_on_ceiling = add_ss_quad(region, light_b, light_a, light_c, light_d, white_light, light);
+
+	vec3 ceiling_a = box_right_top_back;
+	vec3 ceiling_b = box_right_top_front;
+	vec3 ceiling_c = box_left_top_front;
+	vec3 ceiling_d = box_left_top_back;
+	object *ceiling = add_quad(region, ceiling_a, ceiling_b, ceiling_c, ceiling_d, white, lamb);
+
+	vec3 backwall_a = box_right_bottom_back;
+	vec3 backwall_b = box_left_bottom_back;
+	vec3 backwall_c = box_right_top_back;
+	vec3 backwall_d = box_left_top_back;
+	object *backwall = add_quad(region, backwall_a, backwall_b, backwall_c, backwall_d, white, lamb);
+
+	vec3 rightwall_a = box_right_top_back;
+	vec3 rightwall_b = box_right_top_front;
+	vec3 rightwall_c = box_right_bottom_front;
+	vec3 rightwall_d = box_right_bottom_back;
+	object *rightwall = add_quad(region, rightwall_a, rightwall_b, rightwall_c, rightwall_d, green, lamb);
+
+	vec3 leftwall_a = box_left_top_front;
+	vec3 leftwall_b = box_left_top_back;
+	vec3 leftwall_c = box_left_bottom_front;
+	vec3 leftwall_d = box_left_bottom_back;
+	object *leftwall = add_quad(region, leftwall_a, leftwall_b, leftwall_c, leftwall_d, red, lamb);
+
+	float small_radius = right * 0.15, big_radius = right * 0.18, glass_radius = right * 0.155;
+	object *smallsphere = add_sphere(region, vec3_new(front * 0.27, right * 0.27, small_radius + 0.001), small_radius, gray, metal);
+
+	object *bigsphere = add_sphere(region ,vec3_new(front * 0.26, right * 0.75, big_radius + 0.001), big_radius, gray, lamb);
+
+	object *glasssphere = add_sphere(region ,vec3_new(front * 0.7, right * 0.7, glass_radius * 1.0 + 0.001), glass_radius, white, glass);
+
+
+	objects[obj_index++] = floor;
+	//objects[obj_index++] = light_on_ceiling;
+	objects[obj_index++] = ceiling;
+	objects[obj_index++] = backwall;
+	objects[obj_index++] = leftwall;
+	objects[obj_index++] = rightwall;
+	objects[obj_index++] = smallsphere;
+	//objects[obj_index++] = bigsphere;
+	objects[obj_index++] = glasssphere;
+
+	noise *simp = add_simplex_noise(region, 32, tc);
+	texture *normal = add_normal_texture(region);
+
+	texture *bright_white_light = add_color_texture(region, COLOR_VALUE(15.0));
+	object *sph = add_sphere(region, vec3_new(front * 0.4, right * 0.5, top * 0.5), top * 0.2, normal, lamb);
+	object *string = add_stringy_sphere(region, simp, 0.0033, 1.2, top * 0.05, 1.0, 5, sph);
+	object *light_sphere = add_sphere(region, vec3_new(front * 0.4, right * 0.5, top * 0.5), top * 0.1, bright_white_light, light);
+
+	objects[s->object_count++] = string;
+	objects[s->object_count++] = light_sphere;
+
+	s->objects = objects;
+	s->object_count = obj_index;
+}
+
 void Test_ObjectList(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context *tc) {
 	object_list ol = object_list_new(region, 32);
 	
@@ -1615,6 +1774,12 @@ void SceneSelect(memory_region *region, int selection, scene *s, vec3 *o, vec3 *
 			return;
 		case 21:
 			Test_ObjectList(region, s, o, t, tc);
+			return;
+		case 22:
+			TestStringSphere(region, s, o, t, tc);
+			return;
+		case 23:
+			CornellBox_WithString(region, s, o, t, vup, tc);
 			return;
 		default:
 			CornellBox(region, s, o, t, vup, tc);
