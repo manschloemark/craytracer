@@ -660,7 +660,7 @@ void TestGlass(memory_region *region, scene *s, vec3 *o, vec3 *t, thread_context
 
 	object_list_append(&ol, floor);
 	object_list_append(&ol, back);
-	object_list_append(&ol, wlight);
+	//object_list_append(&ol, wlight);
 	object_list_append(&ol, left);
 	object_list_append(&ol, right);
 	object_list_append(&ol, middle);
