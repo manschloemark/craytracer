@@ -173,11 +173,7 @@ int IntersectTriangle(void *self, ray *r, hit_record *hitrec, thread_context *th
 	double determinant = vec3_dot(BA, dir_cross_CA);
 
 	// TODO : change this small value to a variable
-<<<<<<< HEAD
-	if (fabsf(determinant) < 0.0001f) return 0;
-=======
 	if (fabs(determinant) < 0.0001) return 0;
->>>>>>> float_to_double
 
 	double inv_determinant = 1.0 / determinant;
 
