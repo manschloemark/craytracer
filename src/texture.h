@@ -27,35 +27,35 @@ typedef struct {
 
 typedef struct {
 	void *odd, *even;
-	float freq;
+	double freq;
 } checker_texture;
 
-checker_texture checker_texture_new(void *odd, void *even, float freq);
+checker_texture checker_texture_new(void *odd, void *even, double freq);
 
 typedef struct {
 	noise *noise;
 	void *texture;
-	float scale;
+	double scale;
 } noise_texture;
 
 typedef struct {
 	noise *noise;
 	void *colA, *colB;
-	float scale;
+	double scale;
 } gradient_noise_texture;
 
-noise_texture noise_texture_new(memory_region *region, noise *noise, float scale, int pointcount, void *texture);
+noise_texture noise_texture_new(memory_region *region, noise *noise, double scale, int pointcount, void *texture);
 
-gradient_noise_texture gradient_noise_texture_new(memory_region *region, noise *perl, float scale, int pointcount, void *colA, void *colB);
+gradient_noise_texture gradient_noise_texture_new(memory_region *region, noise *perl, double scale, int pointcount, void *colA, void *colB);
 
 typedef struct {
 	noise *noise;
 	void *text;
-	float hurst;
+	double hurst;
 	int octaves;
 } fbm_texture;
 
-fbm_texture fbm_modifier_new(memory_region *region, noise *noise, float hurst, int octaves, void *text);
+fbm_texture fbm_modifier_new(memory_region *region, noise *noise, double hurst, int octaves, void *text);
 
 typedef struct {
 	vec3 intervals, widths;
@@ -72,11 +72,11 @@ static inline level_curve_texture level_curve_texture_new(vec3 intervals, vec3 w
 // Distance greater than the cutoff is white
 typedef struct {
 	point3 pt;
-	float cutoff;
+	double cutoff;
 	void *textA, *textB;
 } distance_texture;
 
-static inline distance_texture distance_texture_new(vec3 point, float cutoff, void *textA, void *textB) {
+static inline distance_texture distance_texture_new(vec3 point, double cutoff, void *textA, void *textB) {
 	distance_texture dt = {point, cutoff, textA, textB};
 	return dt;
 }
@@ -111,7 +111,7 @@ union texture_type {
 };
 
 typedef struct {
-	fcolor (*TextureColor) (void *self, float u, float v, point3 pt, vec3 *normal);
+	fcolor (*TextureColor) (void *self, double u, double v, point3 pt, vec3 *normal);
 	union texture_type type;
 	enum TextureID id;
 } texture;
@@ -129,57 +129,57 @@ texture *add_image_texture(memory_region *region, const char *filename, int byte
 texture make_uv_texture();
 texture *add_uv_texture(memory_region *region);
 
-texture make_checker_texture(texture *odd, texture *even, float freq);
-texture *add_checker_texture(memory_region *region, texture *odd, texture *even, float freq);
+texture make_checker_texture(texture *odd, texture *even, double freq);
+texture *add_checker_texture(memory_region *region, texture *odd, texture *even, double freq);
 
-texture make_uv_checker_texture(texture *odd, texture *even, float freq);
-texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *even, float freq);
+texture make_uv_checker_texture(texture *odd, texture *even, double freq);
+texture *add_uv_checker_texture(memory_region *region, texture *odd, texture *even, double freq);
 
 // This type of texture is unique in that make_noisee_noise_texture and noise_texture_new both require the memory region passed as well.
 // I'm not happy with this because it makes everything else inconsistent.
 // But I need to somehow get the actual noise struct into memory safely.
-texture make_noise_texture(memory_region *region, noise *noise, float scale, int pointcount, texture *text);
-texture *add_noise_texture(memory_region *region, noise *noise, float scale);
-texture *add_noise_texture_sized(memory_region *region, float scale, int bits);
+texture make_noise_texture(memory_region *region, noise *noise, double scale, int pointcount, texture *text);
+texture *add_noise_texture(memory_region *region, noise *noise, double scale);
+texture *add_noise_texture_sized(memory_region *region, double scale, int bits);
 
-texture make_noise_turbulence_texture(memory_region *region, noise *noise, float scale, int pointcount, texture *text);
-texture *add_noise_turbulence_texture(memory_region *region, noise *noise, float scale);
-texture *add_noise_turbulence_texture_sized(memory_region *region, noise *noise, float scale, int bits);
+texture make_noise_turbulence_texture(memory_region *region, noise *noise, double scale, int pointcount, texture *text);
+texture *add_noise_turbulence_texture(memory_region *region, noise *noise, double scale);
+texture *add_noise_turbulence_texture_sized(memory_region *region, noise *noise, double scale, int bits);
 
-texture *add_colored_noise_texture(memory_region *region, noise *noise, float scale, texture *text);
-texture *add_colored_noise_texture_sized(memory_region *region, float scale, int bits, texture *text);
+texture *add_colored_noise_texture(memory_region *region, noise *noise, double scale, texture *text);
+texture *add_colored_noise_texture_sized(memory_region *region, double scale, int bits, texture *text);
 
-texture *add_colored_noise_turbulence_texture(memory_region *region, noise *noise, float scale, texture *text);
-texture *add_colored_noise_turbulence_texture_sized(memory_region *region, float scale, int bits, texture *text);
+texture *add_colored_noise_turbulence_texture(memory_region *region, noise *noise, double scale, texture *text);
+texture *add_colored_noise_turbulence_texture_sized(memory_region *region, double scale, int bits, texture *text);
 
-texture *add_marbled_noise_texture(memory_region *region, noise *noise, float scale, texture *text);
+texture *add_marbled_noise_texture(memory_region *region, noise *noise, double scale, texture *text);
 
-texture make_gradient_noise_texture(memory_region *region, noise *noise, float scale, int pointcount, texture *colA, texture *colB);
+texture make_gradient_noise_texture(memory_region *region, noise *noise, double scale, int pointcount, texture *colA, texture *colB);
 
-texture *add_noise_sincos_texture(memory_region *region, noise *noise, float scale, texture *colA, texture *colB);
+texture *add_noise_sincos_texture(memory_region *region, noise *noise, double scale, texture *colA, texture *colB);
 
-texture make_fbm_modifier(memory_region *region, noise *noise, float hurst, int octaves, texture *text);
-texture *add_fbm_modifier(memory_region *region, noise *noise, float hurst, int octaves, texture *text);
+texture make_fbm_modifier(memory_region *region, noise *noise, double hurst, int octaves, texture *text);
+texture *add_fbm_modifier(memory_region *region, noise *noise, double hurst, int octaves, texture *text);
 
 texture make_level_curve_texture(vec3 intervals, vec3 widths, texture *targetColor, texture *defaltColor);
 texture *add_level_curve_texture(memory_region *region, vec3 intervals, vec3 widths, texture *targetColor, texture *defaltColor);
 
-texture make_distance_texture(point3 point, float cutoff, texture *textA, texture *textB);
-texture *add_distance_texture(memory_region *region, point3 point, float cutoff, texture *textA, texture *textB);
+texture make_distance_texture(point3 point, double cutoff, texture *textA, texture *textB);
+texture *add_distance_texture(memory_region *region, point3 point, double cutoff, texture *textA, texture *textB);
 
-fcolor UNDEFINED_TextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor NormalTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor SignedNormalTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor ColorTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor ImageTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor CheckerTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor UVCheckerTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor NoiseTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor FBMTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor MarbledNoiseTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor NoiseSinCosTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor FBMModifierTextureColor(void *self, float u, float v, point3 pt, vec3 *normal);
-fcolor LevelCurveTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal);
-fcolor DistanceTextureColor(void *self, float u, float v, vec3 pt, vec3 *normal);
+fcolor UNDEFINED_TextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor NormalTextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor SignedNormalTextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor ColorTextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor ImageTextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor CheckerTextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor UVCheckerTextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor NoiseTextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor FBMTextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor MarbledNoiseTextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor NoiseSinCosTextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor FBMModifierTextureColor(void *self, double u, double v, point3 pt, vec3 *normal);
+fcolor LevelCurveTextureColor(void *self, double u, double v, vec3 pt, vec3 *normal);
+fcolor DistanceTextureColor(void *self, double u, double v, vec3 pt, vec3 *normal);
 
 #endif

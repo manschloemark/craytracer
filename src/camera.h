@@ -11,9 +11,9 @@ typedef struct {
 	vec3 u, v, w;
 } camera;
 
-camera make_camera(point3 origin, point3 target, vec3 vup, float vfov, float aspect_ratio, float focal_length);
+camera make_camera(point3 origin, point3 target, vec3 vup, double vfov, double aspect_ratio, double focal_length);
 
-static inline ray camera_cast_ray(camera *cam, float u, float v, thread_context *thread) {
+static inline ray camera_cast_ray(camera *cam, double u, double v, thread_context *thread) {
 	//dir = vp_corner + (horizontal * %across) + (vertical + %across) - origin
 	vec3 dir = vec3_sub(vec3_add(vec3_add(cam->vp_corner, vec3_mul(cam->horizontal, u)), vec3_mul(cam->vertical, v)), cam->origin);
 	ray r = ray_new(cam->origin, dir);

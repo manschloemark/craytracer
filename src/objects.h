@@ -14,8 +14,8 @@ typedef struct {
 	vec3 n;
 	material *mat;
 	texture *text;
-	float t_min, t_max, t;
-	float u, v;
+	double t_min, t_max, t;
+	double u, v;
 	int hit_front;
 } hit_record;
 
@@ -24,10 +24,10 @@ int outward_normal(vec3 incident, vec3 *normal);
 
 typedef struct {
 	vec3 center;
-	float radius;
+	double radius;
 } sphere;
 
-sphere sphere_new(vec3 center, float radius);
+sphere sphere_new(vec3 center, double radius);
 
 typedef struct {
 	point3 a, b, c;
@@ -45,14 +45,14 @@ quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, int
 typedef struct {
 	noise *noise;
 	void *obj;
-	float hurst;
-	float offset_scale, scale;
-	float _epsilon; // NOTE : this is only used for "stringy fbm shapes" (please excuse the name)
+	double hurst;
+	double offset_scale, scale;
+	double _epsilon; // NOTE : this is only used for "stringy fbm shapes" (please excuse the name)
 	int octaves;
 
 } fbm_shape;
 
-fbm_shape fbm_shape_new(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, void *obj);
+fbm_shape fbm_shape_new(memory_region *region, noise *noise, double scale, double offset_scale, double hurst, int octaves, void *obj);
 
 enum ShapeID {
 	Sphere, Triangle, Quad, FBMShape,
@@ -75,16 +75,16 @@ typedef struct {
 	enum ShapeID id;
 } object;
 
-object make_sphere(point3 center, float r, texture *text, material *mat);
+object make_sphere(point3 center, double r, texture *text, material *mat);
 
 object make_triangle(point3 a, point3 b, point3 c, int double_sided, texture *text, material *mat);
 
 object make_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, int double_sided, texture *text, material *mat);
 
-object make_fbm_shape(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octabes, object *obj);
-object make_fbm_sphere(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj);
+object make_fbm_shape(memory_region *region, noise *noise, double scale, double offset_scale, double hurst, int octabes, object *obj);
+object make_fbm_sphere(memory_region *region, noise *noise, double scale, double offset_scale, double hurst, int octaves, object *obj);
 
-object *add_sphere(memory_region *region, point3 center, float r, texture *text, material *mat);
+object *add_sphere(memory_region *region, point3 center, double r, texture *text, material *mat);
 
 object *add_triangle(memory_region *region, point3 a, point3 b, point3 c, texture *text, material *mat);
 object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, point3 c, texture *text, material *mat);
@@ -92,10 +92,10 @@ object *add_single_sided_triangle(memory_region *region, point3 a, point3 b, poi
 object *add_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, texture *text, material *mat);
 object *add_ss_quad(memory_region *region, vec3 a, vec3 b, vec3 c, vec3 d, texture *text, material *mat);
 
-object *add_fbm_shape(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj);
-object *add_fbm_sphere(memory_region *region, noise *noise, float scale, float offset_scale, float hurst, int octaves, object *obj);
+object *add_fbm_shape(memory_region *region, noise *noise, double scale, double offset_scale, double hurst, int octaves, object *obj);
+object *add_fbm_sphere(memory_region *region, noise *noise, double scale, double offset_scale, double hurst, int octaves, object *obj);
 
-object *add_stringy_sphere(memory_region *region, noise *noise, float epsilon, float scale, float offset_scale, float hurst, int octaves, object *obj);
+object *add_stringy_sphere(memory_region *region, noise *noise, double epsilon, double scale, double offset_scale, double hurst, int octaves, object *obj);
 
 
 // TODO : I only make s a pointer here because I don't feel like fixing all the ->, fix it later (also in IntersectTriangle)

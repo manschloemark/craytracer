@@ -17,7 +17,7 @@ static struct argp_option options[] = {
 	{"jpeg-quality", 'j', "QUALITY", 0, "Int in [1-100]. Sets of JPEG output. Default is 100.", 1},
 	{"width", 'w', "WIDTH", 0, "Width of output image in pixels.", 1},
 	{"height", 'h', "HEIGHT", 0, "Height of output image in pixels.", 1},
-	{"vfov", 'f', "VFOV", 0, "Float that sets vertical field of view - smaller numbers are more zoomed in.", 1},
+	{"vfov", 'f', "VFOV", 0, "double that sets vertical field of view - smaller numbers are more zoomed in.", 1},
 	{"scene", 'c', "SCENE", 0, "Which scene to generate -- SCENE is an integer used in a switch statement.", 2},
 	{"num-samples", 'n', "N_SAMPLES", 0, "Take a sample from each pixel N_SAMPLES times", 2},
 	{"max-depth", 'd', "MAX_DEPTH", 0, "MAX_DEPTH is the number of times a ray can be reflected.", 2},
@@ -42,7 +42,7 @@ struct arguments {
 	unsigned int seed;
 	int scene;
 	int threadcount, jobcount;
-	float vfov;
+	double vfov;
 };
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
