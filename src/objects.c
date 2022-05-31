@@ -72,7 +72,7 @@ quad quad_new(memory_region *region, point3 a, point3 b, point3 c, point3 d, int
 		tri_b_v2 = &b;
 		tri_b_v3 = &c;
 	} else {
-		if (fabsf(ang_ad_ab) > fabsf(ang_ad_ac)) {
+		if (fabs(ang_ad_ab) > fabs(ang_ad_ac)) {
 			tri_b_v1 = &d;
 			tri_b_v2 = &a;
 			tri_b_v3 = &c;
@@ -353,7 +353,7 @@ int IntersectFBMSphere(void *self, ray *r, hit_record *hitrec, thread_context *t
 			offset_radius = sph->shape.sphere.radius + fbm_value;
 			double delta = (dist_to_center - offset_radius);
 
-			if(fabsf(delta) < EPSILON) {
+			if(fabs(delta) < EPSILON) {
 				temp_sphere.shape.sphere.radius = offset_radius;
 				hit = sph->Intersect(&temp_sphere, r, &loop_hitrec, thread);
 				EPSILON *= 0.5;
@@ -521,7 +521,7 @@ int IntersectStringySphere(void *self, ray *r, hit_record *hitrec, thread_contex
 				hit = 1;
 			}
 			*/
-			if(fabsf(offset_radius-dist_to_center) < intersection_epsilon) hit = 1;
+			if(fabs(offset_radius-dist_to_center) < intersection_epsilon) hit = 1;
 			else current_t += t_inc;
 			t_inc *= 1.05;
 		}
