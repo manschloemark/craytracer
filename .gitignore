@@ -5,3 +5,4 @@ resource/
 test/
 misc/
 .dev-tmux.conf
+*.txt
