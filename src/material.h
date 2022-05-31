@@ -12,7 +12,6 @@ vec3 vec3_refract(vec3 v, vec3 n, double ior_ratio);
 typedef struct {
 } lambertian;
 
-vec3 ScatterLambertian(vec3 *n, thread_context *thread);
 
 typedef struct { 
 	double blur;
@@ -24,7 +23,6 @@ static inline metal metal_new(double blur) {
 	return metal;
 }
 
-vec3 ScatterMetal(metal m, vec3 v, vec3 *n, thread_context *thread);
 
 // TODO : find a better name for this. It's not just glass, but any medium light can travel _through_
 typedef struct {
@@ -45,7 +43,6 @@ typedef struct {
 // 1.0 here is tecnically n1 but it is assumed to be air all the time.
 double schlick_approximation(double cos_incident, double ior_ratio);
 
-vec3 ScatterGlass(glass g, vec3 v, vec3 *n, double n1, int hit_front, thread_context *thread);
 
 enum MaterialID {
 	Lambertian,
@@ -64,6 +61,7 @@ union surface {
 
 typedef struct {
 	union surface surface;
+	int (*Scatter)(void *self, int hit_front, vec3 *n, ray *r, thread_context *thread);
 	enum MaterialID id;
 	int has_color;
 } material;
@@ -84,5 +82,9 @@ material *add_glass(memory_region *region, double ior);
 
 material *add_diffuse_light(memory_region *region); 
 
-int Scatter(material *mat, int hit_front, vec3 *n, ray *r, thread_context *thread); 
+int ScatterLambertian(void *self, int hit_front, vec3 *n, ray *r, thread_context *thread); 
+int ScatterMetal(void *self, int hit_front, vec3 *n, ray *r, thread_context *thread); 
+int ScatterGlass(void *self, int hit_front, vec3 *n, ray *r, thread_context *thread); 
+int ScatterDiffuseLight(void *self, int hit_front, vec3 *n, ray *r, thread_context *thread); 
+
 #endif

@@ -13,15 +13,17 @@ vec3 vec3_refract(vec3 v, vec3 n, double ior_ratio) {
 	return vec3_add(horizontal_component, vertical_component);
 }
 
-vec3 ScatterLambertian(vec3 *n, thread_context *thread) {
+int ScatterLambertian(void *self, int hit_front, vec3 *n, ray *r, thread_context *thread) {
 	vec3 v = vec3_random_in_hemisphere(*n, &thread->rand_state);
-	if (vec3_near_zero(v)) return *n;
-	return v;
+	if (vec3_near_zero(v)) v = *n;
+	r->dir = v;
+	return 1;
 }
 
-vec3 ScatterMetal(metal m, vec3 v, vec3 *n, thread_context *thread) {
-	//return vec3_reflect(v, *n);
-	return vec3_add(vec3_reflect(v, *n), vec3_mul(vec3_random(&thread->rand_state), m.blur));
+int ScatterMetal(void *self, int hit_front, vec3 *n, ray *r, thread_context *thread) {
+	metal m = (metal)((material *)self)->surface.metal;
+	r->dir = vec3_add(vec3_reflect(r->dir, *n), vec3_mul(vec3_random(&thread->rand_state), m.blur));
+	return 1;
 }
 
 // Schlick's Approximation is a formula for approximating contribution of Fresnel factor in specular reflection
@@ -33,9 +35,12 @@ double schlick_approximation(double cos_incident, double ior_ratio) {
 }
 
 // NOTE : This assumes you are leaving / entering air with ior=1.0.
-vec3 ScatterGlass(glass g, vec3 v, vec3 *n, double n1, int hit_front, thread_context *thread) {
+int ScatterGlass(void *self, int hit_front, vec3 *n, ray *r, thread_context *thread) {
+	material *mat = (material *)self;
+	glass g = (glass)mat->surface.glass;
+	double n1 = 1.0; // TODO : make it possible to have different n1 values
 	double ior_ratio = (hit_front) ? n1 / g.ior : g.ior / n1;
-	vec3 unit_dir = vec3_unit(v);
+	vec3 unit_dir = vec3_unit(r->dir);
 	double cos_theta = vec3_dot(vec3_neg(unit_dir), *n);
 	if (cos_theta > 1.0) cos_theta = 1.0;
 	double sin_theta = sqrt(1.0 - cos_theta * cos_theta);
@@ -48,11 +53,17 @@ vec3 ScatterGlass(glass g, vec3 v, vec3 *n, double n1, int hit_front, thread_con
 	} else {
 		scattered_dir = vec3_refract(unit_dir, *n, ior_ratio);
 	}
-	return scattered_dir;
+	r->dir = scattered_dir;
+	return 1;
+}
+
+int ScatterDiffuseLight(void *self, int hit_front, vec3 *n, ray *r, thread_context *thread) {
+	return 0;
 }
 
 material make_lambertian() {
 	material mat = {};
+	mat.Scatter = (*ScatterLambertian);
 	mat.id = Lambertian;
 	mat.has_color = 1;
 	return mat;
@@ -60,6 +71,7 @@ material make_lambertian() {
 
 material make_metal(double blur) {
 	material mat = {};
+	mat.Scatter = (*ScatterMetal);
 	mat.id = Metal;
 	mat.has_color = 1;
 	mat.surface.metal = metal_new(blur);
@@ -68,6 +80,7 @@ material make_metal(double blur) {
 
 material make_glass(double ior) {
 	material mat = {};
+	mat.Scatter = (*ScatterGlass);
 	mat.id = Glass;
 	mat.has_color = 1;
 	mat.surface.glass = glass_new(ior);
@@ -76,6 +89,7 @@ material make_glass(double ior) {
 
 material make_diffuse_light() {
 	material mat = {};
+	mat.Scatter = (*ScatterDiffuseLight);
 	mat.id = DiffuseLight;
 	return mat;
 }
@@ -100,7 +114,7 @@ material *add_diffuse_light(memory_region *region) {
 	return (material *)memory_region_add(region, &mat, sizeof(material));
 }
 
-// 1 = Scattered ray, 0 = no scatter
+/* 1 = Scattered ray, 0 = no scatter
 int Scatter(material *mat, int hit_front, vec3 *n, ray *r, thread_context *thread) {
 	switch (mat->id) {
 		case Lambertian:
@@ -118,7 +132,6 @@ int Scatter(material *mat, int hit_front, vec3 *n, ray *r, thread_context *threa
 			return 0;
 	}
 }
-/*
 int MatColor(material *mat, fcolor *color) {
 	switch (mat->id) {
 		case Diffuse:

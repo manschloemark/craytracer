@@ -45,7 +45,7 @@ fcolor TraceRay(ray r, scene *scene, fcolor *bgcolor, int maxdepth, int calldept
 	ray scattered_ray = {};
 	scattered_ray.pt = hitrec.pt;
 	scattered_ray.dir = r.dir;
-	int scattered = Scatter(hitrec.mat, hitrec.hit_front, &hitrec.n, &scattered_ray, thread);
+	int scattered = hitrec.mat->Scatter(hitrec.mat, hitrec.hit_front, &hitrec.n, &scattered_ray, thread);
 
  // NOTE : if the ray does not scatter the material is diffuse light
  // if it hit the back of a light I don't want it to emit light, so return black instead
